@@ -9,7 +9,7 @@ A full-stack web application for managing sports groups, memberships, real-time 
 ## 🌐 Live Demo
 
 - **Frontend:** https://sport-booking-app.netlify.app/
-- **Backend API / Swagger:** https://rezervacija-sportskih-termina-production.up.railway.app/swagger
+- **Backend API / Swagger:** https://sports-booking-app.up.railway.app/swagger
 
 ### Demo Access
 
