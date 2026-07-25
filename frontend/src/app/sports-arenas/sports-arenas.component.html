@@ -25,7 +25,7 @@
           </button>
 
           <button type="button" class="favorite-chip-body" (click)="viewFavoriteDetails(favorite)">
-            <img [src]="favorite.imageUrl" [alt]="favorite.arenaName" class="favorite-chip-image" />
+            <img [src]="getFavoriteArenaImageUrl(favorite)" [alt]="favorite.arenaName" class="favorite-chip-image" />
             <span class="favorite-chip-name">{{ favorite.arenaName }}</span>
             <span class="favorite-chip-meta">{{ favorite.city }}</span>
           </button>

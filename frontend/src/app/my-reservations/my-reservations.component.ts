@@ -2,6 +2,8 @@ import { NgClass, NgFor, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { Reservation } from '../interfaces/reservation.model';
 import { formatReadableDate } from '../helpers/date-format.helper';
+import { getArenaDisplayImage } from '../helpers/arena-ui.helper';
+import { Arena } from '../interfaces/arena.model';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { SkeletonListItemComponent } from '../skeleton/skeleton-list-item/skeleton-list-item.component';
@@ -85,6 +87,7 @@ export class MyReservationsComponent implements OnInit {
   async cancelReservation(reservation: Reservation): Promise<void> {
     const confirmed = await this.confirmDialogService.confirm('confirmCancelReservation', {
       previewName: reservation.arenaName,
+      previewImageUrl: getArenaDisplayImage({ id: reservation.arenaId } as Arena),
     });
 
     if (!confirmed) {

@@ -231,6 +231,10 @@ export class SportsArenasComponent implements OnInit {
     return getArenaDisplayImage(arena);
   }
 
+  getFavoriteArenaImageUrl(favorite: FavoriteArena): string {
+    return getArenaDisplayImage({ id: favorite.arenaId } as Arena);
+  }
+
   @HostListener('document:click')
   closeMenus(): void {
     this.showCityMenu = false;
