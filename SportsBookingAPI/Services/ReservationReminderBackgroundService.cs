@@ -22,18 +22,26 @@ namespace SportsBookingAPI.Services
         {
             using var timer = new PeriodicTimer(TickInterval);
 
-            do
+            try
             {
-                try
+                do
                 {
-                    await SendDueRemindersAsync(stoppingToken);
+                    try
+                    {
+                        await SendDueRemindersAsync(stoppingToken);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error while processing reservation reminders.");
+                    }
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error while processing reservation reminders.");
-                }
+                while (await timer.WaitForNextTickAsync(stoppingToken));
             }
-            while (await timer.WaitForNextTickAsync(stoppingToken));
+            catch (OperationCanceledException)
+            {
+                // Expected when the host is shutting down -- PeriodicTimer.WaitForNextTickAsync
+                // throws (rather than returning false) once the token is cancelled.
+            }
         }
 
         private async Task SendDueRemindersAsync(CancellationToken cancellationToken)

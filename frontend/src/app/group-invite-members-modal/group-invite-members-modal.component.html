@@ -40,19 +40,12 @@
     <div *ngIf="inviteModalMessage" class="alert alert-success">
       {{ inviteModalMessage }}
     </div>
-    <div *ngIf="inviteModalError" class="alert alert-danger">
+    <div *ngIf="inviteModalError" class="app-state-message">
       {{ inviteModalError }}
     </div>
 
-    <div *ngIf="isLoadingInviteUsers" class="invite-user-list">
-      <app-skeleton-list-item
-        *ngFor="let placeholder of [1, 2, 3]"
-        avatarShape="circle"
-        avatarSize="44px"
-        [lineWidths]="['50%', '35%']"
-        [actionCount]="1"
-        actionWidth="90px"
-      ></app-skeleton-list-item>
+    <div *ngIf="isLoadingInviteUsers" class="status-message compact">
+      {{ 'loading' | translate }}
     </div>
 
     <div *ngIf="!isLoadingInviteUsers && inviteUsers.length" class="invite-user-list">

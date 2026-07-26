@@ -98,6 +98,10 @@
     flex-direction: row;
     justify-content: space-between;
   }
+
+  :host ::ng-deep app-skeleton-list-item .skeleton-actions {
+    justify-content: flex-start;
+  }
 }
 
 :host-context(body.dark-mode) .reservation-card {

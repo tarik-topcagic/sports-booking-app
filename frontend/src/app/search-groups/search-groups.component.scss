@@ -479,4 +479,13 @@
     width: 100%;
     justify-content: flex-start;
   }
+
+  :host ::ng-deep app-skeleton-list-item .skeleton-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  :host ::ng-deep app-skeleton-list-item .skeleton-actions {
+    justify-content: flex-start;
+  }
 }

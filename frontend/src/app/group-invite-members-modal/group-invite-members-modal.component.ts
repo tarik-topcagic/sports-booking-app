@@ -21,11 +21,10 @@ import {
   respondToGroupJoinRequest,
   sendGroupInvitation,
 } from '../helpers/group-membership-actions.helper';
-import { SkeletonListItemComponent } from '../skeleton/skeleton-list-item/skeleton-list-item.component';
 
 @Component({
   selector: 'app-group-invite-members-modal',
-  imports: [NgFor, NgIf, FormsModule, TranslatePipe, SkeletonListItemComponent],
+  imports: [NgFor, NgIf, FormsModule, TranslatePipe],
   templateUrl: './group-invite-members-modal.component.html',
   styleUrl: './group-invite-members-modal.component.scss'
 })

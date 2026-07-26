@@ -547,4 +547,41 @@
     width: 100%;
     text-align: center;
   }
+
+  :host ::ng-deep app-skeleton-list-item .skeleton-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  :host ::ng-deep app-skeleton-list-item .skeleton-row-main {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  :host ::ng-deep app-skeleton-list-item .skeleton-avatar {
+    box-sizing: border-box !important;
+    flex: 0 0 auto !important;
+    align-self: stretch !important;
+    width: auto !important;
+    height: 180px !important;
+  }
+
+  :host ::ng-deep app-skeleton-list-item .skeleton-avatar .app-skeleton {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  :host ::ng-deep app-skeleton-list-item .skeleton-actions {
+    width: 100%;
+  }
+
+  :host ::ng-deep app-skeleton-list-item .skeleton-actions app-skeleton {
+    width: 100% !important;
+  }
+
+  :host ::ng-deep app-skeleton-list-item .skeleton-actions app-skeleton .app-skeleton {
+    width: 100% !important;
+  }
 }

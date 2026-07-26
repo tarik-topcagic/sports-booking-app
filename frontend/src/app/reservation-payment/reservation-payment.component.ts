@@ -1,4 +1,4 @@
-import { NgIf } from '@angular/common';
+import { NgFor, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -6,7 +6,7 @@ import { Arena } from '../interfaces/arena.model';
 import { formatReadableDate } from '../helpers/date-format.helper';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslatePipe } from '../pipes/translate.pipe';
-import { SkeletonTextBlockComponent } from '../skeleton/skeleton-text-block/skeleton-text-block.component';
+import { SkeletonComponent } from '../skeleton/skeleton/skeleton.component';
 import { ArenaService } from '../../services/arena.service';
 import { LanguageService } from '../../services/language.service';
 import { ReservationService } from '../../services/reservation.service';
@@ -16,7 +16,7 @@ const ADDITIONAL_HALF_HOUR_PRICE = 10;
 
 @Component({
   selector: 'app-reservation-payment',
-  imports: [NgIf, FormsModule, NavbarComponent, TranslatePipe, SkeletonTextBlockComponent],
+  imports: [NgIf, NgFor, FormsModule, NavbarComponent, TranslatePipe, SkeletonComponent],
   templateUrl: './reservation-payment.component.html',
   styleUrl: './reservation-payment.component.scss',
 })
@@ -45,6 +45,10 @@ export class ReservationPaymentComponent implements OnInit {
   cardNumber = '';
   expiry = '';
   cvv = '';
+  expiryPastDateError = false;
+
+  readonly cardNumberPattern =
+    '^(\\d{4} \\d{4} \\d{4} \\d{4}|\\d{4} \\d{6} \\d{5}|\\d{4} \\d{6} \\d{4}|\\d{4} \\d{4} \\d{4} \\d{4} \\d{3})$';
 
   constructor(
     private route: ActivatedRoute,
@@ -130,8 +134,85 @@ export class ReservationPaymentComponent implements OnInit {
     }).format(amount)} BAM`;
   }
 
+  onCardNumberChange(rawValue: string, inputEl: HTMLInputElement): void {
+    const cursorPosition = inputEl.selectionStart ?? rawValue.length;
+    const digitsBeforeCursor = rawValue.slice(0, cursorPosition).replace(/\D/g, '').length;
+
+    const digits = rawValue.replace(/\D/g, '').slice(0, 19);
+    const formatted = this.formatCardNumber(digits);
+
+    this.cardNumber = formatted;
+    inputEl.value = formatted;
+
+    let newCursorPosition = 0;
+    let digitsSeen = 0;
+    while (newCursorPosition < formatted.length && digitsSeen < digitsBeforeCursor) {
+      if (/\d/.test(formatted[newCursorPosition])) {
+        digitsSeen++;
+      }
+      newCursorPosition++;
+    }
+    inputEl.setSelectionRange(newCursorPosition, newCursorPosition);
+  }
+
+  onCvvChange(rawValue: string): void {
+    this.cvv = rawValue.replace(/\D/g, '').slice(0, 4);
+  }
+
+  validateExpiry(): void {
+    this.expiryPastDateError = false;
+
+    const match = /^(0[1-9]|1[0-2])\/([0-9]{2})$/.exec(this.expiry);
+    if (!match) {
+      return;
+    }
+
+    const month = Number(match[1]);
+    const year = 2000 + Number(match[2]);
+
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+
+    this.expiryPastDateError = year < currentYear || (year === currentYear && month < currentMonth);
+  }
+
+  private formatCardNumber(digits: string): string {
+    const groups = this.getCardNumberGroups(digits.length);
+    const parts: string[] = [];
+    let index = 0;
+
+    for (const groupSize of groups) {
+      if (index >= digits.length) {
+        break;
+      }
+
+      parts.push(digits.slice(index, index + groupSize));
+      index += groupSize;
+    }
+
+    if (index < digits.length) {
+      parts.push(digits.slice(index));
+    }
+
+    return parts.join(' ');
+  }
+
+  private getCardNumberGroups(digitCount: number): number[] {
+    switch (digitCount) {
+      case 14:
+        return [4, 6, 4];
+      case 15:
+        return [4, 6, 5];
+      case 19:
+        return [4, 4, 4, 4, 3];
+      default:
+        return [4, 4, 4, 4];
+    }
+  }
+
   submitPayment(form: NgForm): void {
-    if (form.invalid || !this.startTime || this.isProcessing) {
+    if (form.invalid || !this.startTime || this.isProcessing || this.expiryPastDateError) {
       return;
     }
 
