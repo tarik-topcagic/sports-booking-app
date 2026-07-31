@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -183,13 +184,21 @@ namespace SportsBookingAPI
 
             app.UseCors("AllowFrontend");
 
-
             // Configure the HTTP request pipeline.
             app.UseSwagger();
             app.UseSwaggerUI();
 
             app.UseHttpsRedirection();
-            app.UseStaticFiles(); 
+            app.UseStaticFiles();
+
+            var uploadsBasePath = UploadPathHelper.GetUploadsBasePath(builder.Configuration);
+            Directory.CreateDirectory(uploadsBasePath);
+
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(uploadsBasePath),
+                RequestPath = "/uploads"
+            });
 
             app.UseAuthentication();
             app.UseAuthorization();

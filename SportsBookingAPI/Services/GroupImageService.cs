@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using SportsBookingAPI.DTOs;
+using SportsBookingAPI.Helpers;
 using SportsBookingAPI.Interfaces;
 
 namespace SportsBookingAPI.Services
@@ -7,10 +8,12 @@ namespace SportsBookingAPI.Services
     public class GroupImageService : IGroupImageService
     {
         private readonly IGroupRepository _groupRepository;
+        private readonly IConfiguration _configuration;
 
-        public GroupImageService(IGroupRepository groupRepository)
+        public GroupImageService(IGroupRepository groupRepository, IConfiguration configuration)
         {
             _groupRepository = groupRepository;
+            _configuration = configuration;
         }
 
         public async Task<ServiceResult> UploadGroupPictureAsync(string userId, int groupId, UpdateGroupPictureDto groupPictureDto, string scheme, HostString host)
@@ -25,7 +28,7 @@ namespace SportsBookingAPI.Services
             if (groupPictureDto.File == null || groupPictureDto.File.Length == 0)
                 return ServiceResult.BadRequest("No picture selcted");
 
-            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "group");
+            var uploadsFolder = UploadPathHelper.GetUploadsSubfolder(_configuration, "group");
             if (!Directory.Exists(uploadsFolder))
                 Directory.CreateDirectory(uploadsFolder);
 
@@ -57,7 +60,7 @@ namespace SportsBookingAPI.Services
             {
                 var uri = new Uri(group.ImageUrl);
                 var fileName = Path.GetFileName(uri.AbsolutePath);
-                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "group");
+                var filePath = Path.Combine(UploadPathHelper.GetUploadsSubfolder(_configuration, "group"), fileName);
 
                 if (System.IO.File.Exists(filePath))
                 {

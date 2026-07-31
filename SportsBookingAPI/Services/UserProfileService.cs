@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using SportsBookingAPI.DTOs;
+using SportsBookingAPI.Helpers;
 using SportsBookingAPI.Interfaces;
 
 namespace SportsBookingAPI.Services
@@ -7,10 +8,12 @@ namespace SportsBookingAPI.Services
     public class UserProfileService : IUserProfileService
     {
         private readonly IUserRepository _userRepository;
+        private readonly IConfiguration _configuration;
 
-        public UserProfileService(IUserRepository userRepository)
+        public UserProfileService(IUserRepository userRepository, IConfiguration configuration)
         {
             _userRepository = userRepository;
+            _configuration = configuration;
         }
 
         public async Task<ServiceResult> UpdateProfileAsync(string userId, UpdateProfileDto updateProfileDto)
@@ -36,7 +39,7 @@ namespace SportsBookingAPI.Services
             if (updateProfilePictureDto.File == null || updateProfilePictureDto.File.Length == 0)
                 return ServiceResult.BadRequest("Nije odabrana slika.");
 
-            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "profilna");
+            var uploadsFolder = UploadPathHelper.GetUploadsSubfolder(_configuration, "profilna");
             if (!Directory.Exists(uploadsFolder))
                 Directory.CreateDirectory(uploadsFolder);
 
@@ -63,13 +66,7 @@ namespace SportsBookingAPI.Services
             {
                 var uri = new Uri(user.ProfilePictureUrl);
                 var fileName = Path.GetFileName(uri.AbsolutePath);
-                var filePath = Path.Combine(
-                    Directory.GetCurrentDirectory(),
-                    "wwwroot",
-                    "uploads",
-                    "profilna",
-                    fileName
-                );
+                var filePath = Path.Combine(UploadPathHelper.GetUploadsSubfolder(_configuration, "profilna"), fileName);
 
                 if (System.IO.File.Exists(filePath))
                 {

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SportsBookingAPI.DTOs;
 using SportsBookingAPI.DTOs.Admin;
+using SportsBookingAPI.Helpers;
 using SportsBookingAPI.Interfaces;
 using SportsBookingAPI.Models;
 
@@ -12,15 +13,18 @@ namespace SportsBookingAPI.Services
         private readonly IArenaRepository _arenaRepository;
         private readonly IReservationRepository _reservationRepository;
         private readonly IFavoriteArenaRepository _favoriteArenaRepository;
+        private readonly IConfiguration _configuration;
 
         public ArenaService(
             IArenaRepository arenaRepository,
             IReservationRepository reservationRepository,
-            IFavoriteArenaRepository favoriteArenaRepository)
+            IFavoriteArenaRepository favoriteArenaRepository,
+            IConfiguration configuration)
         {
             _arenaRepository = arenaRepository;
             _reservationRepository = reservationRepository;
             _favoriteArenaRepository = favoriteArenaRepository;
+            _configuration = configuration;
         }
 
         public async Task<IEnumerable<ArenaDto>> GetArenasAsync(string? city, string? sportType, string? searchTerm)
@@ -123,9 +127,6 @@ namespace SportsBookingAPI.Services
             }
             catch (DbUpdateException)
             {
-                // Defense in depth: catches any FK-constraint violation the checks above didn't
-                // anticipate (e.g. a reference added between the check and the delete), so the
-                // raw database exception never reaches the client.
                 return ServiceResult.BadRequest("Cannot delete this arena because it is still referenced by other records.");
             }
 
@@ -141,7 +142,7 @@ namespace SportsBookingAPI.Services
             if (file == null || file.Length == 0)
                 return ServiceResult.BadRequest("No picture selected");
 
-            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "arena");
+            var uploadsFolder = UploadPathHelper.GetUploadsSubfolder(_configuration, "arena");
             if (!Directory.Exists(uploadsFolder))
                 Directory.CreateDirectory(uploadsFolder);
 
