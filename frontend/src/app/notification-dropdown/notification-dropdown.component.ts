@@ -42,8 +42,8 @@ export class NotificationDropdownComponent implements OnInit, OnDestroy {
   notifications: AppNotification[] = [];
   unreadNotificationsCount = 0;
   highlightedNotificationIds = new Set<number>();
-  respondingInvitationIds = new Set<number>();
-  respondingJoinRequestIds = new Set<number>();
+  respondingInvitationAction = new Map<number, boolean>();
+  respondingJoinRequestAction = new Map<number, boolean>();
   notificationType = AppNotificationType;
   membershipStatus = MembershipStatus;
   relativeTimeRefreshKey = 0;
@@ -220,8 +220,18 @@ export class NotificationDropdownComponent implements OnInit, OnDestroy {
 
   isResponding(notification: AppNotification): boolean {
     return !!notification.membershipId
-      && (this.respondingInvitationIds.has(notification.membershipId)
-        || this.respondingJoinRequestIds.has(notification.membershipId));
+      && (this.respondingInvitationAction.has(notification.membershipId)
+        || this.respondingJoinRequestAction.has(notification.membershipId));
+  }
+
+  isRespondingInvitation(notification: AppNotification, accept: boolean): boolean {
+    return !!notification.membershipId
+      && this.respondingInvitationAction.get(notification.membershipId) === accept;
+  }
+
+  isRespondingJoinRequest(notification: AppNotification, accept: boolean): boolean {
+    return !!notification.membershipId
+      && this.respondingJoinRequestAction.get(notification.membershipId) === accept;
   }
 
   isHighlightedNotification(notification: AppNotification): boolean {
@@ -369,7 +379,7 @@ export class NotificationDropdownComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.respondingInvitationIds.add(notification.membershipId);
+    this.respondingInvitationAction.set(notification.membershipId, accept);
 
     respondToGroupInvitation(
       this.groupService,
@@ -378,14 +388,14 @@ export class NotificationDropdownComponent implements OnInit, OnDestroy {
       notification.groupId ?? undefined,
       {
         onSuccess: () => {
-        this.respondingInvitationIds.delete(notification.membershipId!);
+        this.respondingInvitationAction.delete(notification.membershipId!);
         notification.invitationStatus = accept ? MembershipStatus.Accepted : MembershipStatus.Declined;
         notification.isRead = true;
         this.loadNotifications();
         this.loadUnreadNotificationsCount();
       },
         onError: (error) => {
-        this.respondingInvitationIds.delete(notification.membershipId!);
+        this.respondingInvitationAction.delete(notification.membershipId!);
         this.toastService.showError(this.languageService.translate('invitationResponseError'));
         console.error('Error responding to invitation:', error);
       },
@@ -398,7 +408,7 @@ export class NotificationDropdownComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.respondingJoinRequestIds.add(notification.membershipId);
+    this.respondingJoinRequestAction.set(notification.membershipId, accept);
 
     respondToGroupJoinRequest(
       this.groupService,
@@ -407,14 +417,14 @@ export class NotificationDropdownComponent implements OnInit, OnDestroy {
       accept,
       {
         onSuccess: () => {
-        this.respondingJoinRequestIds.delete(notification.membershipId!);
+        this.respondingJoinRequestAction.delete(notification.membershipId!);
         notification.membershipStatus = accept ? MembershipStatus.Accepted : MembershipStatus.Declined;
         notification.isRead = true;
         this.loadNotifications();
         this.loadUnreadNotificationsCount();
       },
         onError: (error) => {
-        this.respondingJoinRequestIds.delete(notification.membershipId!);
+        this.respondingJoinRequestAction.delete(notification.membershipId!);
         this.toastService.showError(this.languageService.translate('joinRequestResponseError'));
         console.error('Error responding to join request:', error);
       },
@@ -450,8 +460,8 @@ export class NotificationDropdownComponent implements OnInit, OnDestroy {
     this.unreadNotificationsCount = 0;
     this.isLoading = false;
     this.highlightedNotificationIds.clear();
-    this.respondingInvitationIds.clear();
-    this.respondingJoinRequestIds.clear();
+    this.respondingInvitationAction.clear();
+    this.respondingJoinRequestAction.clear();
     this.closeNotifications();
   }
 

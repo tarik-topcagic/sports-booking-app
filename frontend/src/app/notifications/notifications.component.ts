@@ -31,8 +31,8 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   isLoading = true;
   errorMessage = '';
   highlightedNotificationIds = new Set<number>();
-  respondingInvitationIds = new Set<number>();
-  respondingJoinRequestIds = new Set<number>();
+  respondingInvitationAction = new Map<number, boolean>();
+  respondingJoinRequestAction = new Map<number, boolean>();
   notificationType = AppNotificationType;
   membershipStatus = MembershipStatus;
   private readonly notificationRefreshIntervalMs = 30000;
@@ -162,8 +162,18 @@ export class NotificationsComponent implements OnInit, OnDestroy {
 
   isResponding(notification: AppNotification): boolean {
     return !!notification.membershipId
-      && (this.respondingInvitationIds.has(notification.membershipId)
-        || this.respondingJoinRequestIds.has(notification.membershipId));
+      && (this.respondingInvitationAction.has(notification.membershipId)
+        || this.respondingJoinRequestAction.has(notification.membershipId));
+  }
+
+  isRespondingInvitation(notification: AppNotification, accept: boolean): boolean {
+    return !!notification.membershipId
+      && this.respondingInvitationAction.get(notification.membershipId) === accept;
+  }
+
+  isRespondingJoinRequest(notification: AppNotification, accept: boolean): boolean {
+    return !!notification.membershipId
+      && this.respondingJoinRequestAction.get(notification.membershipId) === accept;
   }
 
   acceptInvitation(notification: AppNotification, event: Event): void {
@@ -247,7 +257,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.respondingInvitationIds.add(notification.membershipId);
+    this.respondingInvitationAction.set(notification.membershipId, accept);
 
     respondToGroupInvitation(
       this.groupService,
@@ -256,13 +266,13 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       notification.groupId ?? undefined,
       {
         onSuccess: () => {
-        this.respondingInvitationIds.delete(notification.membershipId!);
+        this.respondingInvitationAction.delete(notification.membershipId!);
         notification.invitationStatus = accept ? MembershipStatus.Accepted : MembershipStatus.Declined;
         notification.isRead = true;
         this.loadNotifications();
       },
         onError: (error) => {
-        this.respondingInvitationIds.delete(notification.membershipId!);
+        this.respondingInvitationAction.delete(notification.membershipId!);
         this.toastService.showError(this.languageService.translate('invitationResponseError'));
         console.error('Error responding to invitation:', error);
       },
@@ -275,7 +285,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.respondingJoinRequestIds.add(notification.membershipId);
+    this.respondingJoinRequestAction.set(notification.membershipId, accept);
 
     respondToGroupJoinRequest(
       this.groupService,
@@ -284,13 +294,13 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       accept,
       {
         onSuccess: () => {
-        this.respondingJoinRequestIds.delete(notification.membershipId!);
+        this.respondingJoinRequestAction.delete(notification.membershipId!);
         notification.membershipStatus = accept ? MembershipStatus.Accepted : MembershipStatus.Declined;
         notification.isRead = true;
         this.loadNotifications();
       },
         onError: (error) => {
-        this.respondingJoinRequestIds.delete(notification.membershipId!);
+        this.respondingJoinRequestAction.delete(notification.membershipId!);
         this.toastService.showError(this.languageService.translate('joinRequestResponseError'));
         console.error('Error responding to join request:', error);
       },

@@ -77,7 +77,7 @@
                 [disabled]="isResponding(notification)"
                 (click)="acceptInvitation(notification, $event)"
               >
-                <span *ngIf="isResponding(notification)" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                <span *ngIf="isRespondingInvitation(notification, true)" class="spinner-border spinner-border-sm me-1" role="status"></span>
                 {{ 'accept' | translate }}
               </button>
               <button
@@ -86,7 +86,7 @@
                 [disabled]="isResponding(notification)"
                 (click)="declineInvitation(notification, $event)"
               >
-                <span *ngIf="isResponding(notification)" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                <span *ngIf="isRespondingInvitation(notification, false)" class="spinner-border spinner-border-sm me-1" role="status"></span>
                 {{ 'decline' | translate }}
               </button>
             </div>
@@ -102,7 +102,7 @@
                 [disabled]="isResponding(notification)"
                 (click)="acceptJoinRequest(notification, $event)"
               >
-                <span *ngIf="isResponding(notification)" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                <span *ngIf="isRespondingJoinRequest(notification, true)" class="spinner-border spinner-border-sm me-1" role="status"></span>
                 {{ 'acceptJoinRequest' | translate }}
               </button>
               <button
@@ -111,7 +111,7 @@
                 [disabled]="isResponding(notification)"
                 (click)="declineJoinRequest(notification, $event)"
               >
-                <span *ngIf="isResponding(notification)" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                <span *ngIf="isRespondingJoinRequest(notification, false)" class="spinner-border spinner-border-sm me-1" role="status"></span>
                 {{ 'declineJoinRequest' | translate }}
               </button>
             </div>

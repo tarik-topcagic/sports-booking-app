@@ -105,6 +105,10 @@ h1 {
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: 0.75rem;
+
+  .btn {
+    white-space: nowrap;
+  }
 }
 
 .notification-state {
