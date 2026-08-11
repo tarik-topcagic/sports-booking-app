@@ -16,6 +16,7 @@ import { GroupPresence } from '../interfaces/group-presence.model';
 import { UserPresence } from '../interfaces/user-presence.model';
 import { ToastService } from '../../services/toast.service';
 import { SkeletonComponent } from '../skeleton/skeleton/skeleton.component';
+import { LoadErrorStateComponent } from '../load-error-state/load-error-state.component';
 import {
   cancelGroupAccessRequest,
   requestGroupAccess,
@@ -35,6 +36,7 @@ import {
     GroupInviteMembersModalComponent,
     GroupMembersModalComponent,
     SkeletonComponent,
+    LoadErrorStateComponent,
   ],
   templateUrl: './group-details.component.html',
   styleUrl: './group-details.component.scss'
@@ -270,6 +272,13 @@ export class GroupDetailsComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
     this.canShowPresence = false;
     this.onlineMemberUserIds.clear();
+  }
+
+  retryLoadGroup(): void {
+    const groupId = Number(this.route.snapshot.paramMap.get('id'));
+    if (groupId) {
+      this.loadGroup(groupId);
+    }
   }
 
   private loadGroup(groupId: number): void {

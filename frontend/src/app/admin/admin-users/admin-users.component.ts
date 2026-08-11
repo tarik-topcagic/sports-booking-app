@@ -10,11 +10,12 @@ import { AuthService } from '../../../services/auth.service';
 import { getUserIdFromToken } from '../../../services/jwt.util';
 import { paginate } from '../../helpers/pagination.helper';
 import { SkeletonTableRowComponent } from '../../skeleton/skeleton-table-row/skeleton-table-row.component';
+import { LoadErrorStateComponent } from '../../load-error-state/load-error-state.component';
 
 @Component({
   selector: 'app-admin-users',
   standalone: true,
-  imports: [NgFor, NgIf, FormsModule, DatePipe, NavbarComponent, AdminSelectComponent, SkeletonTableRowComponent],
+  imports: [NgFor, NgIf, FormsModule, DatePipe, NavbarComponent, AdminSelectComponent, SkeletonTableRowComponent, LoadErrorStateComponent],
   templateUrl: './admin-users.component.html',
   styleUrl: './admin-users.component.scss',
 })

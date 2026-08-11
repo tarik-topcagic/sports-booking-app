@@ -9,10 +9,11 @@ import { UserService, UserSettings } from '../../services/user.service';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { SkeletonTextBlockComponent } from '../skeleton/skeleton-text-block/skeleton-text-block.component';
+import { LoadErrorStateComponent } from '../load-error-state/load-error-state.component';
 
 @Component({
   selector: 'app-settings',
-  imports: [CommonModule, FormsModule, NavbarComponent, TranslatePipe, SkeletonTextBlockComponent],
+  imports: [CommonModule, FormsModule, NavbarComponent, TranslatePipe, SkeletonTextBlockComponent, LoadErrorStateComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
 })
@@ -44,6 +45,7 @@ export class SettingsComponent implements OnInit {
   }
 
   loadSettings(): void {
+    this.errorMessage = '';
     this.userService.getSettings().subscribe({
       next: (settings) => {
         this.settings = settings;

@@ -50,6 +50,7 @@ import { MessageActionsComponent } from '../message-actions/message-actions.comp
 import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { SkeletonComponent } from '../skeleton/skeleton/skeleton.component';
+import { LoadErrorStateComponent } from '../load-error-state/load-error-state.component';
 import { ToastService } from '../../services/toast.service';
 
 @Component({
@@ -67,6 +68,7 @@ import { ToastService } from '../../services/toast.service';
     SkeletonComponent,
     LongPressDirective,
     MessageActionsComponent,
+    LoadErrorStateComponent,
   ],
   templateUrl: './group-chat.component.html',
   styleUrl: './group-chat.component.scss',
@@ -697,6 +699,13 @@ export class GroupChatComponent implements OnInit, AfterViewInit, OnDestroy {
       this.privateChatListPresenceByUserId,
       this.groupChatListPresenceByGroupId,
     );
+  }
+
+  retryLoadChat(): void {
+    const groupId = Number(this.route.snapshot.paramMap.get('id'));
+    if (groupId) {
+      this.loadChat(groupId);
+    }
   }
 
   private loadChat(groupId: number): void {

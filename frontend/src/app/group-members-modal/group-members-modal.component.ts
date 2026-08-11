@@ -6,7 +6,6 @@ import { TranslatePipe } from '../pipes/translate.pipe';
 import { GroupService } from '../../services/group.service';
 import { ConfirmDialogService } from '../../services/confirm-dialog.service';
 import { LanguageService } from '../../services/language.service';
-import { PrivateChatService } from '../../services/private-chat.service';
 
 @Component({
   selector: 'app-group-members-modal',
@@ -21,14 +20,12 @@ export class GroupMembersModalComponent {
   @Output() error = new EventEmitter<string>();
 
   removingMemberIds = new Set<string>();
-  openingChatUserId: string | null = null;
 
   constructor(
     private router: Router,
     private groupService: GroupService,
     private confirmDialogService: ConfirmDialogService,
     private languageService: LanguageService,
-    private privateChatService: PrivateChatService,
   ) {}
 
   closeModal(): void {
@@ -62,29 +59,13 @@ export class GroupMembersModalComponent {
     return !!this.group?.currentUserId && member.userId === this.group.currentUserId;
   }
 
-  isOpeningChat(member: GroupMember): boolean {
-    return this.openingChatUserId === member.userId;
-  }
-
   openPrivateChat(member: GroupMember): void {
-    if (this.isCurrentUser(member) || this.openingChatUserId) {
+    if (this.isCurrentUser(member)) {
       return;
     }
 
-    this.openingChatUserId = member.userId;
-
-    this.privateChatService.getOrCreateConversation(member.userId).subscribe({
-      next: (conversation) => {
-        this.openingChatUserId = null;
-        this.closeModal();
-        this.router.navigate(['/messages/private', conversation.id]);
-      },
-      error: (error) => {
-        this.openingChatUserId = null;
-        this.error.emit(this.languageService.translate('privateChatLoadError'));
-        console.error('Error opening private chat from group members modal:', error);
-      },
-    });
+    this.closeModal();
+    this.router.navigate(['/messages/private/user', member.userId]);
   }
 
   async removeMember(member: GroupMember): Promise<void> {

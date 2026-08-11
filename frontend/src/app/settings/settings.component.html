@@ -4,7 +4,7 @@
   <h2 class="mb-4">{{ 'settings' | translate }}</h2>
 
   <div *ngIf="errorMessage" class="app-state-message">
-    {{ errorMessage }}
+    <app-load-error-state [message]="errorMessage" (retry)="loadSettings()"></app-load-error-state>
   </div>
 
   <div *ngIf="settings">

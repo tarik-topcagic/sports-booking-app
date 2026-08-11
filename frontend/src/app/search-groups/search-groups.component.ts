@@ -8,6 +8,7 @@ import { CreateGroupModalComponent } from '../create-group-modal/create-group-mo
 import { EditGroupModalComponent } from '../edit-group-modal/edit-group-modal.component';
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { SkeletonListItemComponent } from '../skeleton/skeleton-list-item/skeleton-list-item.component';
+import { LoadErrorStateComponent } from '../load-error-state/load-error-state.component';
 import { Router } from '@angular/router';
 import { Subscription, catchError, forkJoin, of } from 'rxjs';
 import { paginate } from '../helpers/pagination.helper';
@@ -23,7 +24,7 @@ import {
 
 @Component({
   selector: 'app-search-groups',
-  imports: [NgIf, NgFor, NgClass, NavbarComponent, FormsModule, CreateGroupModalComponent, EditGroupModalComponent, TranslatePipe, SkeletonListItemComponent],
+  imports: [NgIf, NgFor, NgClass, NavbarComponent, FormsModule, CreateGroupModalComponent, EditGroupModalComponent, TranslatePipe, SkeletonListItemComponent, LoadErrorStateComponent],
   templateUrl: './search-groups.component.html',
   styleUrl: './search-groups.component.scss',
 })
@@ -41,6 +42,7 @@ export class SearchGroupsComponent implements OnInit, OnDestroy {
   showEditGroupModal = false;
   selectedGroupToEdit: Group | null = null;
   isLoadingGroups = false;
+  errorMessage = '';
   pendingJoinRequestGroupIds = new Set<number>();
   pendingInvitationGroupIds = new Set<number>();
   requestingAccessGroupIds = new Set<number>();
@@ -329,15 +331,20 @@ export class SearchGroupsComponent implements OnInit, OnDestroy {
     return this.activeFilter === 'admin' ? 'noAdminGroups' : 'noMemberGroups';
   }
 
+  retryLoadGroups(): void {
+    this.loadGroupCollections();
+  }
+
   private loadGroupCollections(): void {
     this.isLoadingGroups = true;
+    this.errorMessage = '';
 
     forkJoin({
-      allGroups: this.groupService.searchGroups().pipe(catchError(() => of([] as Group[]))),
-      adminGroups: this.groupService.getMyGroups().pipe(catchError(() => of([] as Group[]))),
-      memberGroups: this.groupService.getMemberGroups().pipe(catchError(() => of([] as Group[]))),
-      pendingJoinRequestGroups: this.groupService.getPendingJoinRequestGroups().pipe(catchError(() => of([] as Group[]))),
-      pendingInvitationGroups: this.groupService.getPendingInvitationGroups().pipe(catchError(() => of([] as Group[]))),
+      allGroups: this.groupService.searchGroups(),
+      adminGroups: this.groupService.getMyGroups(),
+      memberGroups: this.groupService.getMemberGroups(),
+      pendingJoinRequestGroups: this.groupService.getPendingJoinRequestGroups(),
+      pendingInvitationGroups: this.groupService.getPendingInvitationGroups(),
     }).subscribe({
       next: ({ allGroups, adminGroups, memberGroups, pendingJoinRequestGroups, pendingInvitationGroups }) => {
         this.myGroups = adminGroups;
@@ -362,6 +369,7 @@ export class SearchGroupsComponent implements OnInit, OnDestroy {
         this.pendingJoinRequestGroupIds.clear();
         this.pendingInvitationGroupIds.clear();
         this.isLoadingGroups = false;
+        this.errorMessage = this.languageService.translate('groupsLoadError');
         this.applyFiltersAndSort();
       },
     });

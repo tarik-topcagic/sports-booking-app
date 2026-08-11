@@ -51,6 +51,7 @@ import { MessageActionsComponent } from '../message-actions/message-actions.comp
 import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { SkeletonComponent } from '../skeleton/skeleton/skeleton.component';
+import { LoadErrorStateComponent } from '../load-error-state/load-error-state.component';
 import { ToastService } from '../../services/toast.service';
 
 @Component({
@@ -68,6 +69,7 @@ import { ToastService } from '../../services/toast.service';
     SkeletonComponent,
     LongPressDirective,
     MessageActionsComponent,
+    LoadErrorStateComponent,
   ],
   templateUrl: './private-chat.component.html',
   styleUrl: './private-chat.component.scss',
@@ -186,14 +188,21 @@ export class PrivateChatComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.routeSubscription = this.route.paramMap.subscribe((params) => {
       const conversationId = Number(params.get('conversationId'));
+      const targetUserId = params.get('userId');
 
-      if (!conversationId) {
-        this.router.navigate(['/messages']);
+      if (conversationId) {
+        this.resetViewState();
+        void this.initializeConversation(conversationId);
         return;
       }
 
-      this.resetViewState();
-      void this.initializeConversation(conversationId);
+      if (targetUserId) {
+        this.resetViewState();
+        this.initializeConversationWithUser(targetUserId);
+        return;
+      }
+
+      this.router.navigate(['/messages']);
     });
   }
 
@@ -606,6 +615,19 @@ export class PrivateChatComponent implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
+  retryLoadChat(): void {
+    const conversationId = Number(this.route.snapshot.paramMap.get('conversationId'));
+    if (conversationId) {
+      this.loadChat(conversationId);
+      return;
+    }
+
+    const targetUserId = this.route.snapshot.paramMap.get('userId');
+    if (targetUserId) {
+      this.initializeConversationWithUser(targetUserId);
+    }
+  }
+
   private loadChat(conversationId: number): void {
     this.isLoading = true;
     this.errorMessage = '';
@@ -707,6 +729,22 @@ export class PrivateChatComponent implements OnInit, AfterViewInit, OnDestroy {
   private async initializeConversation(conversationId: number): Promise<void> {
     await this.setupRealtime(conversationId);
     this.loadChat(conversationId);
+  }
+
+  private initializeConversationWithUser(targetUserId: string): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    this.privateChatService.getOrCreateConversation(targetUserId).subscribe({
+      next: (conversation) => {
+        this.router.navigate(['/messages/private', conversation.id], { replaceUrl: true });
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.errorMessage = this.languageService.translate('privateChatLoadError');
+        console.error('Error opening private chat from user search:', error);
+      },
+    });
   }
 
   private handleIncomingRealtimeMessage(message: PrivateMessage): void {

@@ -19,11 +19,15 @@
         ></app-skeleton-list-item>
       </div>
 
-      <div *ngIf="!isLoading && !notifications.length" class="status-message">
+      <div *ngIf="!isLoading && errorMessage" class="app-state-message">
+        <app-load-error-state [message]="errorMessage" (retry)="retryLoadNotifications()"></app-load-error-state>
+      </div>
+
+      <div *ngIf="!isLoading && !errorMessage && !notifications.length" class="status-message">
         {{ 'noNotifications' | translate }}
       </div>
 
-      <div *ngIf="!isLoading && notifications.length" class="notifications-list">
+      <div *ngIf="!isLoading && !errorMessage && notifications.length" class="notifications-list">
         <article
           class="notification-card"
           *ngFor="let notification of notifications"

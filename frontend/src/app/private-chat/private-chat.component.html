@@ -46,7 +46,7 @@
     </div>
 
     <div *ngIf="errorMessage" class="chat-state app-state-message">
-      {{ errorMessage }}
+      <app-load-error-state [message]="errorMessage" (retry)="retryLoadChat()"></app-load-error-state>
     </div>
 
     <section *ngIf="conversation && !isLoading" class="private-chat-layout">

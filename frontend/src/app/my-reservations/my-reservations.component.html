@@ -30,7 +30,9 @@
       ></app-skeleton-list-item>
     </section>
   </ng-container>
-  <div *ngIf="!isLoading && errorMessage" class="app-state-message">{{ errorMessage | translate }}</div>
+  <div *ngIf="!isLoading && errorMessage" class="app-state-message">
+    <app-load-error-state [message]="errorMessage | translate" (retry)="retryLoadReservations()"></app-load-error-state>
+  </div>
 
   <ng-container *ngIf="!isLoading && !errorMessage">
     <section class="reservations-section">

@@ -8,15 +8,26 @@
         <h1>{{ 'messages' | translate }}</h1>
       </div>
 
-      <div *ngIf="isLoading" class="status-message">
-        {{ 'loading' | translate }}
+      <div *ngIf="isLoading" class="messages-list">
+        <app-skeleton-list-item
+          *ngFor="let placeholder of [1, 2, 3, 4]"
+          variant="card"
+          avatarShape="circle"
+          avatarSize="38px"
+          [lineWidths]="['85%', '25%']"
+          [actionCount]="0"
+        ></app-skeleton-list-item>
       </div>
 
-      <div *ngIf="!isLoading && !messages.length" class="status-message">
+      <div *ngIf="!isLoading && errorMessage" class="app-state-message">
+        <app-load-error-state [message]="errorMessage" (retry)="retryLoadMessages()"></app-load-error-state>
+      </div>
+
+      <div *ngIf="!isLoading && !errorMessage && !messages.length" class="status-message">
         {{ 'noMessageNotifications' | translate }}
       </div>
 
-      <div *ngIf="!isLoading && messages.length" class="messages-list">
+      <div *ngIf="!isLoading && !errorMessage && messages.length" class="messages-list">
         <article
           class="message-card"
           *ngFor="let message of messages"

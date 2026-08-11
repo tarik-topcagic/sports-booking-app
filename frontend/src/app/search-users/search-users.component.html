@@ -91,6 +91,10 @@
       </p>
     </section>
 
+    <div *ngIf="errorMessage" class="empty-state error-state">
+      <app-load-error-state [message]="errorMessage" (retry)="retryLoadUsers()"></app-load-error-state>
+    </div>
+
     <section class="results-card" *ngIf="isLoadingUsers || (activeFilter === 'commonGroups' && isLoadingCommonGroups)">
       <app-skeleton-list-item
         *ngFor="let placeholder of [1, 2, 3, 4]"
@@ -104,7 +108,7 @@
 
     <section
       class="results-card"
-      *ngIf="!isLoadingUsers && !(activeFilter === 'commonGroups' && isLoadingCommonGroups) && pagedUsers.length; else emptyUsersState"
+      *ngIf="!isLoadingUsers && !(activeFilter === 'commonGroups' && isLoadingCommonGroups) && !errorMessage && pagedUsers.length; else emptyUsersState"
     >
       <article class="result-row" *ngFor="let user of pagedUsers">
         <div class="result-main">
@@ -171,7 +175,7 @@
     </section>
 
     <ng-template #emptyUsersState>
-      <section class="empty-state">
+      <section class="empty-state" *ngIf="!errorMessage">
         <p>{{ 'noUsersFound' | translate }}</p>
       </section>
     </ng-template>

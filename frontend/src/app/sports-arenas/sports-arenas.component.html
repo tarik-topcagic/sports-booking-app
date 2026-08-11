@@ -125,7 +125,7 @@
     </section>
 
     <div *ngIf="errorMessage" class="empty-state error-state">
-      <p>{{ errorMessage | translate }}</p>
+      <app-load-error-state [message]="errorMessage | translate" (retry)="loadArenas()"></app-load-error-state>
     </div>
 
     <section class="results-card" *ngIf="isLoadingArenas; else arenaResults">

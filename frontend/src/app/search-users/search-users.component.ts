@@ -9,16 +9,19 @@ import { AuthService } from '../../services/auth.service';
 import { User } from '../interfaces/user';
 import { ChooseGroupModalComponent } from '../choose-group-modal/choose-group-modal.component';
 import { SkeletonListItemComponent } from '../skeleton/skeleton-list-item/skeleton-list-item.component';
+import { LoadErrorStateComponent } from '../load-error-state/load-error-state.component';
 import { paginate } from '../helpers/pagination.helper';
-import { PrivateChatService } from '../../services/private-chat.service';
 import { GroupService } from '../../services/group.service';
-import { catchError, forkJoin, of } from 'rxjs';
+import { LanguageService } from '../../services/language.service';
+import { catchError, forkJoin, of, timeout } from 'rxjs';
 import { Group, GroupDetails } from '../interfaces/group.model';
 import { SearchSortDirection, sortItemsByText } from '../helpers/search.helper';
 
+const OPEN_CHAT_TIMEOUT_MS = 15000;
+
 @Component({
   selector: 'app-search-users',
-  imports: [NgFor, NgIf, NgClass, NavbarComponent, FormsModule, TranslatePipe, ChooseGroupModalComponent, SkeletonListItemComponent],
+  imports: [NgFor, NgIf, NgClass, NavbarComponent, FormsModule, TranslatePipe, ChooseGroupModalComponent, SkeletonListItemComponent, LoadErrorStateComponent],
   templateUrl: './search-users.component.html',
   styleUrl: './search-users.component.scss',
 })
@@ -34,6 +37,7 @@ export class SearchUsersComponent implements OnInit {
   selectedUserForGroupInvite: User | null = null;
   isLoadingUsers = false;
   isLoadingCommonGroups = false;
+  errorMessage = '';
   openingChatUserId: string | null = null;
 
   pagedUsers: User[] = [];
@@ -48,8 +52,8 @@ export class SearchUsersComponent implements OnInit {
     private userService: UserService,
     private router: Router,
     private authService: AuthService,
-    private privateChatService: PrivateChatService,
     private groupService: GroupService,
+    private languageService: LanguageService,
   ) {
     const currentUser = this.authService.currentUserValue;
     if (currentUser) {
@@ -62,8 +66,13 @@ export class SearchUsersComponent implements OnInit {
     this.loadCommonGroupUsers();
   }
 
+  retryLoadUsers(): void {
+    this.loadUsers();
+  }
+
   loadUsers(): void {
     this.isLoadingUsers = true;
+    this.errorMessage = '';
 
     this.userService.searchUsers(this.searchQuery).subscribe({
       next: (response) => {
@@ -75,6 +84,7 @@ export class SearchUsersComponent implements OnInit {
         console.error('Error loading users from search page:', error);
         this.users = [];
         this.isLoadingUsers = false;
+        this.errorMessage = this.languageService.translate('usersLoadError');
         this.applyFiltersAndSort();
       },
     });
@@ -206,8 +216,7 @@ export class SearchUsersComponent implements OnInit {
     }
 
     if (user.id) {
-      this.openingChatUserId = user.id;
-      this.openConversationByUserId(user.id);
+      this.router.navigate(['/messages/private/user', user.id]);
       return;
     }
 
@@ -218,15 +227,18 @@ export class SearchUsersComponent implements OnInit {
 
     this.openingChatUserId = user.username;
 
-    this.userService.getUserProfileByUsername(user.username).subscribe({
+    this.userService.getUserProfileByUsername(user.username).pipe(
+      timeout(OPEN_CHAT_TIMEOUT_MS),
+    ).subscribe({
       next: (resolvedUser) => {
+        this.openingChatUserId = null;
+
         if (!resolvedUser.id) {
-          this.openingChatUserId = null;
           console.error('Cannot open private chat from user search because resolved user id is missing.');
           return;
         }
 
-        this.openConversationByUserId(resolvedUser.id);
+        this.router.navigate(['/messages/private/user', resolvedUser.id]);
       },
       error: (error) => {
         this.openingChatUserId = null;
@@ -241,19 +253,6 @@ export class SearchUsersComponent implements OnInit {
 
   getDisplayName(user: User): string {
     return user.fullName || user.username || '';
-  }
-
-  private openConversationByUserId(userId: string): void {
-    this.privateChatService.getOrCreateConversation(userId).subscribe({
-      next: (conversation) => {
-        this.openingChatUserId = null;
-        this.router.navigate(['/messages/private', conversation.id]);
-      },
-      error: (error) => {
-        this.openingChatUserId = null;
-        console.error('Error opening private chat from user search:', error);
-      },
-    });
   }
 
   private applyFiltersAndSort(): void {

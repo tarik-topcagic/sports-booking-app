@@ -191,7 +191,7 @@
 
       <ng-template #errorBlock>
         <section class="state-card details-card">
-          <p>{{ errorMessage | translate }}</p>
+          <app-load-error-state [message]="errorMessage | translate" (retry)="retryLoadArena()"></app-load-error-state>
         </section>
       </ng-template>
     </ng-template>

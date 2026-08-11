@@ -13,6 +13,7 @@ import { FavoriteArena } from '../interfaces/favorite-arena.model';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { SkeletonListItemComponent } from '../skeleton/skeleton-list-item/skeleton-list-item.component';
+import { LoadErrorStateComponent } from '../load-error-state/load-error-state.component';
 import { ArenaService } from '../../services/arena.service';
 import { FavoriteArenaService } from '../../services/favorite-arena.service';
 import { LanguageService } from '../../services/language.service';
@@ -20,7 +21,7 @@ import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-sports-arenas',
-  imports: [NgIf, NgFor, NgClass, FormsModule, NavbarComponent, TranslatePipe, SkeletonListItemComponent],
+  imports: [NgIf, NgFor, NgClass, FormsModule, NavbarComponent, TranslatePipe, SkeletonListItemComponent, LoadErrorStateComponent],
   templateUrl: './sports-arenas.component.html',
   styleUrl: './sports-arenas.component.scss',
 })

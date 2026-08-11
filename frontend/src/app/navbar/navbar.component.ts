@@ -109,7 +109,6 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       },
       error: (err) => {
-        console.log('Greška pri dohvaćanju korisničke slike:', err);
         this.profileImageUrl = null;
       },
     });

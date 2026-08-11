@@ -12,13 +12,14 @@ import { ToastService } from '../../../services/toast.service';
 import { ConfirmDialogService } from '../../../services/confirm-dialog.service';
 import { paginate } from '../../helpers/pagination.helper';
 import { SkeletonTableRowComponent } from '../../skeleton/skeleton-table-row/skeleton-table-row.component';
+import { LoadErrorStateComponent } from '../../load-error-state/load-error-state.component';
 
 type AdminArenaMode = 'list' | 'create' | 'edit';
 
 @Component({
   selector: 'app-admin-arenas',
   standalone: true,
-  imports: [NgFor, NgIf, FormsModule, RouterModule, NavbarComponent, AdminSelectComponent, SkeletonTableRowComponent],
+  imports: [NgFor, NgIf, FormsModule, RouterModule, NavbarComponent, AdminSelectComponent, SkeletonTableRowComponent, LoadErrorStateComponent],
   templateUrl: './admin-arenas.component.html',
   styleUrl: './admin-arenas.component.scss',
 })
@@ -278,8 +279,6 @@ export class AdminArenasComponent implements OnInit {
     this.router.navigate(['/admin/arenas']);
   }
 
-  // Guards against displaying raw exception text (stack traces, HTML error pages) that could
-  // otherwise leak backend internals if an unexpected/unhandled error ever slips through.
   private isDisplayableErrorMessage(message: unknown): message is string {
     if (typeof message !== 'string' || !message.trim()) {
       return false;

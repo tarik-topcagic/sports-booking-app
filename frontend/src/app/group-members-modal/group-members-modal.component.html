@@ -56,11 +56,9 @@
             *ngIf="!isCurrentUser(member)"
             type="button"
             class="btn btn-sm btn-outline-secondary"
-            [disabled]="isOpeningChat(member)"
             (click)="openPrivateChat(member)"
           >
-            <span *ngIf="isOpeningChat(member)" class="spinner-border spinner-border-sm" role="status"></span>
-            <i *ngIf="!isOpeningChat(member)" class="bi bi-chat-dots"></i>
+            <i class="bi bi-chat-dots"></i>
             {{ 'message' | translate }}
           </button>
           <button

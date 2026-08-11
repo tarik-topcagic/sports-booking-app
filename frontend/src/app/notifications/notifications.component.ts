@@ -18,16 +18,18 @@ import {
   respondToGroupInvitation,
   respondToGroupJoinRequest,
 } from '../helpers/group-membership-actions.helper';
+import { LoadErrorStateComponent } from '../load-error-state/load-error-state.component';
 
 @Component({
   selector: 'app-notifications',
-  imports: [NgClass, NgFor, NgIf, NavbarComponent, TranslatePipe, SkeletonListItemComponent],
+  imports: [NgClass, NgFor, NgIf, NavbarComponent, TranslatePipe, SkeletonListItemComponent, LoadErrorStateComponent],
   templateUrl: './notifications.component.html',
   styleUrl: './notifications.component.scss',
 })
 export class NotificationsComponent implements OnInit, OnDestroy {
   notifications: AppNotification[] = [];
   isLoading = true;
+  errorMessage = '';
   highlightedNotificationIds = new Set<number>();
   respondingInvitationIds = new Set<number>();
   respondingJoinRequestIds = new Set<number>();
@@ -184,9 +186,14 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     this.respondToJoinRequest(notification, false);
   }
 
+  retryLoadNotifications(): void {
+    this.loadNotifications();
+  }
+
   private loadNotifications(showLoading = true): void {
     if (showLoading) {
       this.isLoading = true;
+      this.errorMessage = '';
     }
 
     this.notificationService.getNotifications().subscribe({
@@ -210,6 +217,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
         console.error('Error loading notifications:', error);
         if (showLoading) {
           this.isLoading = false;
+          this.errorMessage = this.languageService.translate('notificationsLoadError');
         }
       },
     });

@@ -17,16 +17,19 @@ import { ChatInboxItem } from '../interfaces/chat-inbox-item.model';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
+import { LoadErrorStateComponent } from '../load-error-state/load-error-state.component';
+import { SkeletonListItemComponent } from '../skeleton/skeleton-list-item/skeleton-list-item.component';
 
 @Component({
   selector: 'app-messages',
-  imports: [NgFor, NgIf, NgClass, NavbarComponent, TranslatePipe],
+  imports: [NgFor, NgIf, NgClass, NavbarComponent, TranslatePipe, LoadErrorStateComponent, SkeletonListItemComponent],
   templateUrl: './messages.component.html',
   styleUrl: './messages.component.scss',
 })
 export class MessagesComponent implements OnInit, OnDestroy {
   messages: ChatInboxItem[] = [];
   isLoading = true;
+  errorMessage = '';
   highlightedMessageKeys = new Set<string>();
   relativeTimeRefreshKey = 0;
 
@@ -161,9 +164,14 @@ export class MessagesComponent implements OnInit, OnDestroy {
     return !!message.groupId && this.groupPresenceByGroupId.get(message.groupId) === true;
   }
 
+  retryLoadMessages(): void {
+    this.loadMessages();
+  }
+
   private loadMessages(showLoading = true): void {
     if (showLoading) {
       this.isLoading = true;
+      this.errorMessage = '';
     }
 
     this.chatInboxService.getInboxItems(this.currentUserId).subscribe({
@@ -190,6 +198,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
 
         if (showLoading) {
           this.isLoading = false;
+          this.errorMessage = this.languageService.translate('messagesLoadError');
         }
       },
     });

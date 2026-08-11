@@ -7,6 +7,7 @@ import { formatReadableDate } from '../helpers/date-format.helper';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { SkeletonComponent } from '../skeleton/skeleton/skeleton.component';
+import { LoadErrorStateComponent } from '../load-error-state/load-error-state.component';
 import { ArenaService } from '../../services/arena.service';
 import { LanguageService } from '../../services/language.service';
 import { ReservationService } from '../../services/reservation.service';
@@ -16,7 +17,7 @@ const ADDITIONAL_HALF_HOUR_PRICE = 10;
 
 @Component({
   selector: 'app-reservation-payment',
-  imports: [NgIf, NgFor, FormsModule, NavbarComponent, TranslatePipe, SkeletonComponent],
+  imports: [NgIf, NgFor, FormsModule, NavbarComponent, TranslatePipe, SkeletonComponent, LoadErrorStateComponent],
   templateUrl: './reservation-payment.component.html',
   styleUrl: './reservation-payment.component.scss',
 })
@@ -80,7 +81,28 @@ export class ReservationPaymentComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading arena for payment:', error);
-        this.errorMessage = error.status === 404 ? 'arenaNotFound' : 'arenaDetailsLoadError';
+        this.errorMessage = error.status === 404 ? 'arenaNotFound' : 'paymentPageLoadError';
+        this.isLoading = false;
+      },
+    });
+  }
+
+  retryLoadArena(): void {
+    if (!this.arenaId || !this.startTime) {
+      return;
+    }
+
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    this.arenaService.getArenaById(this.arenaId).subscribe({
+      next: (arena) => {
+        this.arena = arena;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading arena for payment:', error);
+        this.errorMessage = error.status === 404 ? 'arenaNotFound' : 'paymentPageLoadError';
         this.isLoading = false;
       },
     });

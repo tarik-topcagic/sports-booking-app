@@ -37,7 +37,7 @@
     </section>
 
     <div *ngIf="errorMessage" class="app-state-message mt-3">
-      {{ errorMessage }}
+      <app-load-error-state [message]="errorMessage" (retry)="retryLoadGroup()"></app-load-error-state>
     </div>
 
     <section *ngIf="group && !isLoading" class="details-shell">

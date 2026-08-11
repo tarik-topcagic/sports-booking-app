@@ -93,6 +93,11 @@ export const routes: Routes = [
       canActivate: [AuthGuard],
     },
     {
+      path: 'messages/private/user/:userId',
+      loadComponent: () => import('./private-chat/private-chat.component').then((module) => module.PrivateChatComponent),
+      canActivate: [AuthGuard],
+    },
+    {
       path: 'messages/private/:conversationId',
       loadComponent: () => import('./private-chat/private-chat.component').then((module) => module.PrivateChatComponent),
       canActivate: [AuthGuard],

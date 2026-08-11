@@ -7,15 +7,15 @@ import { TranslatePipe } from '../pipes/translate.pipe';
 import { ChooseGroupModalComponent } from '../choose-group-modal/choose-group-modal.component';
 import { User } from '../interfaces/user';
 import { AuthService } from '../../services/auth.service';
-import { PrivateChatService } from '../../services/private-chat.service';
 import { PresenceService } from '../../services/presence.service';
 import { Subscription } from 'rxjs';
 import { UserPresence } from '../interfaces/user-presence.model';
 import { SkeletonComponent } from '../skeleton/skeleton/skeleton.component';
+import { LoadErrorStateComponent } from '../load-error-state/load-error-state.component';
 
 @Component({
   selector: 'app-user-profile',
-  imports: [NgIf, NavbarComponent, TranslatePipe, RouterLink, ChooseGroupModalComponent, SkeletonComponent],
+  imports: [NgIf, NavbarComponent, TranslatePipe, RouterLink, ChooseGroupModalComponent, SkeletonComponent, LoadErrorStateComponent],
   templateUrl: './user-profile.component.html',
   styleUrl: './user-profile.component.scss'
 })
@@ -33,7 +33,6 @@ export class UserProfileComponent implements OnDestroy {
     private route: ActivatedRoute,
     private userService: UserService,
     private authService: AuthService,
-    private privateChatService: PrivateChatService,
     private presenceService: PresenceService,
     private router: Router,
   ) { }
@@ -52,6 +51,13 @@ export class UserProfileComponent implements OnDestroy {
   ngOnDestroy(): void {
     this.presenceSubscription?.unsubscribe();
     void this.presenceService.disconnectRealtime();
+  }
+
+  retryLoadProfile(): void {
+    const username = this.route.snapshot.paramMap.get('username');
+    if (username) {
+      this.getUserProfile(username);
+    }
   }
 
   getUserProfile(username: string): void {
@@ -101,7 +107,7 @@ export class UserProfileComponent implements OnDestroy {
     }
 
     if (this.userProfile?.id) {
-      this.openConversationByUserId(this.userProfile.id);
+      this.router.navigate(['/messages/private/user', this.userProfile.id]);
       return;
     }
 
@@ -118,21 +124,10 @@ export class UserProfileComponent implements OnDestroy {
           return;
         }
 
-        this.openConversationByUserId(resolvedUser.id);
+        this.router.navigate(['/messages/private/user', resolvedUser.id]);
       },
       error: (error) => {
         console.error('Error resolving target user before opening private chat from user profile:', error);
-      },
-    });
-  }
-
-  private openConversationByUserId(userId: string): void {
-    this.privateChatService.getOrCreateConversation(userId).subscribe({
-      next: (conversation) => {
-        this.router.navigate(['/messages/private', conversation.id]);
-      },
-      error: (error) => {
-        console.error('Error opening private chat from user profile:', error);
       },
     });
   }

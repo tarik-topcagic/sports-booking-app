@@ -23,7 +23,9 @@
     </div>
   </form>
 
-  <div *ngIf="errorMessage" class="app-state-message">{{ errorMessage }}</div>
+  <div *ngIf="errorMessage" class="app-state-message">
+    <app-load-error-state [message]="errorMessage" [retryLabel]="'Retry'" (retry)="loadUsers()"></app-load-error-state>
+  </div>
 
   <div class="table-responsive" *ngIf="!errorMessage">
     <table class="table table-striped align-middle">

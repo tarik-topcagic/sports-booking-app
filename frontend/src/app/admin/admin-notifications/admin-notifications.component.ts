@@ -9,6 +9,7 @@ import { ToastService } from '../../../services/toast.service';
 import { ConfirmDialogService } from '../../../services/confirm-dialog.service';
 import { paginate } from '../../helpers/pagination.helper';
 import { SkeletonTableRowComponent } from '../../skeleton/skeleton-table-row/skeleton-table-row.component';
+import { LoadErrorStateComponent } from '../../load-error-state/load-error-state.component';
 
 const NOTIFICATION_TYPES = [
   'GroupInvitationReceived',
@@ -22,7 +23,7 @@ const NOTIFICATION_TYPES = [
 @Component({
   selector: 'app-admin-notifications',
   standalone: true,
-  imports: [NgFor, NgIf, FormsModule, DatePipe, NavbarComponent, AdminSelectComponent, SkeletonTableRowComponent],
+  imports: [NgFor, NgIf, FormsModule, DatePipe, NavbarComponent, AdminSelectComponent, SkeletonTableRowComponent, LoadErrorStateComponent],
   templateUrl: './admin-notifications.component.html',
   styleUrl: './admin-notifications.component.scss',
 })

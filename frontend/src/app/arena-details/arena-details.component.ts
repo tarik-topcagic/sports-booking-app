@@ -17,6 +17,7 @@ import { TranslatePipe } from '../pipes/translate.pipe';
 import { SkeletonComponent } from '../skeleton/skeleton/skeleton.component';
 import { SkeletonCalendarGridComponent } from '../skeleton/skeleton-calendar-grid/skeleton-calendar-grid.component';
 import { SkeletonTextBlockComponent } from '../skeleton/skeleton-text-block/skeleton-text-block.component';
+import { LoadErrorStateComponent } from '../load-error-state/load-error-state.component';
 import { ArenaService } from '../../services/arena.service';
 import { LanguageService } from '../../services/language.service';
 import { ReservationService } from '../../services/reservation.service';
@@ -47,6 +48,7 @@ const CLOSING_HOUR = 23;
     SkeletonComponent,
     SkeletonCalendarGridComponent,
     SkeletonTextBlockComponent,
+    LoadErrorStateComponent,
   ],
   templateUrl: './arena-details.component.html',
   styleUrl: './arena-details.component.scss',
@@ -140,6 +142,31 @@ export class ArenaDetailsComponent implements OnInit, OnDestroy {
     if (this.refreshIntervalId !== null) {
       clearInterval(this.refreshIntervalId);
     }
+  }
+
+  retryLoadArenaDetails(): void {
+    if (!this.arenaId) {
+      return;
+    }
+
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    this.arenaService.getArenaById(this.arenaId).subscribe({
+      next: async (arena) => {
+        this.arena = arena;
+        this.galleryImageUrls = await this.resolveGalleryImages(arena);
+        this.isLoading = false;
+        this.loadAvailabilityForVisibleDays();
+        this.loadMyReservations();
+      },
+      error: (error) => {
+        console.error('Error loading arena details:', error);
+        this.errorMessage =
+          error.status === 404 ? 'arenaNotFound' : 'arenaDetailsLoadError';
+        this.isLoading = false;
+      },
+    });
   }
 
   @HostListener('window:focus')
