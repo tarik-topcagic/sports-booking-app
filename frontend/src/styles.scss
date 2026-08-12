@@ -177,22 +177,12 @@ body.dark-mode .form-select {
     border-color: #3a3a3a;
 }
 
-/* .navbar sets data-bs-theme="dark" for its own contrast against the blue background,
-   but that scope inherits into the nested profile dropdown/list, forcing it dark even
-   outside the app's own dark mode. Reset just the base colors here (not hover/active,
-   which stay as Bootstrap resolves them) so the dropdown follows the app's own theme. */
 body:not(.dark-mode) .navbar .dropdown-menu,
 body:not(.dark-mode) .navbar .list-group-item {
     --bs-dropdown-bg: #fff;
     --bs-dropdown-color: #495057;
     --bs-dropdown-link-color: #495057;
     --bs-dropdown-border-color: rgba(0, 0, 0, 0.175);
-    /* Bootstrap's dropdown-divider reads this variable (border-top color) too --
-       without resetting it here, it stays whatever data-bs-theme="dark" (set on
-       .navbar above, for contrast against the blue navbar background) resolved it to,
-       which is a light color meant to show up against a DARK dropdown background. That
-       makes the divider invisible once the rest of this block forces the dropdown back
-       to a light background. */
     --bs-dropdown-divider-bg: rgba(0, 0, 0, 0.175);
     background-color: #fff;
     color: #495057;
@@ -270,20 +260,12 @@ body.dark-mode .bg-light {
     background-color: #2a2a2a !important;
 }
 
-/* Admin panel tables (Users, Groups, Arenas, Reservations, Notifications) share the
-   same bare Bootstrap `.table` markup, so their dark-mode theming lives here once
-   rather than duplicated per component — mirrors how .card/.form-control are handled
-   above. Uses Bootstrap's own --bs-table-* variable API (same approach as the
-   --bs-btn-* overrides further down) rather than touching --bs-body-bg, which this
-   app's dark mode never redefines. */
 :is(.admin-page, .admin-dashboard-page) .table-responsive {
     background: #fff;
     border: 1px solid #dee2e6;
     border-radius: 1rem;
     box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
     padding: 0.25rem;
-    /* Hide the scrollbar cross-browser while keeping horizontal scroll (swipe/drag)
-       fully functional, so the table stays scrollable on mobile without a visible track. */
     scrollbar-width: none;
     -ms-overflow-style: none;
 }
@@ -292,22 +274,11 @@ body.dark-mode .bg-light {
     display: none;
 }
 
-/* Let the table keep its natural desktop width instead of shrinking to fit narrow
-   viewports (Bootstrap's .table defaults to width: 100%). On mobile this means the
-   table renders identically to desktop and simply overflows into the horizontally
-   scrollable .table-responsive container above, rather than wrapping/stacking cell
-   content and buttons. min-width: 100% preserves the existing desktop look (table
-   still fills/stretches to the container when it has room to). */
 :is(.admin-page, .admin-dashboard-page) .table-responsive .table {
     width: auto;
     min-width: 100%;
 }
 
-/* Action button cells (Edit/Delete/Members/etc.) must never wrap their buttons onto
-   separate lines, on any screen size - the cell's own natural width already fits them
-   on one line at desktop widths; without this, narrow viewports can still let the
-   inline-block buttons break onto their own lines even though the table itself no
-   longer shrinks. */
 :is(.admin-page, .admin-dashboard-page) .table td:has(.btn) {
     white-space: nowrap;
 }
@@ -334,58 +305,6 @@ body.dark-mode :is(.admin-page, .admin-dashboard-page) .table thead th {
     border-bottom-color: #3a3a3a;
 }
 
-/* Pagination controls, matching the .pagination-shell/.page-button/.page-number
-   pattern already used by search-users/search-groups/sports-arenas. */
-:is(.admin-page, .admin-dashboard-page) .pagination-shell {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0.65rem;
-    margin-top: 1.5rem;
-    flex-wrap: wrap;
-}
-
-:is(.admin-page, .admin-dashboard-page) :is(.page-button, .page-number) {
-    min-width: 46px;
-    height: 46px;
-    border: 1px solid #dee2e6;
-    border-radius: 0.95rem;
-    background: #fff;
-    color: #0f172a;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-:is(.admin-page, .admin-dashboard-page) .page-number.active {
-    color: #fff;
-    border-color: transparent;
-    background: linear-gradient(135deg, #0d6efd, #3b82f6);
-    box-shadow: 0 16px 24px rgba(13, 110, 253, 0.22);
-}
-
-:is(.admin-page, .admin-dashboard-page) .page-button:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-}
-
-:is(.admin-page, .admin-dashboard-page) :is(.page-button, .page-number):hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: 0 10px 18px rgba(15, 23, 42, 0.08);
-}
-
-body.dark-mode :is(.admin-page, .admin-dashboard-page) :is(.page-button, .page-number) {
-    background: #1a1a1a;
-    border-color: #3a3a3a;
-    color: #f1f3f5;
-}
-
-body.dark-mode :is(.admin-page, .admin-dashboard-page) .page-number.active {
-    background: linear-gradient(135deg, #3b82f6, #60a5fa);
-    box-shadow: 0 16px 24px rgba(59, 130, 246, 0.3);
-}
-
-/* Admin form inputs (popup forms and full-page forms like arenas/new) match
-   create-group-modal's/edit-group-modal's .form-control treatment exactly,
-   rather than falling back to the flatter global body.dark-mode .form-control rule. */
 body.dark-mode :is(.admin-page, .admin-dashboard-page) :is(.form-control, .form-select) {
     background-color: #15191e;
     color: #f1f3f5;
@@ -971,21 +890,6 @@ body.dark-mode .app-error-toast {
     }
 }
 
-/* app-message-actions popups (More menu, quick-reaction bar, wide emoji picker) are
-   rendered through Angular CDK Overlay, which portals them to a container appended
-   directly to <body> -- outside app-message-actions' own host element. That alone
-   doesn't stop component-scoped selectors from matching (Angular's emulated
-   encapsulation attribute stays on the moved elements), but it does rule out writing
-   these dark-mode overrides as plain "body.dark-mode X" rules inside the component's
-   own stylesheet: Angular's CSS shim appends its scoping attribute to EVERY compound
-   in a selector, not just the rightmost one -- so a rule written that way there
-   compiles to "body.dark-mode[_ngcontent-xxx] .popup[_ngcontent-xxx]", which requires
-   <body> itself to carry the component's content attribute. It never will, so the
-   rule can never match anything. :host-context() has the opposite problem (it needs
-   .popup to still be a DOM descendant of <app-message-actions>, which portaling also
-   breaks). Global styles are the only place a plain ancestor-based selector like this
-   actually works, which is exactly the existing convention already used for e.g. the
-   admin-table dark-mode rules above. */
 body.dark-mode .popup {
     background: #1f1f1f;
     border-color: #3a3a3a;

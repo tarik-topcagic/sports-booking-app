@@ -1,0 +1,19 @@
+<nav class="pagination-shell" [attr.aria-label]="ariaLabel" *ngIf="totalPages > 1">
+  <button type="button" class="page-button" [disabled]="currentPage === 1" (click)="previousPage($event)">
+    <i class="bi bi-chevron-left"></i>
+  </button>
+
+  <button
+    type="button"
+    class="page-number"
+    *ngFor="let page of totalPagesArray"
+    [class.active]="page === currentPage"
+    (click)="goToPage(page, $event)"
+  >
+    {{ page }}
+  </button>
+
+  <button type="button" class="page-button" [disabled]="currentPage === totalPages" (click)="nextPage($event)">
+    <i class="bi bi-chevron-right"></i>
+  </button>
+</nav>

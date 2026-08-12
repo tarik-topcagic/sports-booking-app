@@ -13,13 +13,14 @@ import { ConfirmDialogService } from '../../../services/confirm-dialog.service';
 import { paginate } from '../../helpers/pagination.helper';
 import { SkeletonTableRowComponent } from '../../skeleton/skeleton-table-row/skeleton-table-row.component';
 import { LoadErrorStateComponent } from '../../load-error-state/load-error-state.component';
+import { PaginationComponent } from '../../pagination/pagination.component';
 
 type AdminArenaMode = 'list' | 'create' | 'edit';
 
 @Component({
   selector: 'app-admin-arenas',
   standalone: true,
-  imports: [NgFor, NgIf, FormsModule, RouterModule, NavbarComponent, AdminSelectComponent, SkeletonTableRowComponent, LoadErrorStateComponent],
+  imports: [NgFor, NgIf, FormsModule, RouterModule, NavbarComponent, AdminSelectComponent, SkeletonTableRowComponent, LoadErrorStateComponent, PaginationComponent],
   templateUrl: './admin-arenas.component.html',
   styleUrl: './admin-arenas.component.scss',
 })
@@ -145,24 +146,7 @@ export class AdminArenasComponent implements OnInit {
     this.totalPagesArray = pagination.totalPagesArray;
   }
 
-  previousPage(event: Event): void {
-    event.preventDefault();
-    if (this.currentPage > 1) {
-      this.currentPage--;
-      this.setupPagination();
-    }
-  }
-
-  nextPage(event: Event): void {
-    event.preventDefault();
-    if (this.currentPage < this.totalPages) {
-      this.currentPage++;
-      this.setupPagination();
-    }
-  }
-
-  goToPage(page: number, event: Event): void {
-    event.preventDefault();
+  onPageChange(page: number): void {
     this.currentPage = page;
     this.setupPagination();
   }

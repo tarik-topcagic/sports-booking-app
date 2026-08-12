@@ -9,6 +9,7 @@ import { EditGroupModalComponent } from '../edit-group-modal/edit-group-modal.co
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { SkeletonListItemComponent } from '../skeleton/skeleton-list-item/skeleton-list-item.component';
 import { LoadErrorStateComponent } from '../load-error-state/load-error-state.component';
+import { PaginationComponent } from '../pagination/pagination.component';
 import { Router } from '@angular/router';
 import { Subscription, catchError, forkJoin, of } from 'rxjs';
 import { paginate } from '../helpers/pagination.helper';
@@ -24,7 +25,7 @@ import {
 
 @Component({
   selector: 'app-search-groups',
-  imports: [NgIf, NgFor, NgClass, NavbarComponent, FormsModule, CreateGroupModalComponent, EditGroupModalComponent, TranslatePipe, SkeletonListItemComponent, LoadErrorStateComponent],
+  imports: [NgIf, NgFor, NgClass, NavbarComponent, FormsModule, CreateGroupModalComponent, EditGroupModalComponent, TranslatePipe, SkeletonListItemComponent, LoadErrorStateComponent, PaginationComponent],
   templateUrl: './search-groups.component.html',
   styleUrl: './search-groups.component.scss',
 })
@@ -137,24 +138,7 @@ export class SearchGroupsComponent implements OnInit, OnDestroy {
     this.totalPagesArray = pagination.totalPagesArray;
   }
 
-  previousPage(event: Event): void {
-    event.preventDefault();
-    if (this.currentPage > 1) {
-      this.currentPage--;
-      this.setPagedGroups();
-    }
-  }
-
-  nextPage(event: Event): void {
-    event.preventDefault();
-    if (this.currentPage < this.totalPages) {
-      this.currentPage++;
-      this.setPagedGroups();
-    }
-  }
-
-  goToPage(page: number, event: Event): void {
-    event.preventDefault();
+  onPageChange(page: number): void {
     this.currentPage = page;
     this.setPagedGroups();
   }

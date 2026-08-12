@@ -10,6 +10,7 @@ import { User } from '../interfaces/user';
 import { ChooseGroupModalComponent } from '../choose-group-modal/choose-group-modal.component';
 import { SkeletonListItemComponent } from '../skeleton/skeleton-list-item/skeleton-list-item.component';
 import { LoadErrorStateComponent } from '../load-error-state/load-error-state.component';
+import { PaginationComponent } from '../pagination/pagination.component';
 import { paginate } from '../helpers/pagination.helper';
 import { GroupService } from '../../services/group.service';
 import { LanguageService } from '../../services/language.service';
@@ -21,7 +22,7 @@ const OPEN_CHAT_TIMEOUT_MS = 15000;
 
 @Component({
   selector: 'app-search-users',
-  imports: [NgFor, NgIf, NgClass, NavbarComponent, FormsModule, TranslatePipe, ChooseGroupModalComponent, SkeletonListItemComponent, LoadErrorStateComponent],
+  imports: [NgFor, NgIf, NgClass, NavbarComponent, FormsModule, TranslatePipe, ChooseGroupModalComponent, SkeletonListItemComponent, LoadErrorStateComponent, PaginationComponent],
   templateUrl: './search-users.component.html',
   styleUrl: './search-users.component.scss',
 })
@@ -150,24 +151,7 @@ export class SearchUsersComponent implements OnInit {
     this.totalPagesArray = pagination.totalPagesArray;
   }
 
-  previousPage(event: Event): void {
-    event.preventDefault();
-    if (this.currentPage > 1) {
-      this.currentPage--;
-      this.setPagedUsers();
-    }
-  }
-
-  nextPage(event: Event): void {
-    event.preventDefault();
-    if (this.currentPage < this.totalPages) {
-      this.currentPage++;
-      this.setPagedUsers();
-    }
-  }
-
-  goToPage(page: number, event: Event): void {
-    event.preventDefault();
+  onPageChange(page: number): void {
     this.currentPage = page;
     this.setPagedUsers();
   }
