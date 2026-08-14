@@ -319,7 +319,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
       return {
         type: 'group',
         id: notification.groupId ?? 0,
-        title: notification.groupId ? `Grupa #${notification.groupId}` : notification.senderName,
+        title: notification.groupId ? `Group #${notification.groupId}` : notification.senderName,
         preview,
         createdAt: notification.createdAt,
         unreadCount: shouldIncrementUnread ? 1 : 0,

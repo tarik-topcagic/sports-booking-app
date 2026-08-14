@@ -48,8 +48,8 @@
             <td>{{ group.name }}</td>
             <td>{{ group.adminDisplayName || '-' }}</td>
             <td>{{ group.adminUsername || '-' }}</td>
-            <td>{{ group.grad }}</td>
-            <td>{{ group.kategorijaSporta }}</td>
+            <td>{{ group.city }}</td>
+            <td>{{ group.sportCategory }}</td>
             <td>{{ group.membersCount ?? '-' }}</td>
             <td>{{ group.dateCreated | date: 'short' }}</td>
             <td class="text-end">
@@ -107,11 +107,11 @@
         <label for="adminEditGroupDescription">Description</label>
       </div>
       <div class="mb-3 form-floating">
-        <input id="adminEditGroupCity" type="text" class="form-control" name="grad" [(ngModel)]="editForm.grad" required placeholder="City" />
+        <input id="adminEditGroupCity" type="text" class="form-control" name="city" [(ngModel)]="editForm.city" required placeholder="City" />
         <label for="adminEditGroupCity">City</label>
       </div>
       <div class="mb-3 form-floating">
-        <input id="adminEditGroupSport" type="text" class="form-control" name="kategorijaSporta" [(ngModel)]="editForm.kategorijaSporta" required placeholder="Sport category" />
+        <input id="adminEditGroupSport" type="text" class="form-control" name="sportCategory" [(ngModel)]="editForm.sportCategory" required placeholder="Sport category" />
         <label for="adminEditGroupSport">Sport category</label>
       </div>
 

@@ -28,7 +28,7 @@ export class AdminGroupsComponent implements OnInit {
   pendingGroupIds = new Set<number>();
 
   editingGroup: Group | null = null;
-  editForm: UpdateGroupDto = { name: '', description: '', grad: '', kategorijaSporta: '', groupPictureUrl: '' };
+  editForm: UpdateGroupDto = { name: '', description: '', city: '', sportCategory: '', groupPictureUrl: '' };
   isSavingEdit = false;
 
   membersGroup: GroupDetails | null = null;
@@ -127,8 +127,8 @@ export class AdminGroupsComponent implements OnInit {
     this.editForm = {
       name: group.name,
       description: group.description,
-      grad: group.grad,
-      kategorijaSporta: group.kategorijaSporta,
+      city: group.city,
+      sportCategory: group.sportCategory,
       groupPictureUrl: group.imageUrl,
     };
   }

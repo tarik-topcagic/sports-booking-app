@@ -382,8 +382,8 @@ export class SearchGroupsComponent implements OnInit, OnDestroy {
         [
         group.name,
         group.description,
-        group.grad,
-        group.kategorijaSporta,
+        group.city,
+        group.sportCategory,
         ],
         this.searchQuery,
       ),

@@ -83,7 +83,7 @@ export function createGroupChatListItemFromNotification(
   return {
     type: 'group',
     id: notification.groupId ?? 0,
-    title: currentGroupMatches ? (currentGroup?.name ?? `Grupa #${notification.groupId}`) : `Grupa #${notification.groupId}`,
+    title: currentGroupMatches ? (currentGroup?.name ?? `Group #${notification.groupId}`) : `Group #${notification.groupId}`,
     preview: buildNotificationPreviewText(notification, currentUserId, translate),
     createdAt: notification.createdAt,
     unreadCount: shouldHighlight ? 1 : 0,

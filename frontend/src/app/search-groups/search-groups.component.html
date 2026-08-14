@@ -145,7 +145,7 @@
 
           <div class="result-copy">
             <h2>{{ group.name }}</h2>
-            <p class="group-meta">{{ group.grad || ('notSet' | translate) }}</p>
+            <p class="group-meta">{{ group.city || ('notSet' | translate) }}</p>
             <p class="meta-text">{{ group.description || ('notSet' | translate) }}</p>
             <p class="members-text">
               {{ (group.membersCount ?? 0) > 0 ? ((group.membersCount ?? 0) + ' ' + ('members' | translate)) : ('noMembers' | translate) }}

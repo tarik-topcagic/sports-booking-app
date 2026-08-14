@@ -31,8 +31,8 @@ export class CreateGroupModalComponent {
   ) {
     this.createGroupForm = this.fb.group({
       name: ['', Validators.required],
-      grad: ['', Validators.required],
-      kategorijaSporta: ['', Validators.required],
+      city: ['', Validators.required],
+      sportCategory: ['', Validators.required],
       description: ['']
     });
   }
@@ -65,8 +65,8 @@ export class CreateGroupModalComponent {
     const data = {
       Name: this.createGroupForm.value.name,
       Description: this.createGroupForm.value.description,
-      Grad: this.createGroupForm.value.grad,
-      KategorijaSporta: this.createGroupForm.value.kategorijaSporta,
+      City: this.createGroupForm.value.city,
+      SportCategory: this.createGroupForm.value.sportCategory,
       ImageUrl: this.previewUrl || ""
     };
 

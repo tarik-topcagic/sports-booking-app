@@ -50,16 +50,16 @@
       </div>
     </div>
     <div class="mb-3 form-floating">
-      <input id="groupCity" type="text" formControlName="grad" class="form-control" required placeholder="{{ 'groupCity' | translate }}">
+      <input id="groupCity" type="text" formControlName="city" class="form-control" required placeholder="{{ 'groupCity' | translate }}">
       <label for="groupCity">{{ 'groupCity' | translate }}</label>
-      <div *ngIf="createGroupForm.get('grad')?.touched && createGroupForm.get('grad')?.invalid" class="text-danger">
+      <div *ngIf="createGroupForm.get('city')?.touched && createGroupForm.get('city')?.invalid" class="text-danger">
         {{ 'requiredField' | translate }}
       </div>
     </div>
     <div class="mb-3 form-floating">
-      <input id="sportCategory" type="text" formControlName="kategorijaSporta" class="form-control" required placeholder="{{ 'sportCategory' | translate }}">
+      <input id="sportCategory" type="text" formControlName="sportCategory" class="form-control" required placeholder="{{ 'sportCategory' | translate }}">
       <label for="sportCategory">{{ 'sportCategory' | translate }}</label>
-      <div *ngIf="createGroupForm.get('kategorijaSporta')?.touched && createGroupForm.get('kategorijaSporta')?.invalid" class="text-danger">
+      <div *ngIf="createGroupForm.get('sportCategory')?.touched && createGroupForm.get('sportCategory')?.invalid" class="text-danger">
         {{ 'requiredField' | translate }}
       </div>
     </div>

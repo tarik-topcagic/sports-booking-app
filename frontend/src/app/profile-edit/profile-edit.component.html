@@ -107,7 +107,7 @@
               *ngFor="let city of filteredCities$ | async"
               (click)="selectCity(city)"
             >
-              {{ city.naziv }}, {{ city.kanton }}
+              {{ city.name }}, {{ city.canton }}
             </li>
           </ul>
         </div>

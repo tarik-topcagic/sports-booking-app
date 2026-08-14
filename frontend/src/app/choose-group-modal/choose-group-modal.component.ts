@@ -85,8 +85,8 @@ export class ChooseGroupModalComponent implements OnChanges {
 
     return this.adminGroups.filter((group) =>
       group.name.toLowerCase().includes(query)
-      || group.grad?.toLowerCase().includes(query)
-      || group.kategorijaSporta?.toLowerCase().includes(query)
+      || group.city?.toLowerCase().includes(query)
+      || group.sportCategory?.toLowerCase().includes(query)
     );
   }
 

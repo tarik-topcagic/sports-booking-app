@@ -135,12 +135,12 @@ export class ProfileEditComponent
   private _filterCities(value: string): City[] {
     const filterValue = value.toLowerCase();
     return this.cities.filter((city) =>
-      city.naziv.toLowerCase().includes(filterValue),
+      city.name.toLowerCase().includes(filterValue),
     );
   }
 
   selectCity(city: City): void {
-    this.editForm.get('location')?.setValue(city.naziv);
+    this.editForm.get('location')?.setValue(city.name);
 
     this.editForm.get('location')?.markAsDirty();
 
@@ -187,7 +187,7 @@ export class ProfileEditComponent
         },
         error: (err) => {
           this.isSaving = false;
-          console.error('Greška pri uploadu slike', err);
+          console.error('Error uploading image', err);
           this.fileError = this.languageService.translate('uploadImageError');
         },
       });
@@ -216,9 +216,9 @@ export class ProfileEditComponent
       },
       error: (err) => {
         this.isSaving = false;
-        console.error('Greška pri ažuriranju profila', err);
+        console.error('Error updating profile', err);
         if (err.error && err.error.errors) {
-          console.error('Validacijske greške:', err.error.errors);
+          console.error('Validation errors:', err.error.errors);
         }
         this.toastService.showError(
           this.languageService.translate('updateProfileError'),
@@ -255,7 +255,7 @@ export class ProfileEditComponent
       },
       error: (err) => {
         this.isRemovingPicture = false;
-        console.error('Greška pri uklanjanju slike', err);
+        console.error('Error removing image', err);
       },
     });
     this.editForm.markAsDirty();

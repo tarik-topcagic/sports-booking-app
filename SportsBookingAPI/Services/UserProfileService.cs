@@ -37,9 +37,9 @@ namespace SportsBookingAPI.Services
         public async Task<ServiceResult> UploadProfilePictureAsync(UpdateProfilePictureDto updateProfilePictureDto, string scheme, HostString host)
         {
             if (updateProfilePictureDto.File == null || updateProfilePictureDto.File.Length == 0)
-                return ServiceResult.BadRequest("Nije odabrana slika.");
+                return ServiceResult.BadRequest("No image selected.");
 
-            var uploadsFolder = UploadPathHelper.GetUploadsSubfolder(_configuration, "profilna");
+            var uploadsFolder = UploadPathHelper.GetUploadsSubfolder(_configuration, "profile");
             if (!Directory.Exists(uploadsFolder))
                 Directory.CreateDirectory(uploadsFolder);
 
@@ -51,7 +51,7 @@ namespace SportsBookingAPI.Services
                 await updateProfilePictureDto.File.CopyToAsync(stream);
             }
 
-            var imageUrl = $"{scheme}://{host}/uploads/profilna/{fileName}";
+            var imageUrl = $"{scheme}://{host}/uploads/profile/{fileName}";
             return ServiceResult.Ok(new { imageUrl });
         }
 
@@ -66,7 +66,7 @@ namespace SportsBookingAPI.Services
             {
                 var uri = new Uri(user.ProfilePictureUrl);
                 var fileName = Path.GetFileName(uri.AbsolutePath);
-                var filePath = Path.Combine(UploadPathHelper.GetUploadsSubfolder(_configuration, "profilna"), fileName);
+                var filePath = Path.Combine(UploadPathHelper.GetUploadsSubfolder(_configuration, "profile"), fileName);
 
                 if (System.IO.File.Exists(filePath))
                 {

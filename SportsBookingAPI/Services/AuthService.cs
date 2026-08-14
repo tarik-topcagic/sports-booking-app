@@ -22,18 +22,18 @@ namespace SportsBookingAPI.Services
         {
             var existingUser = await _userManager.FindByNameAsync(model.Username);
             if (existingUser != null)
-                return ServiceResult.BadRequest(new { field = "username", message = "Korisničko ime je već u upotrebi." });
+                return ServiceResult.BadRequest(new { field = "username", message = "Username is already taken." });
 
             var normalizedEmail = _userManager.NormalizeEmail(model.Email);
             var existingEmail = await _userManager.Users
                 .AnyAsync(user => user.NormalizedEmail == normalizedEmail);
             if (existingEmail)
-                return ServiceResult.BadRequest(new { field = "email", message = "E-mail je već u upotrebi." });
+                return ServiceResult.BadRequest(new { field = "email", message = "Email is already in use." });
 
             var existingPhoneNumber = await _userManager.Users
                 .AnyAsync(user => user.PhoneNumber == model.PhoneNumber);
             if (existingPhoneNumber)
-                return ServiceResult.BadRequest(new { field = "phoneNumber", message = "Broj telefona je već u upotrebi." });
+                return ServiceResult.BadRequest(new { field = "phoneNumber", message = "Phone number is already in use." });
 
             var user = new AppUser
             {

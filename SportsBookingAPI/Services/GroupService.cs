@@ -22,8 +22,8 @@ namespace SportsBookingAPI.Services
             {
                 Name = groupDto.Name,
                 Description = groupDto.Description,
-                Grad = groupDto.Grad,
-                KategorijaSporta = groupDto.KategorijaSporta,
+                City = groupDto.City,
+                SportCategory = groupDto.SportCategory,
                 AdminId = userId,
                 DateCreated = DateTime.UtcNow,
                 ImageUrl = groupDto.ImageUrl ?? "default-group.png"
@@ -57,8 +57,8 @@ namespace SportsBookingAPI.Services
 
             group.Name = updateGroupDto.Name;
             group.Description = updateGroupDto.Description;
-            group.Grad = updateGroupDto.Grad;
-            group.KategorijaSporta = updateGroupDto.KategorijaSporta;
+            group.City = updateGroupDto.City;
+            group.SportCategory = updateGroupDto.SportCategory;
             group.ImageUrl = updateGroupDto.GroupPictureUrl ?? "default-group.png";
 
             var updatedGroup = await _groupRepository.UpdateGroupAsync(group);
@@ -148,8 +148,8 @@ namespace SportsBookingAPI.Services
 
             group.Name = updateGroupDto.Name;
             group.Description = updateGroupDto.Description;
-            group.Grad = updateGroupDto.Grad;
-            group.KategorijaSporta = updateGroupDto.KategorijaSporta;
+            group.City = updateGroupDto.City;
+            group.SportCategory = updateGroupDto.SportCategory;
             group.ImageUrl = updateGroupDto.GroupPictureUrl ?? "default-group.png";
 
             var updatedGroup = await _groupRepository.UpdateGroupAsync(group);

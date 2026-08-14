@@ -3091,6 +3091,16 @@ export class LanguageService {
       fr: 'Annuler la réponse',
       it: 'Annulla risposta',
     },
+    latestMessage: {
+      en: 'Latest message',
+      de: 'Neueste Nachricht',
+      bs: 'Najnovija poruka',
+      hr: 'Najnovija poruka',
+      sr: 'Najnovija poruka',
+      es: 'Mensaje más reciente',
+      fr: 'Message le plus récent',
+      it: 'Messaggio più recente',
+    },
     messageUnavailable: {
       en: 'Message unavailable',
       de: 'Nachricht nicht verfügbar',

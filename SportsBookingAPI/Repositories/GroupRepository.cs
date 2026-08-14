@@ -268,7 +268,7 @@ namespace SportsBookingAPI.Repositories
             return await _context.Groups
                 .Include(g => g.Memberships)
                 .ThenInclude(m => m.User)
-                .Where(g => g.Name.Contains(query) || g.Description.Contains(query) || g.Grad.Contains(query) || g.KategorijaSporta.Contains(query))
+                .Where(g => g.Name.Contains(query) || g.Description.Contains(query) || g.City.Contains(query) || g.SportCategory.Contains(query))
                 .ToListAsync();
         }
 

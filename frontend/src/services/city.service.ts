@@ -8,11 +8,11 @@ import { Injectable } from '@angular/core';
   providedIn: 'root',
 })
 export class CityService {
-  private apiUrl = environment.apiUrl + '/gradovi';
+  private apiUrl = environment.apiUrl + '/cities';
 
   constructor(private http: HttpClient) {}
 
   getCities(): Observable<City[]> {
-    return this.http.get<City[]>(`${this.apiUrl}/get-gradovi`);
+    return this.http.get<City[]>(`${this.apiUrl}/get-cities`);
   }
 }

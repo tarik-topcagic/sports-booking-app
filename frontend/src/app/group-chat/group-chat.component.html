@@ -236,7 +236,7 @@
             class="scroll-to-latest-button"
             (click)="scrollMessagesToLatest()"
             [attr.aria-label]="'groupChat' | translate"
-            title="Najnovija poruka"
+            [attr.title]="'latestMessage' | translate"
           >
             <i class="bi bi-arrow-down"></i>
           </button>

@@ -4,8 +4,8 @@ export interface Group {
   id: number;
   name: string;
   description: string;
-  grad: string;
-  kategorijaSporta: string;
+  city: string;
+  sportCategory: string;
   adminId: string;
   adminDisplayName?: string;
   adminUsername?: string;
@@ -20,8 +20,8 @@ export interface GroupDetails {
   id: number;
   name: string;
   description: string;
-  grad: string;
-  kategorijaSporta: string;
+  city: string;
+  sportCategory: string;
   imageUrl: string;
   adminDisplayName: string;
   currentUserId: string;
@@ -84,8 +84,8 @@ export interface GroupMembership {
 export interface UpdateGroupDto {
   name: string;
   description: string;
-  grad: string;
-  kategorijaSporta: string;
+  city: string;
+  sportCategory: string;
   groupPictureUrl?: string | null;
 }
 

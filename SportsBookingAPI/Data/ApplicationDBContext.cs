@@ -11,7 +11,7 @@ namespace SportsBookingAPI.Data
             
 
         }
-        public DbSet<Grad> Gradovi { get; set; }
+        public DbSet<City> Cities { get; set; }
         public DbSet<Arena> Arenas { get; set; }
         public DbSet<Group> Groups { get; set; }
         public DbSet<GroupMembership> GroupMemberships { get; set; }
@@ -70,7 +70,7 @@ namespace SportsBookingAPI.Data
                 .HasOne(g => g.Admin)
                 .WithMany(u => u.Groups)
                 .HasForeignKey(g => g.AdminId)
-                .OnDelete(DeleteBehavior.Restrict); 
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<GroupMembership>()
                 .HasOne(gm => gm.User)

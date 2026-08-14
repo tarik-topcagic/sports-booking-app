@@ -51,7 +51,7 @@ namespace SportsBookingAPI.Services
             if (!result.Succeeded)
                 return ServiceResult.BadRequest(result.Errors);
 
-            return ServiceResult.Ok(new { message = "Postavke obavijesti su sačuvane." });
+            return ServiceResult.Ok(new { message = "Notification settings saved." });
         }
 
         public async Task<ServiceResult> UpdateLanguagePreferenceAsync(string userId, UpdateLanguagePreferenceDto dto)
@@ -62,7 +62,7 @@ namespace SportsBookingAPI.Services
 
             var normalizedLanguagePreference = NormalizeLanguagePreference(dto.LanguagePreference);
             if (!SupportedLanguagePreferences.Contains(normalizedLanguagePreference))
-                return ServiceResult.BadRequest(new { field = "languagePreference", message = "Nepodržan jezik aplikacije." });
+                return ServiceResult.BadRequest(new { field = "languagePreference", message = "Unsupported application language." });
 
             user.LanguagePreference = normalizedLanguagePreference;
 
@@ -72,7 +72,7 @@ namespace SportsBookingAPI.Services
 
             return ServiceResult.Ok(new
             {
-                message = "Jezik aplikacije je sačuvan.",
+                message = "Application language saved.",
                 languagePreference = normalizedLanguagePreference
             });
         }
@@ -81,7 +81,7 @@ namespace SportsBookingAPI.Services
         {
             var newUsername = dto.Username.Trim();
             if (string.IsNullOrWhiteSpace(newUsername))
-                return ServiceResult.BadRequest(new { field = "username", message = "Korisničko ime je obavezno." });
+                return ServiceResult.BadRequest(new { field = "username", message = "Username is required." });
 
             var user = await _userRepository.GetUserByIdAsync(userId);
             if (user == null)
@@ -97,7 +97,7 @@ namespace SportsBookingAPI.Services
             var usernameExists = await _userRepository.UsernameExistsAsync(normalizedUsername, user.Id);
 
             if (usernameExists)
-                return ServiceResult.BadRequest(new { field = "username", message = "Korisničko ime je već u upotrebi" });
+                return ServiceResult.BadRequest(new { field = "username", message = "Username is already taken" });
 
             user.UserName = newUsername;
             user.NormalizedUserName = normalizedUsername;

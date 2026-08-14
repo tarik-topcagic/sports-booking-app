@@ -28,7 +28,7 @@ export class AppComponent implements OnInit {
   }
 
   private redirectIfOnAuthPage(): void {
-    const authRoutes = ['/login', '/register', '/prijava', '/registracija'];
+    const authRoutes = ['/login', '/register'];
     if (authRoutes.includes(window.location.pathname)) {
       this.router.navigate(['/']);
     }
