@@ -202,7 +202,7 @@ namespace SportsBookingAPI.Migrations
 
                     b.HasIndex("UserId", "IsRead", "CreatedAt");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("SportsBookingAPI.Models.AppUser", b =>
@@ -342,225 +342,7 @@ namespace SportsBookingAPI.Migrations
 
                     b.HasIndex("City", "SportType");
 
-                    b.ToTable("Arenas");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Address = "Patriotske lige 41, Sarajevo",
-                            City = "Sarajevo",
-                            CreatedAt = new DateTime(2026, 5, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Otvoreni teren smješten tik uz gradske saobraćajnice i nekoliko kafića, pa je pogodan za rekreativne i takmičarske termine. Reflektori pružaju vrlo dobro večernje osvjetljenje, a teren se redovno održava tokom cijele sezone. Na raspolaganju su svlačionice, manji tribinski prostor i parking u neposrednoj blizini.",
-                            ImageUrl = "https://image.pollinations.ai/prompt/photorealistic%20modern%20outdoor%20football%20arena%20in%20Sarajevo%2C%20Balkan%20sports%20center%20architecture%2C%20empty%20artificial%20turf%20field%2C%20stadium%20lights%2C%20small%20seating%20area%2C%20fences%2C%20evening%20atmosphere%2C%20no%20players%2C%20no%20logos?width=1280&height=720&seed=1001&model=flux&nologo=true&private=true",
-                            Name = "Arena Koševo Center",
-                            PricePerHour = 50m,
-                            SportType = "Football"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Address = "Terezija bb, Sarajevo",
-                            City = "Sarajevo",
-                            CreatedAt = new DateTime(2026, 5, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Moderna dvorana sa parketom pogodnim za treninge klubova, škola košarke i rekreativne mečeve. Unutrašnji prostor je dobro ventilisan, a gledalište omogućava ugodno praćenje utakmica za manju publiku. U objektu se nalaze svlačionice, sanitarni čvorovi i recepcijski prostor.",
-                            ImageUrl = "https://image.pollinations.ai/prompt/photorealistic%20indoor%20basketball%20hall%20in%20Sarajevo%2C%20modern%20European%20sports%20facility%2C%20polished%20wooden%20court%2C%20seating%20stands%2C%20ceiling%20lights%2C%20empty%20arena%2C%20realistic%20architecture%2C%20no%20players%2C%20no%20logos?width=1280&height=720&seed=1002&model=flux&nologo=true&private=true",
-                            Name = "Skenderija Basket Hall",
-                            PricePerHour = 42m,
-                            SportType = "Basketball"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Address = "Fra Anđela Zvizdovića 8, Sarajevo",
-                            City = "Sarajevo",
-                            CreatedAt = new DateTime(2026, 5, 2, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Padel centar otvorenog tipa sa kvalitetnom podlogom i zaštitnim staklenim panelima koji dobro drže ritam igre. Arena ima večernju rasvjetu, rezervisana parking mjesta i lounge zonu za odmor između termina. Lokacija je praktična za dolazak iz više dijelova grada.",
-                            ImageUrl = "https://image.pollinations.ai/prompt/photorealistic%20outdoor%20padel%20court%20complex%20in%20Sarajevo%2C%20glass%20walls%2C%20modern%20Balkan%20sports%20center%2C%20evening%20lighting%2C%20spectator%20benches%2C%20fenced%20courts%2C%20empty%20facility%2C%20no%20players%2C%20no%20logos?width=1280&height=720&seed=1003&model=flux&nologo=true&private=true",
-                            Name = "Padel Vista Marijin Dvor",
-                            PricePerHour = 36m,
-                            SportType = "Padel"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Address = "Maršala Tita 178, Mostar",
-                            City = "Mostar",
-                            CreatedAt = new DateTime(2026, 5, 2, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Otvoreni nogometni kompleks s prirodnim osjećajem terena i uredno obilježenim linijama za rekreativne lige. Prostor je osvijetljen za večernje termine, a uz teren se nalazi nekoliko klupa i manja natkrivena zona za gledaoce. Arena je posebno popularna među ekipama koje žele termin u mirnijem dijelu grada.",
-                            ImageUrl = "https://image.pollinations.ai/prompt/photorealistic%20outdoor%20football%20sports%20park%20in%20Mostar%2C%20Balkan%20urban%20setting%2C%20green%20field%2C%20floodlights%2C%20fences%2C%20modest%20grandstand%2C%20warm%20stone%20architecture%2C%20empty%20facility%2C%20no%20players%2C%20no%20logos?width=1280&height=720&seed=1004&model=flux&nologo=true&private=true",
-                            Name = "Velež Sport Park",
-                            PricePerHour = 50m,
-                            SportType = "Football"
-                        },
-                        new
-                        {
-                            Id = 5,
-                            Address = "Kneza Branimira 12, Mostar",
-                            City = "Mostar",
-                            CreatedAt = new DateTime(2026, 5, 3, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Zatvorena košarkaška dvorana sa stabilnom rasvjetom i vrlo dobrim akustičnim uslovima za trening i turnire. Parket je redovno održavan, a uz salu su dostupne svlačionice, tuševi i manja tribina. U blizini se nalaze parking mjesta i nekoliko ugostiteljskih objekata.",
-                            ImageUrl = "https://image.pollinations.ai/prompt/photorealistic%20indoor%20basketball%20arena%20in%20Mostar%2C%20modern%20sports%20hall%2C%20hardwood%20court%2C%20bright%20roof%20lighting%2C%20compact%20spectator%20area%2C%20clean%20European%20design%2C%20empty%20facility%2C%20no%20players%2C%20no%20logos?width=1280&height=720&seed=1005&model=flux&nologo=true&private=true",
-                            Name = "Neretva Basket House",
-                            PricePerHour = 42m,
-                            SportType = "Basketball"
-                        },
-                        new
-                        {
-                            Id = 6,
-                            Address = "Bulevar narodne revolucije 21, Mostar",
-                            City = "Mostar",
-                            CreatedAt = new DateTime(2026, 5, 3, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Mirniji padel kompleks smješten nedaleko od gradskog jezgra, idealan za rekreativce i manje turnire. Tereni su na otvorenom, imaju snažno noćno osvjetljenje i dovoljno prostora oko staklenih ograda za sigurnu igru. Gostima su na raspolaganju parking, svlačionice i terasa za odmor.",
-                            ImageUrl = "https://image.pollinations.ai/prompt/photorealistic%20outdoor%20padel%20club%20in%20Mostar%2C%20glass%20padel%20courts%2C%20Mediterranean%20Balkan%20atmosphere%2C%20modern%20lighting%2C%20lounge%20terrace%2C%20clean%20fences%2C%20empty%20facility%2C%20no%20players%2C%20no%20logos?width=1280&height=720&seed=1006&model=flux&nologo=true&private=true",
-                            Name = "Padel Club Buna",
-                            PricePerHour = 36m,
-                            SportType = "Padel"
-                        },
-                        new
-                        {
-                            Id = 7,
-                            Address = "Rudarska 2, Tuzla",
-                            City = "Tuzla",
-                            CreatedAt = new DateTime(2026, 5, 4, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Nogometni teren sa umjetnom travom projektovan za dinamične termine malog fudbala i treninge mlađih selekcija. Reflektori pokrivaju čitavu površinu, a pored terena postoji dovoljno prostora za zagrijavanje i kratki odmor. Kompleks nudi svlačionice, parking i pristup glavnim gradskim saobraćajnicama.",
-                            ImageUrl = "https://image.pollinations.ai/prompt/photorealistic%20small%20football%20arena%20in%20Tuzla%2C%20empty%20synthetic%20turf%20field%2C%20floodlights%2C%20fences%2C%20parking%20nearby%2C%20modern%20Bosnian%20sports%20facility%2C%20overcast%20daylight%2C%20no%20players%2C%20no%20logos?width=1280&height=720&seed=1007&model=flux&nologo=true&private=true",
-                            Name = "Tušanj Arena 5+",
-                            PricePerHour = 50m,
-                            SportType = "Football"
-                        },
-                        new
-                        {
-                            Id = 8,
-                            Address = "Bosne Srebrene 55, Tuzla",
-                            City = "Tuzla",
-                            CreatedAt = new DateTime(2026, 5, 4, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Višenamjenska dvorana sa kvalitetnim parketom i odličnom preglednošću terena iz gledališta. Prostor je pogodan za treninge, prijateljske utakmice i školske turnire, uz uredne svlačionice i pomoćne prostorije. Lokacija u sportskom centru olakšava pristup i organizaciju događaja.",
-                            ImageUrl = "https://image.pollinations.ai/prompt/photorealistic%20indoor%20basketball%20sports%20hall%20in%20Tuzla%2C%20clean%20wooden%20court%2C%20bright%20lighting%2C%20tiered%20seating%2C%20modern%20Balkan%20civic%20arena%2C%20empty%20facility%2C%20no%20players%2C%20no%20logos?width=1280&height=720&seed=1008&model=flux&nologo=true&private=true",
-                            Name = "Mejdan Basket Arena",
-                            PricePerHour = 42m,
-                            SportType = "Basketball"
-                        },
-                        new
-                        {
-                            Id = 9,
-                            Address = "Šetalište Slana banja 18, Tuzla",
-                            City = "Tuzla",
-                            CreatedAt = new DateTime(2026, 5, 5, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Padel teren u modernom rekreativnom kompleksu, poznat po urednoj podlozi i prijatnom ambijentu tokom cijelog dana. Reflektori omogućavaju stabilnu igru i u kasnijim večernjim satima, a gostima su dostupni garderoberi i caffe zona. Posebna prednost je blizina parkinga i centra grada.",
-                            ImageUrl = "https://image.pollinations.ai/prompt/photorealistic%20outdoor%20padel%20arena%20in%20Tuzla%2C%20modern%20glass%20courts%2C%20evening%20lights%2C%20urban%20recreational%20zone%2C%20fenced%20facility%2C%20empty%20courts%2C%20no%20players%2C%20no%20logos?width=1280&height=720&seed=1009&model=flux&nologo=true&private=true",
-                            Name = "Padel Panonika",
-                            PricePerHour = 36m,
-                            SportType = "Padel"
-                        },
-                        new
-                        {
-                            Id = 10,
-                            Address = "Kralja Petra I Karađorđevića 91, Banja Luka",
-                            City = "Banja Luka",
-                            CreatedAt = new DateTime(2026, 5, 5, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Otvorena arena za mali fudbal sa čvrstom umjetnom travom i vrlo dobrom drenažom nakon kiše. Teren je osvijetljen, ograda je uredna i sigurna, a uz objekat se nalaze svlačionice i prostor za kraće zadržavanje ekipa. Arena često okuplja rekreativne lige i vikend turnire.",
-                            ImageUrl = "https://image.pollinations.ai/prompt/photorealistic%20football%20hub%20in%20Banja%20Luka%2C%20empty%20artificial%20grass%20pitch%2C%20European%20sports%20facility%2C%20perimeter%20fences%2C%20floodlights%2C%20modest%20stands%2C%20modern%20architecture%2C%20no%20players%2C%20no%20logos?width=1280&height=720&seed=1010&model=flux&nologo=true&private=true",
-                            Name = "Krajina Football Hub",
-                            PricePerHour = 50m,
-                            SportType = "Football"
-                        },
-                        new
-                        {
-                            Id = 11,
-                            Address = "Aleja Svetog Save 48, Banja Luka",
-                            City = "Banja Luka",
-                            CreatedAt = new DateTime(2026, 5, 6, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Košarkaška dvorana poznata po ravnomjernom osvjetljenju i dobro održavanom parketu koji odgovara i intenzivnijim treninzima. U sklopu objekta nalaze se svlačionice, prostor za trenere i manja zona za gledaoce. U neposrednoj blizini postoji više parking mjesta i pristup glavnim ulicama.",
-                            ImageUrl = "https://image.pollinations.ai/prompt/photorealistic%20indoor%20basketball%20court%20in%20Banja%20Luka%2C%20bright%20sports%20hall%20lighting%2C%20polished%20parquet%2C%20spectator%20seating%2C%20contemporary%20Balkan%20arena%20interior%2C%20empty%20facility%2C%20no%20players%2C%20no%20logos?width=1280&height=720&seed=1011&model=flux&nologo=true&private=true",
-                            Name = "Borik Basket Zone",
-                            PricePerHour = 42m,
-                            SportType = "Basketball"
-                        },
-                        new
-                        {
-                            Id = 12,
-                            Address = "Cara Lazara 77, Banja Luka",
-                            City = "Banja Luka",
-                            CreatedAt = new DateTime(2026, 5, 6, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Padel centar sa otvorenim terenima i prijatnim ambijentom uz rijeku, što ga čini popularnim za popodnevne i večernje termine. Podloga je brza, staklene ograde su kvalitetne, a osvjetljenje ravnomjerno raspoređeno. Gosti imaju pristup parkingu, garderoberima i zoni za osvježenje.",
-                            ImageUrl = "https://image.pollinations.ai/prompt/photorealistic%20outdoor%20padel%20complex%20near%20river%20in%20Banja%20Luka%2C%20modern%20glass%20courts%2C%20elegant%20lighting%2C%20landscaped%20sports%20center%2C%20empty%20facility%2C%20no%20players%2C%20no%20logos?width=1280&height=720&seed=1012&model=flux&nologo=true&private=true",
-                            Name = "Padel Riverside Vrbas",
-                            PricePerHour = 36m,
-                            SportType = "Padel"
-                        },
-                        new
-                        {
-                            Id = 13,
-                            Address = "5. korpusa 14, Bihać",
-                            City = "Bihać",
-                            CreatedAt = new DateTime(2026, 5, 7, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Nogometni teren u mirnijem dijelu Bihaća, pogodan za termine prijateljskih ekipa i školskih sekcija. Reflektori pružaju dobru vidljivost, a uz teren postoje klupe za igrače i mali prostor za gledaoce. Površina terena je uredna i pogodna za cjelogodišnje korištenje.",
-                            ImageUrl = "https://image.pollinations.ai/prompt/photorealistic%20outdoor%20football%20terrain%20in%20Bihac%2C%20empty%20field%2C%20fences%2C%20tribune%20benches%2C%20clean%20Balkan%20sports%20center%2C%20natural%20daylight%2C%20parking%20and%20trees%20nearby%2C%20no%20players%2C%20no%20logos?width=1280&height=720&seed=1013&model=flux&nologo=true&private=true",
-                            Name = "Una Football Point",
-                            PricePerHour = 50m,
-                            SportType = "Football"
-                        },
-                        new
-                        {
-                            Id = 14,
-                            Address = "Harmanski sokak 9, Bihać",
-                            City = "Bihać",
-                            CreatedAt = new DateTime(2026, 5, 7, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Zatvoreni košarkaški prostor sa ugodnom atmosferom i parketom koji dobro podnosi česte treninge. Arena je pogodna za omladinske selekcije i rekreativne mečeve, uz svlačionice i pristojan prostor za publiku. Lokacija je lako dostupna i u blizini ima dovoljno parking mjesta.",
-                            ImageUrl = "https://image.pollinations.ai/prompt/photorealistic%20indoor%20basketball%20hall%20in%20Bihac%2C%20hardwood%20court%2C%20bright%20ceiling%20lighting%2C%20modest%20stands%2C%20local%20European%20sports%20facility%2C%20empty%20arena%2C%20no%20players%2C%20no%20logos?width=1280&height=720&seed=1014&model=flux&nologo=true&private=true",
-                            Name = "Dvorana Sokol Basket",
-                            PricePerHour = 42m,
-                            SportType = "Basketball"
-                        },
-                        new
-                        {
-                            Id = 15,
-                            Address = "Bedem 23, Bihać",
-                            City = "Bihać",
-                            CreatedAt = new DateTime(2026, 5, 8, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Otvoreni padel kompleks sa čistim linijama terena i dobro održavanom podlogom za rekreativnu i takmičarsku igru. Prostor ima rasvjetu za noćne termine, svlačionice i manji lounge kutak za ekipe nakon meča. Blizina zelenih zona daje cijelom centru opušten i prijatan dojam.",
-                            ImageUrl = "https://image.pollinations.ai/prompt/photorealistic%20outdoor%20padel%20gardens%20in%20Bihac%2C%20glass%20wall%20courts%2C%20green%20surroundings%2C%20evening%20lights%2C%20modern%20recreational%20center%2C%20empty%20facility%2C%20no%20players%2C%20no%20logos?width=1280&height=720&seed=1015&model=flux&nologo=true&private=true",
-                            Name = "Padel Una Gardens",
-                            PricePerHour = 36m,
-                            SportType = "Padel"
-                        },
-                        new
-                        {
-                            Id = 16,
-                            Address = "Bulevar Kralja Tvrtka I 6, Zenica",
-                            City = "Zenica",
-                            CreatedAt = new DateTime(2026, 5, 8, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Arena za mali fudbal sa kvalitetnom umjetnom travom i vrlo dobrom preglednošću cijele površine. Reflektori i zaštitna ograda omogućavaju sigurne večernje termine, a u sklopu centra nalaze se svlačionice i parking. Često je izbor ekipa koje traže centralnu lokaciju u Zenici.",
-                            ImageUrl = "https://image.pollinations.ai/prompt/photorealistic%20football%20arena%20in%20Zenica%2C%20empty%20artificial%20turf%2C%20powerful%20floodlights%2C%20fences%2C%20compact%20stands%2C%20urban%20Balkan%20sports%20facility%2C%20no%20players%2C%20no%20logos?width=1280&height=720&seed=1016&model=flux&nologo=true&private=true",
-                            Name = "Bilino Football Arena",
-                            PricePerHour = 50m,
-                            SportType = "Football"
-                        },
-                        new
-                        {
-                            Id = 17,
-                            Address = "Prve zeničke brigade 3, Zenica",
-                            City = "Zenica",
-                            CreatedAt = new DateTime(2026, 5, 9, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Unutrašnja dvorana sa profesionalnim osjećajem prostora, pogodna za treninge klubova i rekreativne utakmice. Parket je u dobrom stanju, rasvjeta je ravnomjerna, a manja tribina omogućava prisustvo publike bez gužve. Korisnicima su dostupne svlačionice, sanitarni čvorovi i prateći sadržaji.",
-                            ImageUrl = "https://image.pollinations.ai/prompt/photorealistic%20indoor%20basketball%20arena%20in%20Zenica%2C%20polished%20wood%20floor%2C%20balanced%20lighting%2C%20spectator%20tribune%2C%20contemporary%20European%20sports%20hall%2C%20empty%20facility%2C%20no%20players%2C%20no%20logos?width=1280&height=720&seed=1017&model=flux&nologo=true&private=true",
-                            Name = "Arena Kamberovića Basket",
-                            PricePerHour = 42m,
-                            SportType = "Basketball"
-                        },
-                        new
-                        {
-                            Id = 18,
-                            Address = "Londža 41, Zenica",
-                            City = "Zenica",
-                            CreatedAt = new DateTime(2026, 5, 9, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Savremeni padel teren sa urednim staklenim panelima, kvalitetnim osvjetljenjem i dovoljno prostora oko terena za udobno kretanje igrača. Centar je pogodan i za početnike i za naprednije rekreativce, a uz teren se nalaze parking i zona za odmor. Atmosfera je mirna, ali dovoljno živahna za turnirske dane.",
-                            ImageUrl = "https://image.pollinations.ai/prompt/photorealistic%20modern%20padel%20center%20in%20Zenica%2C%20empty%20glass%20courts%2C%20evening%20lights%2C%20fences%2C%20sleek%20Balkan%20sports%20architecture%2C%20realistic%20facility%20atmosphere%2C%20no%20players%2C%20no%20logos?width=1280&height=720&seed=1018&model=flux&nologo=true&private=true",
-                            Name = "Padel City Zen",
-                            PricePerHour = 36m,
-                            SportType = "Padel"
-                        });
+                    b.ToTable("Arenas", (string)null);
                 });
 
             modelBuilder.Entity("SportsBookingAPI.Models.City", b =>
@@ -581,7 +363,7 @@ namespace SportsBookingAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Cities");
+                    b.ToTable("Cities", (string)null);
                 });
 
             modelBuilder.Entity("SportsBookingAPI.Models.FavoriteArena", b =>
@@ -609,7 +391,7 @@ namespace SportsBookingAPI.Migrations
                     b.HasIndex("UserId", "ArenaId")
                         .IsUnique();
 
-                    b.ToTable("FavoriteArenas");
+                    b.ToTable("FavoriteArenas", (string)null);
                 });
 
             modelBuilder.Entity("SportsBookingAPI.Models.Group", b =>
@@ -654,7 +436,7 @@ namespace SportsBookingAPI.Migrations
 
                     b.HasIndex("AdminId");
 
-                    b.ToTable("Groups");
+                    b.ToTable("Groups", (string)null);
                 });
 
             modelBuilder.Entity("SportsBookingAPI.Models.GroupChatReadState", b =>
@@ -682,7 +464,7 @@ namespace SportsBookingAPI.Migrations
                     b.HasIndex("GroupId", "UserId")
                         .IsUnique();
 
-                    b.ToTable("GroupChatReadStates");
+                    b.ToTable("GroupChatReadStates", (string)null);
                 });
 
             modelBuilder.Entity("SportsBookingAPI.Models.GroupMembership", b =>
@@ -719,7 +501,7 @@ namespace SportsBookingAPI.Migrations
                     b.HasIndex("GroupId", "UserId")
                         .IsUnique();
 
-                    b.ToTable("GroupMemberships");
+                    b.ToTable("GroupMemberships", (string)null);
                 });
 
             modelBuilder.Entity("SportsBookingAPI.Models.GroupMessage", b =>
@@ -767,7 +549,7 @@ namespace SportsBookingAPI.Migrations
 
                     b.HasIndex("GroupId", "CreatedAt");
 
-                    b.ToTable("GroupMessages");
+                    b.ToTable("GroupMessages", (string)null);
                 });
 
             modelBuilder.Entity("SportsBookingAPI.Models.GroupMessageReaction", b =>
@@ -799,7 +581,7 @@ namespace SportsBookingAPI.Migrations
                     b.HasIndex("GroupMessageId", "UserId")
                         .IsUnique();
 
-                    b.ToTable("GroupMessageReactions");
+                    b.ToTable("GroupMessageReactions", (string)null);
                 });
 
             modelBuilder.Entity("SportsBookingAPI.Models.GroupMessageReceipt", b =>
@@ -830,7 +612,7 @@ namespace SportsBookingAPI.Migrations
                     b.HasIndex("GroupMessageId", "UserId")
                         .IsUnique();
 
-                    b.ToTable("GroupMessageReceipts");
+                    b.ToTable("GroupMessageReceipts", (string)null);
                 });
 
             modelBuilder.Entity("SportsBookingAPI.Models.PrivateChatReadState", b =>
@@ -858,7 +640,7 @@ namespace SportsBookingAPI.Migrations
                     b.HasIndex("ConversationId", "UserId")
                         .IsUnique();
 
-                    b.ToTable("PrivateChatReadStates");
+                    b.ToTable("PrivateChatReadStates", (string)null);
                 });
 
             modelBuilder.Entity("SportsBookingAPI.Models.PrivateConversation", b =>
@@ -887,7 +669,7 @@ namespace SportsBookingAPI.Migrations
                     b.HasIndex("UserOneId", "UserTwoId")
                         .IsUnique();
 
-                    b.ToTable("PrivateConversations");
+                    b.ToTable("PrivateConversations", (string)null);
                 });
 
             modelBuilder.Entity("SportsBookingAPI.Models.PrivateMessage", b =>
@@ -941,7 +723,7 @@ namespace SportsBookingAPI.Migrations
 
                     b.HasIndex("ConversationId", "CreatedAt");
 
-                    b.ToTable("PrivateMessages");
+                    b.ToTable("PrivateMessages", (string)null);
                 });
 
             modelBuilder.Entity("SportsBookingAPI.Models.PrivateMessageReaction", b =>
@@ -973,7 +755,7 @@ namespace SportsBookingAPI.Migrations
                     b.HasIndex("PrivateMessageId", "UserId")
                         .IsUnique();
 
-                    b.ToTable("PrivateMessageReactions");
+                    b.ToTable("PrivateMessageReactions", (string)null);
                 });
 
             modelBuilder.Entity("SportsBookingAPI.Models.Reservation", b =>
@@ -1018,7 +800,7 @@ namespace SportsBookingAPI.Migrations
                         .IsUnique()
                         .HasFilter("\"Status\" = 0");
 
-                    b.ToTable("Reservations");
+                    b.ToTable("Reservations", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
