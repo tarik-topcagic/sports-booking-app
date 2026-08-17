@@ -6,6 +6,7 @@ import { AuthService } from '../../services/auth.service';
 import { LanguageService } from '../../services/language.service';
 import { ToastService } from '../../services/toast.service';
 import { UserService, UserSettings } from '../../services/user.service';
+import { tap } from 'rxjs';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { SkeletonTextBlockComponent } from '../skeleton/skeleton-text-block/skeleton-text-block.component';
@@ -25,7 +26,6 @@ export class SettingsComponent implements OnInit {
   selectedLanguage = 'bs';
   showLanguageMenu = false;
   newUsername = '';
-  errorMessage = '';
   isChangingUsername = false;
 
   constructor(
@@ -41,27 +41,19 @@ export class SettingsComponent implements OnInit {
     this.darkModeEnabled = localStorage.getItem('darkMode') === 'true';
     this.selectedLanguage = this.languageService.currentLanguage;
     this.applyDarkMode();
-    this.loadSettings();
   }
 
-  loadSettings(): void {
-    this.errorMessage = '';
-    this.userService.getSettings().subscribe({
-      next: (settings) => {
-        this.settings = settings;
-        this.emailNotificationsEnabled = settings.emailNotificationsEnabled;
-        this.selectedLanguage = settings.languagePreference || this.languageService.currentLanguage;
-        this.newUsername = settings.username;
-        this.languageService.setLanguage(this.selectedLanguage);
-      },
-      error: () => {
-        this.errorMessage = this.languageService.translate('settingsLoadError');
-      },
-    });
-  }
+  loadSettings = () => this.userService.getSettings().pipe(
+    tap((settings) => {
+      this.settings = settings;
+      this.emailNotificationsEnabled = settings.emailNotificationsEnabled;
+      this.selectedLanguage = settings.languagePreference || this.languageService.currentLanguage;
+      this.newUsername = settings.username;
+      this.languageService.setLanguage(this.selectedLanguage);
+    }),
+  );
 
   saveEmailNotifications(): void {
-    this.clearMessages();
     this.userService
       .updateEmailNotifications(this.emailNotificationsEnabled)
       .subscribe({
@@ -86,11 +78,9 @@ export class SettingsComponent implements OnInit {
   }
 
   changeUsername(): void {
-    this.clearMessages();
     const username = this.newUsername.trim();
 
     if (!username) {
-      this.errorMessage = this.languageService.translate('usernameRequired');
       return;
     }
 
@@ -135,7 +125,6 @@ export class SettingsComponent implements OnInit {
   }
 
   saveLanguage(): void {
-    this.clearMessages();
     const previousLanguage = this.languageService.currentLanguage;
     this.languageService.setLanguage(this.selectedLanguage);
 
@@ -197,10 +186,6 @@ export class SettingsComponent implements OnInit {
 
   private applyDarkMode(): void {
     document.body.classList.toggle('dark-mode', this.darkModeEnabled);
-  }
-
-  private clearMessages(): void {
-    this.errorMessage = '';
   }
 
   @HostListener('document:click')

@@ -1,5 +1,6 @@
 import { NgClass, NgFor, NgIf } from '@angular/common';
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
+import { catchError, tap, throwError } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
@@ -45,11 +46,11 @@ export class SportsArenasComponent implements OnInit {
   showCityMenu = false;
   showSportMenu = false;
 
+  @ViewChild('arenasState') arenasState!: LoadErrorStateComponent;
+
   arenas: Arena[] = [];
   filteredArenas: Arena[] = [];
   pagedArenas: Arena[] = [];
-  isLoadingArenas = false;
-  errorMessage = '';
 
   favoriteArenas: FavoriteArena[] = [];
   removingFavoriteArenaId: number | null = null;
@@ -68,7 +69,6 @@ export class SportsArenasComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadArenas();
     this.loadFavoriteArenas();
   }
 
@@ -106,37 +106,30 @@ export class SportsArenasComponent implements OnInit {
     });
   }
 
-  loadArenas(): void {
-    this.isLoadingArenas = true;
-    this.errorMessage = '';
-
-    this.arenaService.getArenas({
-      city: this.activeCityFilter || undefined,
-      sportType: this.activeSportFilter || undefined,
-      searchTerm: this.searchQuery || undefined,
-    }).subscribe({
-      next: (arenas) => {
-        this.arenas = arenas;
-        this.isLoadingArenas = false;
-        this.applyFiltersAndSort();
-      },
-      error: (error) => {
-        console.error('Error loading arenas:', error);
-        this.arenas = [];
-        this.filteredArenas = [];
-        this.pagedArenas = [];
-        this.isLoadingArenas = false;
-        this.errorMessage = 'arenasLoadError';
-      },
-    });
-  }
+  loadArenas = () => this.arenaService.getArenas({
+    city: this.activeCityFilter || undefined,
+    sportType: this.activeSportFilter || undefined,
+    searchTerm: this.searchQuery || undefined,
+  }).pipe(
+    tap((arenas) => {
+      this.arenas = arenas;
+      this.applyFiltersAndSort();
+    }),
+    catchError((error) => {
+      console.error('Error loading arenas:', error);
+      this.arenas = [];
+      this.filteredArenas = [];
+      this.pagedArenas = [];
+      return throwError(() => error);
+    }),
+  );
 
   searchArenas(): void {
-    this.loadArenas();
+    this.arenasState.reload();
   }
 
   onSearchQueryChange(): void {
-    this.loadArenas();
+    this.arenasState.reload();
   }
 
   toggleCityMenu(event?: Event): void {
@@ -155,28 +148,28 @@ export class SportsArenasComponent implements OnInit {
     event?.stopPropagation();
     this.activeCityFilter = city;
     this.showCityMenu = false;
-    this.loadArenas();
+    this.arenasState.reload();
   }
 
   selectSportFilter(sportType: string, event?: Event): void {
     event?.stopPropagation();
     this.activeSportFilter = sportType;
     this.showSportMenu = false;
-    this.loadArenas();
+    this.arenasState.reload();
   }
 
   clearCityFilter(event?: Event): void {
     event?.stopPropagation();
     this.activeCityFilter = '';
     this.showCityMenu = false;
-    this.loadArenas();
+    this.arenasState.reload();
   }
 
   clearSportFilter(event?: Event): void {
     event?.stopPropagation();
     this.activeSportFilter = '';
     this.showSportMenu = false;
-    this.loadArenas();
+    this.arenasState.reload();
   }
 
   viewDetails(arena: Arena): void {

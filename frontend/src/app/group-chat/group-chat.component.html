@@ -2,7 +2,8 @@
 
 <main class="group-chat-page">
   <div class="chat-window">
-    <div *ngIf="isLoading" class="chat-layout">
+    <app-load-error-state #chatState [load]="loadChat" errorKey="groupChatLoadError" errorWrapperStyle="margin: 1.5rem">
+    <div loading class="chat-layout">
       <aside class="conversations-sidebar">
         <div class="sidebar-header">
           <p class="section-label">{{ 'messages' | translate }}</p>
@@ -45,11 +46,7 @@
       </section>
     </div>
 
-    <div *ngIf="errorMessage" class="chat-state app-state-message">
-      <app-load-error-state [message]="errorMessage" (retry)="retryLoadChat()"></app-load-error-state>
-    </div>
-
-    <section *ngIf="group && !isLoading" class="chat-layout">
+    <section *ngIf="group" class="chat-layout">
       <aside class="conversations-sidebar">
         <div class="sidebar-header">
           <p class="section-label">{{ 'messages' | translate }}</p>
@@ -313,5 +310,6 @@
         </form>
       </section>
     </section>
+    </app-load-error-state>
   </div>
 </main>

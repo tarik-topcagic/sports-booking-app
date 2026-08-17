@@ -2,7 +2,7 @@ import { DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { catchError, NEVER, Subscription, switchMap, tap, throwError } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { ChatRealtimeService } from '../../services/chat-realtime.service';
 import { ChatInboxService } from '../../services/chat-inbox.service';
@@ -76,13 +76,13 @@ import { ToastService } from '../../services/toast.service';
 export class GroupChatComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('messagesContainer') private messagesContainer?: ElementRef<HTMLDivElement>;
   @ViewChild('messageInput') private messageInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('chatState') chatState!: LoadErrorStateComponent;
 
   group: GroupDetails | null = null;
   chatListItems: ChatInboxItem[] = [];
   highlightedChatListKeys = new Set<string>();
   messages: GroupChatMessage[] = [];
   messageText = '';
-  isLoading = true;
   isSending = false;
   readonly skeletonBubbles = [
     { width: '55%', own: false },
@@ -96,6 +96,7 @@ export class GroupChatComponent implements OnInit, AfterViewInit, OnDestroy {
   groupChatListPresenceByGroupId = new Map<number, boolean>();
   replyTarget: GroupChatMessage | null = null;
   private currentUserId: string | null = null;
+  private isInitialRouteParamsEmission = true;
   private currentUserSubscription?: Subscription;
   private routeSubscription?: Subscription;
   private realtimeMessageSubscription?: Subscription;
@@ -189,6 +190,12 @@ export class GroupChatComponent implements OnInit, AfterViewInit, OnDestroy {
         return;
       }
 
+      if (this.isInitialRouteParamsEmission) {
+        this.isInitialRouteParamsEmission = false;
+        void this.setupRealtime(groupId);
+        return;
+      }
+
       this.resetViewState();
       void this.initializeGroupChat(groupId);
     });
@@ -227,7 +234,6 @@ export class GroupChatComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.stopTypingLocally();
     this.isSending = true;
-    this.errorMessage = '';
 
     const groupId = this.group.id;
     const replyTarget = this.replyTarget;
@@ -701,52 +707,42 @@ export class GroupChatComponent implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
-  retryLoadChat(): void {
+  loadChat = () => {
     const groupId = Number(this.route.snapshot.paramMap.get('id'));
-    if (groupId) {
-      this.loadChat(groupId);
+    if (!groupId) {
+      return NEVER;
     }
-  }
 
-  private loadChat(groupId: number): void {
-    this.isLoading = true;
-    this.errorMessage = '';
     this.loadChatListItems();
 
-    this.groupService.getGroupDetails(groupId).subscribe({
-      next: (group) => {
+    return this.groupService.getGroupDetails(groupId).pipe(
+      catchError((error) => {
+        console.error('Error loading group chat details:', error);
+        return throwError(() => error);
+      }),
+      switchMap((group) => {
         if (!group.isMember) {
           this.router.navigate(['/groups', groupId]);
-          return;
+          return NEVER;
         }
 
         this.group = group;
         this.loadGroupPresence(group.id);
-        this.loadMessages(groupId);
-      },
-      error: (error) => {
-        this.isLoading = false;
-        this.errorMessage = this.languageService.translate('groupChatLoadError');
-        console.error('Error loading group chat details:', error);
-      },
-    });
-  }
 
-  private loadMessages(groupId: number): void {
-    this.groupService.getGroupMessages(groupId).subscribe({
-      next: (messages) => {
-        this.messages = messages;
-        this.isLoading = false;
-        this.scrollMessagesToBottom();
-        this.markCurrentGroupChatAsRead(groupId);
-        this.acknowledgeLoadedMessages();
-      },
-      error: (error) => {
-        this.isLoading = false;
-        this.errorMessage = this.languageService.translate('groupChatLoadError');
-        console.error('Error loading group chat messages:', error);
-      },
-    });
+        return this.groupService.getGroupMessages(groupId).pipe(
+          tap((messages) => {
+            this.messages = messages;
+            this.scrollMessagesToBottom();
+            this.markCurrentGroupChatAsRead(groupId);
+            this.acknowledgeLoadedMessages();
+          }),
+          catchError((error) => {
+            console.error('Error loading group chat messages:', error);
+            return throwError(() => error);
+          }),
+        );
+      }),
+    );
   }
 
   private resetViewState(): void {
@@ -754,10 +750,8 @@ export class GroupChatComponent implements OnInit, AfterViewInit, OnDestroy {
     this.group = null;
     this.messages = [];
     this.messageText = '';
-    this.isLoading = true;
     this.isSending = false;
     this.showScrollToBottomButton = false;
-    this.errorMessage = '';
     this.onlineMemberUserIds.clear();
     this.privateChatListPresenceByUserId.clear();
     this.groupChatListPresenceByGroupId.clear();
@@ -792,7 +786,7 @@ export class GroupChatComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private async initializeGroupChat(groupId: number): Promise<void> {
     await this.setupRealtime(groupId);
-    this.loadChat(groupId);
+    this.chatState.reload();
   }
 
   private scrollMessagesToBottom(behavior: ScrollBehavior = 'auto'): void {

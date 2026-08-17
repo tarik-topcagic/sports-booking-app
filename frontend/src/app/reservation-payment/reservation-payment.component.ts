@@ -1,7 +1,8 @@
 import { NgFor, NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { catchError, tap, throwError } from 'rxjs';
 import { Arena } from '../interfaces/arena.model';
 import { formatReadableDate } from '../helpers/date-format.helper';
 import { NavbarComponent } from '../navbar/navbar.component';
@@ -21,7 +22,7 @@ const ADDITIONAL_HALF_HOUR_PRICE = 10;
   templateUrl: './reservation-payment.component.html',
   styleUrl: './reservation-payment.component.scss',
 })
-export class ReservationPaymentComponent implements OnInit {
+export class ReservationPaymentComponent {
   private readonly localeByLanguage: Record<string, string> = {
     en: 'en-US',
     de: 'de-DE',
@@ -34,9 +35,8 @@ export class ReservationPaymentComponent implements OnInit {
   };
 
   arena: Arena | null = null;
-  isLoading = true;
+  arenaErrorKey = 'paymentPageLoadError';
   isProcessing = false;
-  errorMessage = '';
 
   arenaId = 0;
   startTime: Date | null = null;
@@ -60,52 +60,29 @@ export class ReservationPaymentComponent implements OnInit {
     private toastService: ToastService,
   ) {}
 
-  ngOnInit(): void {
+  loadArena = () => {
     const queryParams = this.route.snapshot.queryParamMap;
     this.arenaId = Number(queryParams.get('arenaId'));
     const startTimeParam = queryParams.get('startTime');
     this.durationInHours = Number(queryParams.get('durationInHours')) || 1;
 
     if (!this.arenaId || !startTimeParam) {
-      this.errorMessage = 'paymentMissingDetails';
-      this.isLoading = false;
-      return;
+      this.arenaErrorKey = 'paymentMissingDetails';
+      return throwError(() => new Error('Missing payment details'));
     }
 
     this.startTime = new Date(startTimeParam);
 
-    this.arenaService.getArenaById(this.arenaId).subscribe({
-      next: (arena) => {
+    return this.arenaService.getArenaById(this.arenaId).pipe(
+      tap((arena) => {
         this.arena = arena;
-        this.isLoading = false;
-      },
-      error: (error) => {
+      }),
+      catchError((error) => {
         console.error('Error loading arena for payment:', error);
-        this.errorMessage = error.status === 404 ? 'arenaNotFound' : 'paymentPageLoadError';
-        this.isLoading = false;
-      },
-    });
-  }
-
-  retryLoadArena(): void {
-    if (!this.arenaId || !this.startTime) {
-      return;
-    }
-
-    this.isLoading = true;
-    this.errorMessage = '';
-
-    this.arenaService.getArenaById(this.arenaId).subscribe({
-      next: (arena) => {
-        this.arena = arena;
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error loading arena for payment:', error);
-        this.errorMessage = error.status === 404 ? 'arenaNotFound' : 'paymentPageLoadError';
-        this.isLoading = false;
-      },
-    });
+        this.arenaErrorKey = error.status === 404 ? 'arenaNotFound' : 'paymentPageLoadError';
+        return throwError(() => error);
+      }),
+    );
   }
 
   get currentLocale(): string {

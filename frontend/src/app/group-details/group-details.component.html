@@ -7,7 +7,8 @@
       {{ 'backToGroups' | translate }}
     </a>
 
-    <section *ngIf="isLoading" class="details-shell">
+    <app-load-error-state #groupState [load]="loadGroup" errorKey="groupDetailsLoadError" errorWrapperClass="my-4">
+    <section loading class="details-shell">
       <div class="details-header">
         <div class="title-block">
           <app-skeleton [circle]="true" width="150px" height="150px"></app-skeleton>
@@ -36,11 +37,7 @@
       </div>
     </section>
 
-    <div *ngIf="errorMessage" class="app-state-message mt-3">
-      <app-load-error-state [message]="errorMessage" (retry)="retryLoadGroup()"></app-load-error-state>
-    </div>
-
-    <section *ngIf="group && !isLoading" class="details-shell">
+    <section *ngIf="group" class="details-shell">
       <div class="details-header">
         <div class="title-block">
           <div class="group-image-container">
@@ -198,6 +195,7 @@
         <p>{{ group.description }}</p>
       </div>
     </section>
+    </app-load-error-state>
   </div>
 </main>
 

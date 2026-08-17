@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { catchError, tap, throwError } from 'rxjs';
 import { NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -25,12 +26,13 @@ type AdminArenaMode = 'list' | 'create' | 'edit';
   styleUrl: './admin-arenas.component.scss',
 })
 export class AdminArenasComponent implements OnInit {
+  @ViewChild('arenasState') arenasState!: LoadErrorStateComponent;
+
   mode: AdminArenaMode = 'list';
 
   arenas: AdminArenaDto[] = [];
   pagedArenas: AdminArenaDto[] = [];
   isLoading = false;
-  errorMessage = '';
   pendingArenaIds = new Set<number>();
 
   editingArenaId: number | null = null;
@@ -85,7 +87,6 @@ export class AdminArenasComponent implements OnInit {
       } else {
         this.mode = 'list';
         this.loadFilterOptions();
-        this.loadArenas();
       }
     });
   }
@@ -105,38 +106,37 @@ export class AdminArenasComponent implements OnInit {
     });
   }
 
-  loadArenas(): void {
+  loadArenas = () => {
     this.isLoading = true;
-    this.errorMessage = '';
 
-    this.adminArenaService.getAllArenas({
+    return this.adminArenaService.getAllArenas({
       name: this.filterName || undefined,
       city: this.filterCity || undefined,
       sportType: this.filterSportType || undefined,
-    }).subscribe({
-      next: (arenas) => {
+    }).pipe(
+      tap((arenas) => {
         this.arenas = arenas;
         this.isLoading = false;
         this.currentPage = 1;
         this.setupPagination();
-      },
-      error: (error) => {
+      }),
+      catchError((error) => {
         console.error('Error loading arenas:', error);
-        this.errorMessage = 'Failed to load arenas.';
         this.isLoading = false;
-      },
-    });
+        return throwError(() => error);
+      }),
+    );
   }
 
   applyFilters(): void {
-    this.loadArenas();
+    this.arenasState.reload();
   }
 
   clearFilters(): void {
     this.filterName = '';
     this.filterCity = '';
     this.filterSportType = '';
-    this.loadArenas();
+    this.arenasState.reload();
   }
 
   private setupPagination(): void {
@@ -185,7 +185,7 @@ export class AdminArenasComponent implements OnInit {
       next: () => {
         this.pendingArenaIds.delete(arena.id);
         this.toastService.showSuccess('Arena deleted.');
-        this.loadArenas();
+        this.arenasState.reload();
       },
       error: (error) => {
         console.error('Error deleting arena:', error);

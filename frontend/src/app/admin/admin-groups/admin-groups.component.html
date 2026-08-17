@@ -19,11 +19,9 @@
     </div>
   </form>
 
-  <div *ngIf="errorMessage" class="app-state-message">
-    <app-load-error-state [message]="errorMessage" [retryLabel]="'Retry'" (retry)="loadGroups()"></app-load-error-state>
-  </div>
+  <app-load-error-state #groupsState [load]="loadGroups" errorText="Failed to load groups." [retryLabel]="'Retry'" errorWrapperClass="my-4"></app-load-error-state>
 
-  <div class="table-responsive" *ngIf="!errorMessage">
+  <div class="table-responsive" *ngIf="!groupsState.hasError">
     <table class="table table-striped align-middle">
       <thead>
         <tr>

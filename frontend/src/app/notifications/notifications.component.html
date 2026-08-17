@@ -8,7 +8,8 @@
         <h1>{{ 'notifications' | translate }}</h1>
       </div>
 
-      <div *ngIf="isLoading" class="notifications-list">
+      <app-load-error-state #notificationsState [load]="loadNotifications" errorKey="notificationsLoadError" errorWrapperClass="my-4">
+      <div loading class="notifications-list">
         <app-skeleton-list-item
           *ngFor="let placeholder of [1, 2, 3, 4]"
           variant="card"
@@ -19,15 +20,11 @@
         ></app-skeleton-list-item>
       </div>
 
-      <div *ngIf="!isLoading && errorMessage" class="app-state-message">
-        <app-load-error-state [message]="errorMessage" (retry)="retryLoadNotifications()"></app-load-error-state>
-      </div>
-
-      <div *ngIf="!isLoading && !errorMessage && !notifications.length" class="status-message">
+      <div *ngIf="!notifications.length" class="status-message">
         {{ 'noNotifications' | translate }}
       </div>
 
-      <div *ngIf="!isLoading && !errorMessage && notifications.length" class="notifications-list">
+      <div *ngIf="notifications.length" class="notifications-list">
         <article
           class="notification-card"
           *ngFor="let notification of notifications"
@@ -129,6 +126,7 @@
           </div>
         </article>
       </div>
+      </app-load-error-state>
     </section>
   </div>
 </main>

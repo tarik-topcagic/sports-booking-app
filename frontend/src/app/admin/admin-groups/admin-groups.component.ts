@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
+import { catchError, tap, throwError } from 'rxjs';
 import { DatePipe, NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NavbarComponent } from '../../navbar/navbar.component';
@@ -20,11 +21,12 @@ import { PaginationComponent } from '../../pagination/pagination.component';
   templateUrl: './admin-groups.component.html',
   styleUrl: './admin-groups.component.scss',
 })
-export class AdminGroupsComponent implements OnInit {
+export class AdminGroupsComponent {
+  @ViewChild('groupsState') groupsState!: LoadErrorStateComponent;
+
   groups: Group[] = [];
   pagedGroups: Group[] = [];
   isLoading = false;
-  errorMessage = '';
   pendingGroupIds = new Set<number>();
 
   editingGroup: Group | null = null;
@@ -50,40 +52,35 @@ export class AdminGroupsComponent implements OnInit {
     private confirmDialogService: ConfirmDialogService,
   ) {}
 
-  ngOnInit(): void {
-    this.loadGroups();
-  }
-
-  loadGroups(): void {
+  loadGroups = () => {
     this.isLoading = true;
-    this.errorMessage = '';
 
-    this.adminGroupService.getAllGroups({
+    return this.adminGroupService.getAllGroups({
       name: this.filterName || undefined,
       owner: this.filterOwner || undefined,
-    }).subscribe({
-      next: (groups) => {
+    }).pipe(
+      tap((groups) => {
         this.groups = groups;
         this.isLoading = false;
         this.currentPage = 1;
         this.setupPagination();
-      },
-      error: (error) => {
+      }),
+      catchError((error) => {
         console.error('Error loading groups:', error);
-        this.errorMessage = 'Failed to load groups.';
         this.isLoading = false;
-      },
-    });
+        return throwError(() => error);
+      }),
+    );
   }
 
   applyFilters(): void {
-    this.loadGroups();
+    this.groupsState.reload();
   }
 
   clearFilters(): void {
     this.filterName = '';
     this.filterOwner = '';
-    this.loadGroups();
+    this.groupsState.reload();
   }
 
   private setupPagination(): void {
@@ -112,7 +109,7 @@ export class AdminGroupsComponent implements OnInit {
       next: () => {
         this.pendingGroupIds.delete(group.id);
         this.toastService.showSuccess('Group deleted.');
-        this.loadGroups();
+        this.groupsState.reload();
       },
       error: (error) => {
         console.error('Error deleting group:', error);
@@ -148,7 +145,7 @@ export class AdminGroupsComponent implements OnInit {
       next: () => {
         this.toastService.showSuccess('Group updated.');
         this.closeEdit();
-        this.loadGroups();
+        this.groupsState.reload();
       },
       error: (error) => {
         console.error('Error updating group:', error);
@@ -206,7 +203,7 @@ export class AdminGroupsComponent implements OnInit {
           };
         }
         this.toastService.showSuccess('Member removed.');
-        this.loadGroups();
+        this.groupsState.reload();
       },
       error: (error) => {
         console.error('Error removing member:', error);

@@ -2,7 +2,7 @@ import { DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Subscription, catchError, forkJoin, of } from 'rxjs';
+import { Subscription, catchError, forkJoin, NEVER, of, switchMap, tap, throwError } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { ChatRealtimeService } from '../../services/chat-realtime.service';
 import { ChatInboxService } from '../../services/chat-inbox.service';
@@ -77,6 +77,7 @@ import { ToastService } from '../../services/toast.service';
 export class PrivateChatComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('messagesContainer') private messagesContainer?: ElementRef<HTMLDivElement>;
   @ViewChild('messageInput') private messageInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('chatState') chatState!: LoadErrorStateComponent;
 
   conversation: PrivateConversation | null = null;
   conversations: PrivateConversation[] = [];
@@ -84,7 +85,6 @@ export class PrivateChatComponent implements OnInit, AfterViewInit, OnDestroy {
   highlightedChatListKeys = new Set<string>();
   messages: PrivateMessage[] = [];
   messageText = '';
-  isLoading = true;
   isSending = false;
   readonly skeletonBubbles = [
     { width: '55%', own: false },
@@ -100,6 +100,7 @@ export class PrivateChatComponent implements OnInit, AfterViewInit, OnDestroy {
   groupChatListPresenceByGroupId = new Map<number, boolean>();
   replyTarget: PrivateMessage | null = null;
   private currentUserId: string | null = null;
+  private isInitialRouteParamsEmission = true;
   private currentUserSubscription?: Subscription;
   private routeSubscription?: Subscription;
   private realtimeMessageSubscription?: Subscription;
@@ -190,19 +191,30 @@ export class PrivateChatComponent implements OnInit, AfterViewInit, OnDestroy {
       const conversationId = Number(params.get('conversationId'));
       const targetUserId = params.get('userId');
 
+      if (!conversationId && !targetUserId) {
+        this.router.navigate(['/messages']);
+        return;
+      }
+
+      // The initial emission is handled by the component's own [load] call on
+      // creation (loadChat reads the route fresh); only subsequent route
+      // changes need an explicit reload.
+      if (this.isInitialRouteParamsEmission) {
+        this.isInitialRouteParamsEmission = false;
+        if (conversationId) {
+          void this.setupRealtime(conversationId);
+        }
+        return;
+      }
+
+      this.resetViewState();
+
       if (conversationId) {
-        this.resetViewState();
-        void this.initializeConversation(conversationId);
+        void this.setupRealtime(conversationId).then(() => this.chatState.reload());
         return;
       }
 
-      if (targetUserId) {
-        this.resetViewState();
-        this.initializeConversationWithUser(targetUserId);
-        return;
-      }
-
-      this.router.navigate(['/messages']);
+      this.chatState.reload();
     });
   }
 
@@ -239,7 +251,6 @@ export class PrivateChatComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.stopTypingLocally();
     this.isSending = true;
-    this.errorMessage = '';
 
     const conversationId = this.conversation.id;
     const replyTarget = this.replyTarget;
@@ -615,61 +626,59 @@ export class PrivateChatComponent implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
-  retryLoadChat(): void {
+  loadChat = () => {
     const conversationId = Number(this.route.snapshot.paramMap.get('conversationId'));
+
     if (conversationId) {
-      this.loadChat(conversationId);
-      return;
+      this.loadChatListItems();
+
+      return this.privateChatService.getConversations().pipe(
+        catchError((error) => {
+          console.error('Error loading private chat conversation:', error);
+          return throwError(() => error);
+        }),
+        switchMap((conversations) => {
+          this.conversations = conversations;
+          const conversation = conversations.find((item) => item.id === conversationId);
+
+          if (!conversation) {
+            this.router.navigate(['/messages']);
+            return NEVER;
+          }
+
+          this.conversation = conversation;
+
+          return this.privateChatService.getMessages(conversationId).pipe(
+            tap((messages) => {
+              this.messages = messages;
+              this.resolveConversationPresenceVisibility();
+              this.markConversationAsRead(conversationId);
+              this.scrollMessagesToBottom();
+              this.acknowledgeLoadedMessages();
+            }),
+            catchError((error) => {
+              console.error('Error loading private chat messages:', error);
+              return throwError(() => error);
+            }),
+          );
+        }),
+      );
     }
 
     const targetUserId = this.route.snapshot.paramMap.get('userId');
-    if (targetUserId) {
-      this.initializeConversationWithUser(targetUserId);
+    if (!targetUserId) {
+      return NEVER;
     }
-  }
 
-  private loadChat(conversationId: number): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-    this.loadChatListItems();
-
-    this.privateChatService.getConversations().subscribe({
-      next: (conversations) => {
-        this.conversations = conversations;
-        const conversation = conversations.find((item) => item.id === conversationId);
-
-        if (!conversation) {
-          this.router.navigate(['/messages']);
-          return;
-        }
-
-        this.conversation = conversation;
-        this.loadMessages(conversationId);
-      },
-      error: (error) => {
-        this.isLoading = false;
-        this.errorMessage = this.languageService.translate('privateChatLoadError');
-        console.error('Error loading private chat conversation:', error);
-      },
-    });
-  }
-
-  private loadMessages(conversationId: number): void {
-    this.privateChatService.getMessages(conversationId).subscribe({
-      next: (messages) => {
-        this.messages = messages;
-        this.isLoading = false;
-        this.resolveConversationPresenceVisibility();
-        this.markConversationAsRead(conversationId);
-        this.scrollMessagesToBottom();
-        this.acknowledgeLoadedMessages();
-      },
-      error: (error) => {
-        this.isLoading = false;
-        this.errorMessage = this.languageService.translate('privateChatLoadError');
-        console.error('Error loading private chat messages:', error);
-      },
-    });
+    return this.privateChatService.getOrCreateConversation(targetUserId).pipe(
+      tap((conversation) => {
+        this.router.navigate(['/messages/private', conversation.id], { replaceUrl: true });
+      }),
+      catchError((error) => {
+        console.error('Error opening private chat from user search:', error);
+        return throwError(() => error);
+      }),
+    );
   }
 
   private resetViewState(): void {
@@ -677,10 +686,8 @@ export class PrivateChatComponent implements OnInit, AfterViewInit, OnDestroy {
     this.conversation = null;
     this.messages = [];
     this.messageText = '';
-    this.isLoading = true;
     this.isSending = false;
     this.showScrollToBottomButton = false;
-    this.errorMessage = '';
     this.isOtherUserOnline = false;
     this.isOtherUserPresenceKnown = false;
     this.canShowOtherUserPresence = false;
@@ -726,26 +733,6 @@ export class PrivateChatComponent implements OnInit, AfterViewInit, OnDestroy {
     await this.chatRealtimeService.joinConversation(conversationId);
   }
 
-  private async initializeConversation(conversationId: number): Promise<void> {
-    await this.setupRealtime(conversationId);
-    this.loadChat(conversationId);
-  }
-
-  private initializeConversationWithUser(targetUserId: string): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-
-    this.privateChatService.getOrCreateConversation(targetUserId).subscribe({
-      next: (conversation) => {
-        this.router.navigate(['/messages/private', conversation.id], { replaceUrl: true });
-      },
-      error: (error) => {
-        this.isLoading = false;
-        this.errorMessage = this.languageService.translate('privateChatLoadError');
-        console.error('Error opening private chat from user search:', error);
-      },
-    });
-  }
 
   private handleIncomingRealtimeMessage(message: PrivateMessage): void {
     if (!this.conversation?.id || message.conversationId !== this.conversation.id) {

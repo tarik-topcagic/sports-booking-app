@@ -1,7 +1,7 @@
 import { NgClass, NgFor, NgIf } from '@angular/common';
 import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { forkJoin, of } from 'rxjs';
+import { forkJoin, from, of, switchMap, tap, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import {
   getArenaDescriptionTranslationKey,
@@ -66,8 +66,7 @@ export class ArenaDetailsComponent implements OnInit, OnDestroy {
   };
 
   arena: Arena | null = null;
-  isLoading = true;
-  errorMessage = '';
+  arenaErrorKey = 'arenaDetailsLoadError';
   showFullWeek = false;
   selectedDateIndex = 0;
   selectedSlotStart: number | null = null;
@@ -104,29 +103,6 @@ export class ArenaDetailsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.initializeMockSelection();
-    this.arenaId = Number(this.route.snapshot.paramMap.get('id'));
-
-    if (!this.arenaId) {
-      this.errorMessage = 'arenaNotFound';
-      this.isLoading = false;
-      return;
-    }
-
-    this.arenaService.getArenaById(this.arenaId).subscribe({
-      next: async (arena) => {
-        this.arena = arena;
-        this.galleryImageUrls = await this.resolveGalleryImages(arena);
-        this.isLoading = false;
-        this.loadAvailabilityForVisibleDays();
-        this.loadMyReservations();
-      },
-      error: (error) => {
-        console.error('Error loading arena details:', error);
-        this.errorMessage =
-          error.status === 404 ? 'arenaNotFound' : 'arenaDetailsLoadError';
-        this.isLoading = false;
-      },
-    });
 
     this.favoriteArenaService.getMyFavorites().subscribe({
       error: (error) => console.error('Error loading favorites:', error),
@@ -144,29 +120,29 @@ export class ArenaDetailsComponent implements OnInit, OnDestroy {
     }
   }
 
-  retryLoadArenaDetails(): void {
+  loadArenaDetails = () => {
+    this.arenaId = Number(this.route.snapshot.paramMap.get('id'));
+
     if (!this.arenaId) {
-      return;
+      this.arenaErrorKey = 'arenaNotFound';
+      return throwError(() => new Error('Missing arena id'));
     }
 
-    this.isLoading = true;
-    this.errorMessage = '';
-
-    this.arenaService.getArenaById(this.arenaId).subscribe({
-      next: async (arena) => {
-        this.arena = arena;
-        this.galleryImageUrls = await this.resolveGalleryImages(arena);
-        this.isLoading = false;
-        this.loadAvailabilityForVisibleDays();
-        this.loadMyReservations();
-      },
-      error: (error) => {
+    return this.arenaService.getArenaById(this.arenaId).pipe(
+      switchMap((arena) => from(this.resolveGalleryImages(arena)).pipe(
+        tap((galleryImageUrls) => {
+          this.arena = arena;
+          this.galleryImageUrls = galleryImageUrls;
+          this.loadAvailabilityForVisibleDays();
+          this.loadMyReservations();
+        }),
+      )),
+      catchError((error) => {
         console.error('Error loading arena details:', error);
-        this.errorMessage =
-          error.status === 404 ? 'arenaNotFound' : 'arenaDetailsLoadError';
-        this.isLoading = false;
-      },
-    });
+        this.arenaErrorKey = error.status === 404 ? 'arenaNotFound' : 'arenaDetailsLoadError';
+        return throwError(() => error);
+      }),
+    );
   }
 
   @HostListener('window:focus')

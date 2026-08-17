@@ -23,11 +23,9 @@
     </div>
   </form>
 
-  <div *ngIf="errorMessage" class="app-state-message">
-    <app-load-error-state [message]="errorMessage" [retryLabel]="'Retry'" (retry)="loadNotifications()"></app-load-error-state>
-  </div>
+  <app-load-error-state #notificationsState [load]="loadNotifications" errorText="Failed to load notifications." [retryLabel]="'Retry'" errorWrapperClass="my-4"></app-load-error-state>
 
-  <div class="table-responsive" *ngIf="!errorMessage">
+  <div class="table-responsive" *ngIf="!notificationsState.hasError">
     <table class="table table-striped align-middle">
       <thead>
         <tr>

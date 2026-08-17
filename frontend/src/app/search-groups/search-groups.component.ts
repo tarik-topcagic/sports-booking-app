@@ -1,4 +1,4 @@
-import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, ViewChild } from '@angular/core';
 import { Group } from '../interfaces/group.model';
 import { GroupService } from '../../services/group.service';
 import { NavbarComponent } from '../navbar/navbar.component';
@@ -11,7 +11,7 @@ import { SkeletonListItemComponent } from '../skeleton/skeleton-list-item/skelet
 import { LoadErrorStateComponent } from '../load-error-state/load-error-state.component';
 import { PaginationComponent } from '../pagination/pagination.component';
 import { Router } from '@angular/router';
-import { Subscription, catchError, forkJoin, of } from 'rxjs';
+import { Observable, Subscription, catchError, forkJoin, of, switchMap, tap, throwError } from 'rxjs';
 import { paginate } from '../helpers/pagination.helper';
 import { matchesSearchQuery, SearchSortDirection, sortItemsByText } from '../helpers/search.helper';
 import { GroupDetails } from '../interfaces/group.model';
@@ -29,7 +29,7 @@ import {
   templateUrl: './search-groups.component.html',
   styleUrl: './search-groups.component.scss',
 })
-export class SearchGroupsComponent implements OnInit, OnDestroy {
+export class SearchGroupsComponent implements OnDestroy {
   searchQuery = '';
   filteredGroups: Group[] = [];
   allGroups: Group[] = [];
@@ -39,11 +39,11 @@ export class SearchGroupsComponent implements OnInit, OnDestroy {
   activeSort: SearchSortDirection = 'asc';
   showFilterMenu = false;
   showSortMenu = false;
+  @ViewChild('groupsState') groupsState!: LoadErrorStateComponent;
+
   showCreateGroupModal = false;
   showEditGroupModal = false;
   selectedGroupToEdit: Group | null = null;
-  isLoadingGroups = false;
-  errorMessage = '';
   pendingJoinRequestGroupIds = new Set<number>();
   pendingInvitationGroupIds = new Set<number>();
   requestingAccessGroupIds = new Set<number>();
@@ -66,12 +66,8 @@ export class SearchGroupsComponent implements OnInit, OnDestroy {
     private toastService: ToastService,
   ) {
     this.membershipChangedSubscription = this.groupService.membershipChanged$.subscribe(() => {
-      this.loadGroupCollections();
+      this.groupsState.reload();
     });
-  }
-
-  ngOnInit(): void {
-    this.loadGroupCollections();
   }
 
   ngOnDestroy(): void {
@@ -153,11 +149,11 @@ export class SearchGroupsComponent implements OnInit, OnDestroy {
 
   closeCreateGroupModal(): void {
     this.showCreateGroupModal = false;
-    this.loadGroupCollections();
+    this.groupsState.reload();
   }
 
   onGroupCreated(newGroup: Group): void {
-    this.loadGroupCollections();
+    this.groupsState.reload();
     this.closeCreateGroupModal();
   }
 
@@ -178,11 +174,11 @@ export class SearchGroupsComponent implements OnInit, OnDestroy {
   closeEditGroupModal(): void {
     this.showEditGroupModal = false;
     this.selectedGroupToEdit = null;
-    this.loadGroupCollections();
+    this.groupsState.reload();
   }
 
   onGroupUpdated(updatedGroup: Group): void {
-    this.loadGroupCollections();
+    this.groupsState.reload();
     this.closeEditGroupModal();
   }
 
@@ -297,7 +293,7 @@ export class SearchGroupsComponent implements OnInit, OnDestroy {
         this.pendingInvitationGroupIds.delete(group.id);
         this.pendingInvitationMembershipIdByGroupId.delete(group.id);
         this.toastService.showSuccess(this.languageService.translate(accept ? 'invitationAccepted' : 'invitationDeclined'));
-        this.loadGroupCollections();
+        this.groupsState.reload();
       },
       onError: (error) => {
         this.respondingToInvitationGroupIds.delete(group.id);
@@ -315,49 +311,38 @@ export class SearchGroupsComponent implements OnInit, OnDestroy {
     return this.activeFilter === 'admin' ? 'noAdminGroups' : 'noMemberGroups';
   }
 
-  retryLoadGroups(): void {
-    this.loadGroupCollections();
-  }
+  loadGroupCollections = () => forkJoin({
+    allGroups: this.groupService.searchGroups(),
+    adminGroups: this.groupService.getMyGroups(),
+    memberGroups: this.groupService.getMemberGroups(),
+    pendingJoinRequestGroups: this.groupService.getPendingJoinRequestGroups(),
+    pendingInvitationGroups: this.groupService.getPendingInvitationGroups(),
+  }).pipe(
+    catchError((error) => {
+      console.error('Error loading group collections for search groups page:', error);
+      this.allGroups = [];
+      this.myGroups = [];
+      this.memberGroups = [];
+      this.pendingJoinRequestGroupIds.clear();
+      this.pendingInvitationGroupIds.clear();
+      this.applyFiltersAndSort();
+      return throwError(() => error);
+    }),
+    tap(({ allGroups, adminGroups, memberGroups, pendingJoinRequestGroups, pendingInvitationGroups }) => {
+      this.myGroups = adminGroups;
+      this.memberGroups = memberGroups;
+      this.allGroups = this.mergeUniqueGroups(allGroups, adminGroups, memberGroups, pendingJoinRequestGroups, pendingInvitationGroups);
 
-  private loadGroupCollections(): void {
-    this.isLoadingGroups = true;
-    this.errorMessage = '';
-
-    forkJoin({
-      allGroups: this.groupService.searchGroups(),
-      adminGroups: this.groupService.getMyGroups(),
-      memberGroups: this.groupService.getMemberGroups(),
-      pendingJoinRequestGroups: this.groupService.getPendingJoinRequestGroups(),
-      pendingInvitationGroups: this.groupService.getPendingInvitationGroups(),
-    }).subscribe({
-      next: ({ allGroups, adminGroups, memberGroups, pendingJoinRequestGroups, pendingInvitationGroups }) => {
-        this.myGroups = adminGroups;
-        this.memberGroups = memberGroups;
-        this.allGroups = this.mergeUniqueGroups(allGroups, adminGroups, memberGroups, pendingJoinRequestGroups, pendingInvitationGroups);
-
-        if (!this.myGroups.length && !this.memberGroups.length) {
-          this.activeFilter = 'all';
-        } else if (this.activeFilter === 'all') {
-          this.activeFilter = this.myGroups.length ? 'admin' : 'membership';
-        } else if (this.activeFilter === 'admin' && !this.myGroups.length && this.memberGroups.length) {
-          this.activeFilter = 'membership';
-        }
-
-        this.syncAccessRequestStates();
-      },
-      error: (error) => {
-        console.error('Error loading group collections for search groups page:', error);
-        this.allGroups = [];
-        this.myGroups = [];
-        this.memberGroups = [];
-        this.pendingJoinRequestGroupIds.clear();
-        this.pendingInvitationGroupIds.clear();
-        this.isLoadingGroups = false;
-        this.errorMessage = this.languageService.translate('groupsLoadError');
-        this.applyFiltersAndSort();
-      },
-    });
-  }
+      if (!this.myGroups.length && !this.memberGroups.length) {
+        this.activeFilter = 'all';
+      } else if (this.activeFilter === 'all') {
+        this.activeFilter = this.myGroups.length ? 'admin' : 'membership';
+      } else if (this.activeFilter === 'admin' && !this.myGroups.length && this.memberGroups.length) {
+        this.activeFilter = 'membership';
+      }
+    }),
+    switchMap(() => this.syncAccessRequestStates()),
+  );
 
   private mergeUniqueGroups(...groupCollections: Group[][]): Group[] {
     const uniqueGroups = new Map<number, Group>();
@@ -395,26 +380,25 @@ export class SearchGroupsComponent implements OnInit, OnDestroy {
     this.setupPagination();
   }
 
-  private syncAccessRequestStates(): void {
+  private syncAccessRequestStates(): Observable<unknown> {
     const candidateGroups = this.allGroups.filter((group) => !this.isMyGroup(group) && !this.isMemberGroup(group));
 
     if (!candidateGroups.length) {
       this.pendingJoinRequestGroupIds.clear();
       this.pendingInvitationGroupIds.clear();
       this.pendingInvitationMembershipIdByGroupId.clear();
-      this.isLoadingGroups = false;
       this.applyFiltersAndSort();
-      return;
+      return of(undefined);
     }
 
-    forkJoin(
+    return forkJoin(
       candidateGroups.map((group) =>
         this.groupService.getGroupDetails(group.id).pipe(
           catchError(() => of(null as GroupDetails | null)),
         ),
       ),
-    ).subscribe({
-      next: (groupDetails) => {
+    ).pipe(
+      tap((groupDetails) => {
         this.pendingJoinRequestGroupIds.clear();
         this.pendingInvitationGroupIds.clear();
         this.pendingInvitationMembershipIdByGroupId.clear();
@@ -439,17 +423,16 @@ export class SearchGroupsComponent implements OnInit, OnDestroy {
           }
         });
 
-        this.isLoadingGroups = false;
         this.applyFiltersAndSort();
-      },
-      error: (error) => {
+      }),
+      catchError((error) => {
         console.error('Error loading access request states for search groups page:', error);
         this.pendingJoinRequestGroupIds.clear();
         this.pendingInvitationGroupIds.clear();
         this.pendingInvitationMembershipIdByGroupId.clear();
-        this.isLoadingGroups = false;
         this.applyFiltersAndSort();
-      },
-    });
+        return of(undefined);
+      }),
+    );
   }
 }

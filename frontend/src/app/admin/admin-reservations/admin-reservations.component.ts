@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
+import { catchError, tap, throwError } from 'rxjs';
 import { DatePipe, NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NavbarComponent } from '../../navbar/navbar.component';
@@ -19,11 +20,12 @@ import { PaginationComponent } from '../../pagination/pagination.component';
   templateUrl: './admin-reservations.component.html',
   styleUrl: './admin-reservations.component.scss',
 })
-export class AdminReservationsComponent implements OnInit {
+export class AdminReservationsComponent {
+  @ViewChild('reservationsState') reservationsState!: LoadErrorStateComponent;
+
   reservations: Reservation[] = [];
   pagedReservations: Reservation[] = [];
   isLoading = false;
-  errorMessage = '';
   pendingReservationIds = new Set<number>();
 
   filterArenaId: number | null = null;
@@ -47,31 +49,26 @@ export class AdminReservationsComponent implements OnInit {
     private confirmDialogService: ConfirmDialogService,
   ) {}
 
-  ngOnInit(): void {
-    this.loadReservations();
-  }
-
-  loadReservations(): void {
+  loadReservations = () => {
     this.isLoading = true;
-    this.errorMessage = '';
 
-    this.adminReservationService.getAllReservations({
+    return this.adminReservationService.getAllReservations({
       arenaId: this.filterArenaId ?? undefined,
       username: this.filterUsername || undefined,
       status: this.filterStatus || undefined,
-    }).subscribe({
-      next: (reservations) => {
+    }).pipe(
+      tap((reservations) => {
         this.reservations = reservations;
         this.isLoading = false;
         this.currentPage = 1;
         this.setupPagination();
-      },
-      error: (error) => {
+      }),
+      catchError((error) => {
         console.error('Error loading reservations:', error);
-        this.errorMessage = 'Failed to load reservations.';
         this.isLoading = false;
-      },
-    });
+        return throwError(() => error);
+      }),
+    );
   }
 
   private setupPagination(): void {
@@ -87,14 +84,14 @@ export class AdminReservationsComponent implements OnInit {
   }
 
   applyFilters(): void {
-    this.loadReservations();
+    this.reservationsState.reload();
   }
 
   clearFilters(): void {
     this.filterArenaId = null;
     this.filterUsername = '';
     this.filterStatus = '';
-    this.loadReservations();
+    this.reservationsState.reload();
   }
 
   isPending(reservation: Reservation): boolean {
@@ -115,7 +112,7 @@ export class AdminReservationsComponent implements OnInit {
       next: () => {
         this.pendingReservationIds.delete(reservation.id);
         this.toastService.showSuccess('Reservation cancelled.');
-        this.loadReservations();
+        this.reservationsState.reload();
       },
       error: (error) => {
         console.error('Error cancelling reservation:', error);

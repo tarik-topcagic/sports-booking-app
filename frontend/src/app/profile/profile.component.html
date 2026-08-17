@@ -1,5 +1,22 @@
 <app-navbar></app-navbar>
-<div *ngIf="userProfile; else loading" class="container mt-4">
+<app-load-error-state [load]="loadProfile" errorKey="profileLoadError" errorWrapperClass="container my-4">
+<div loading class="container mt-4">
+  <div class="card mx-auto shadow-sm profile-card" style="max-width: 500px; position: relative; padding-bottom: 20px">
+    <div class="card-body text-center">
+      <app-skeleton [circle]="true" width="150px" height="150px" class="mb-3 mx-auto" style="display: block"></app-skeleton>
+      <app-skeleton width="40%" height="1.6rem" class="mx-auto mb-2" style="display: block"></app-skeleton>
+      <app-skeleton width="28%" height="1.15rem" class="mx-auto mb-3" style="display: block"></app-skeleton>
+      <hr />
+      <app-skeleton width="28%" height="1rem" class="mx-auto mb-3" style="display: block"></app-skeleton>
+      <app-skeleton width="22%" height="1rem" class="mx-auto" style="display: block"></app-skeleton>
+    </div>
+    <div class="text-center">
+      <app-skeleton width="160px" height="2.4rem" radius="var(--app-control-radius)" class="mx-auto" style="display: block"></app-skeleton>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="userProfile" class="container mt-4">
   <div
     class="card mx-auto shadow-sm profile-card"
     style="max-width: 500px; position: relative; padding-bottom: 20px"
@@ -59,25 +76,4 @@
     </div>
   </div>
 </div>
-
-<ng-template #loading>
-  <div class="container mt-4">
-    <div *ngIf="isLoading" class="card mx-auto shadow-sm profile-card" style="max-width: 500px; position: relative; padding-bottom: 20px">
-      <div class="card-body text-center">
-        <app-skeleton [circle]="true" width="150px" height="150px" class="mb-3 mx-auto" style="display: block"></app-skeleton>
-        <app-skeleton width="40%" height="1.6rem" class="mx-auto mb-2" style="display: block"></app-skeleton>
-        <app-skeleton width="28%" height="1.15rem" class="mx-auto mb-3" style="display: block"></app-skeleton>
-        <hr />
-        <app-skeleton width="28%" height="1rem" class="mx-auto mb-3" style="display: block"></app-skeleton>
-        <app-skeleton width="22%" height="1rem" class="mx-auto" style="display: block"></app-skeleton>
-      </div>
-      <div class="text-center">
-        <app-skeleton width="160px" height="2.4rem" radius="var(--app-control-radius)" class="mx-auto" style="display: block"></app-skeleton>
-      </div>
-    </div>
-
-    <div *ngIf="!isLoading && errorMessage" class="app-state-message">
-      <app-load-error-state [message]="errorMessage | translate" (retry)="loadProfile()"></app-load-error-state>
-    </div>
-  </div>
-</ng-template>
+</app-load-error-state>

@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
+import { catchError, tap, throwError } from 'rxjs';
 import { DatePipe, NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NavbarComponent } from '../../navbar/navbar.component';
@@ -28,11 +29,12 @@ const NOTIFICATION_TYPES = [
   templateUrl: './admin-notifications.component.html',
   styleUrl: './admin-notifications.component.scss',
 })
-export class AdminNotificationsComponent implements OnInit {
+export class AdminNotificationsComponent {
+  @ViewChild('notificationsState') notificationsState!: LoadErrorStateComponent;
+
   notifications: AppNotification[] = [];
   pagedNotifications: AppNotification[] = [];
   isLoading = false;
-  errorMessage = '';
   pendingNotificationIds = new Set<number>();
 
   readonly notificationTypes = NOTIFICATION_TYPES;
@@ -63,42 +65,37 @@ export class AdminNotificationsComponent implements OnInit {
     private confirmDialogService: ConfirmDialogService,
   ) {}
 
-  ngOnInit(): void {
-    this.loadNotifications();
-  }
-
-  loadNotifications(): void {
+  loadNotifications = () => {
     this.isLoading = true;
-    this.errorMessage = '';
 
-    this.adminNotificationService.getAllNotifications({
+    return this.adminNotificationService.getAllNotifications({
       type: this.filterType || undefined,
       isRead: this.filterIsRead ? this.filterIsRead === 'true' : undefined,
       username: this.filterUsername || undefined,
-    }).subscribe({
-      next: (notifications) => {
+    }).pipe(
+      tap((notifications) => {
         this.notifications = notifications;
         this.isLoading = false;
         this.currentPage = 1;
         this.setupPagination();
-      },
-      error: (error) => {
+      }),
+      catchError((error) => {
         console.error('Error loading notifications:', error);
-        this.errorMessage = 'Failed to load notifications.';
         this.isLoading = false;
-      },
-    });
+        return throwError(() => error);
+      }),
+    );
   }
 
   applyFilters(): void {
-    this.loadNotifications();
+    this.notificationsState.reload();
   }
 
   clearFilters(): void {
     this.filterType = '';
     this.filterIsRead = '';
     this.filterUsername = '';
-    this.loadNotifications();
+    this.notificationsState.reload();
   }
 
   private setupPagination(): void {

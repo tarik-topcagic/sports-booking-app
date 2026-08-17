@@ -1,5 +1,6 @@
 import { NgClass, NgFor, NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
+import { catchError, tap, throwError } from 'rxjs';
 import { Reservation } from '../interfaces/reservation.model';
 import { formatReadableDate } from '../helpers/date-format.helper';
 import { getArenaDisplayImage } from '../helpers/arena-ui.helper';
@@ -19,7 +20,7 @@ import { ConfirmDialogService } from '../../services/confirm-dialog.service';
   templateUrl: './my-reservations.component.html',
   styleUrl: './my-reservations.component.scss',
 })
-export class MyReservationsComponent implements OnInit {
+export class MyReservationsComponent {
   private readonly localeByLanguage: Record<string, string> = {
     en: 'en-US',
     de: 'de-DE',
@@ -31,8 +32,8 @@ export class MyReservationsComponent implements OnInit {
     it: 'it-IT',
   };
 
-  isLoading = true;
-  errorMessage = '';
+  @ViewChild('reservationsState') reservationsState!: LoadErrorStateComponent;
+
   reservations: Reservation[] = [];
   cancellingId: number | null = null;
 
@@ -43,9 +44,7 @@ export class MyReservationsComponent implements OnInit {
     private confirmDialogService: ConfirmDialogService,
   ) {}
 
-  ngOnInit(): void {
-    this.loadReservations();
-  }
+  ngOnInit(): void {}
 
   get currentLocale(): string {
     return this.localeByLanguage[this.languageService.currentLanguage] || 'en-US';
@@ -101,7 +100,7 @@ export class MyReservationsComponent implements OnInit {
       next: () => {
         this.cancellingId = null;
         this.toastService.showSuccess(this.languageService.translate('reservationCancelledSuccess'));
-        this.loadReservations();
+        this.reservationsState.reload();
       },
       error: (error) => {
         this.cancellingId = null;
@@ -113,23 +112,13 @@ export class MyReservationsComponent implements OnInit {
     });
   }
 
-  retryLoadReservations(): void {
-    this.loadReservations();
-  }
-
-  private loadReservations(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-    this.reservationService.getMyReservations().subscribe({
-      next: (reservations) => {
-        this.reservations = reservations;
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error loading reservations:', error);
-        this.errorMessage = 'myReservationsLoadError';
-        this.isLoading = false;
-      },
-    });
-  }
+  loadReservations = () => this.reservationService.getMyReservations().pipe(
+    tap((reservations) => {
+      this.reservations = reservations;
+    }),
+    catchError((error) => {
+      console.error('Error loading reservations:', error);
+      return throwError(() => error);
+    }),
+  );
 }

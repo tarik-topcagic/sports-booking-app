@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { catchError, tap, throwError } from 'rxjs';
 import { DatePipe, NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NavbarComponent } from '../../navbar/navbar.component';
@@ -21,10 +22,11 @@ import { PaginationComponent } from '../../pagination/pagination.component';
   styleUrl: './admin-users.component.scss',
 })
 export class AdminUsersComponent implements OnInit {
+  @ViewChild('usersState') usersState!: LoadErrorStateComponent;
+
   users: AdminUserDto[] = [];
   pagedUsers: AdminUserDto[] = [];
   isLoading = false;
-  errorMessage = '';
   pendingUserIds = new Set<string>();
   currentUserId: string | null = null;
 
@@ -58,45 +60,43 @@ export class AdminUsersComponent implements OnInit {
   ngOnInit(): void {
     const token = this.authService.currentUserValue?.token;
     this.currentUserId = token ? getUserIdFromToken(token) : null;
-    this.loadUsers();
   }
 
   isSelf(user: AdminUserDto): boolean {
     return !!this.currentUserId && user.id === this.currentUserId;
   }
 
-  loadUsers(): void {
+  loadUsers = () => {
     this.isLoading = true;
-    this.errorMessage = '';
 
-    this.adminUserService.getAllUsers({
+    return this.adminUserService.getAllUsers({
       username: this.filterUsername || undefined,
       role: this.filterRole || undefined,
       locked: this.filterLocked ? this.filterLocked === 'true' : undefined,
-    }).subscribe({
-      next: (users) => {
+    }).pipe(
+      tap((users) => {
         this.users = users;
         this.isLoading = false;
         this.currentPage = 1;
         this.setupPagination();
-      },
-      error: (error) => {
+      }),
+      catchError((error) => {
         console.error('Error loading users:', error);
-        this.errorMessage = 'Failed to load users.';
         this.isLoading = false;
-      },
-    });
+        return throwError(() => error);
+      }),
+    );
   }
 
   applyFilters(): void {
-    this.loadUsers();
+    this.usersState.reload();
   }
 
   clearFilters(): void {
     this.filterUsername = '';
     this.filterRole = '';
     this.filterLocked = '';
-    this.loadUsers();
+    this.usersState.reload();
   }
 
   private setupPagination(): void {
@@ -129,7 +129,7 @@ export class AdminUsersComponent implements OnInit {
       next: () => {
         this.pendingUserIds.delete(user.id);
         this.toastService.showSuccess(willLock ? 'User locked.' : 'User unlocked.');
-        this.loadUsers();
+        this.usersState.reload();
       },
       error: (error) => {
         console.error('Error updating user lockout state:', error);

@@ -124,11 +124,9 @@
       </p>
     </section>
 
-    <div *ngIf="errorMessage" class="empty-state error-state">
-      <app-load-error-state [message]="errorMessage | translate" (retry)="loadArenas()"></app-load-error-state>
-    </div>
+    <app-load-error-state #arenasState [load]="loadArenas" errorKey="arenasLoadError" errorWrapperClass="my-4"></app-load-error-state>
 
-    <section class="results-card" *ngIf="isLoadingArenas; else arenaResults">
+    <section class="results-card" *ngIf="arenasState.isLoading; else arenaResults">
       <app-skeleton-list-item
         *ngFor="let placeholder of [1, 2, 3, 4, 5]"
         avatarShape="square"
@@ -141,7 +139,7 @@
     </section>
 
     <ng-template #arenaResults>
-      <section class="results-card" *ngIf="pagedArenas.length && !errorMessage; else emptyArenasState">
+      <section class="results-card" *ngIf="pagedArenas.length && !arenasState.hasError; else emptyArenasState">
         <article class="result-row arena-row" *ngFor="let arena of pagedArenas">
           <div class="result-main arena-main">
             <div class="arena-image-shell">
@@ -170,7 +168,7 @@
     </ng-template>
 
     <ng-template #emptyArenasState>
-      <section class="empty-state" *ngIf="!errorMessage">
+      <section class="empty-state" *ngIf="!arenasState.hasError">
         <p>{{ 'noArenasFound' | translate }}</p>
       </section>
     </ng-template>

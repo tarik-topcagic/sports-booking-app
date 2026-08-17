@@ -7,7 +7,45 @@
       {{ 'backToArenas' | translate }}
     </button>
 
-    <ng-container *ngIf="!isLoading && arena; else stateBlock">
+    <app-load-error-state [load]="loadArena" [errorKey]="arenaErrorKey" errorWrapperClass="my-4">
+    <div loading class="payment-grid">
+      <section class="payment-card details-card">
+        <app-skeleton width="45%" height="1.75rem" class="mb-3"></app-skeleton>
+
+        <app-skeleton width="100%" height="58px" radius="var(--app-control-radius)" class="mb-3"></app-skeleton>
+        <app-skeleton width="100%" height="58px" radius="var(--app-control-radius)" class="mb-3"></app-skeleton>
+
+        <div class="d-flex gap-3 mb-3">
+          <app-skeleton class="flex-fill" height="58px" radius="var(--app-control-radius)"></app-skeleton>
+          <app-skeleton class="flex-fill" height="58px" radius="var(--app-control-radius)"></app-skeleton>
+        </div>
+
+        <app-skeleton width="70%" height="0.85rem" class="mb-3"></app-skeleton>
+
+        <app-skeleton width="100%" height="3.2rem" radius="1rem"></app-skeleton>
+      </section>
+
+      <aside class="summary-card details-card">
+        <app-skeleton width="55%" height="1.75rem" class="mb-3"></app-skeleton>
+
+        <div class="summary-item" *ngFor="let placeholder of [1, 2, 3]">
+          <app-skeleton width="16px" height="20px" radius="0.25rem"></app-skeleton>
+          <div class="flex-fill">
+            <app-skeleton width="45%" height="0.7rem" class="mb-2"></app-skeleton>
+            <app-skeleton width="70%" height="1rem"></app-skeleton>
+          </div>
+        </div>
+
+        <div class="summary-divider"></div>
+
+        <div class="price-row total">
+          <app-skeleton width="30%" height="1rem"></app-skeleton>
+          <app-skeleton width="25%" height="1.35rem"></app-skeleton>
+        </div>
+      </aside>
+    </div>
+
+    <ng-container *ngIf="arena">
       <div class="payment-grid">
         <section class="payment-card details-card">
           <h2 class="mb-3">{{ 'paymentDetails' | translate }}</h2>
@@ -150,50 +188,6 @@
         </aside>
       </div>
     </ng-container>
-
-    <ng-template #stateBlock>
-      <div class="payment-grid" *ngIf="isLoading; else errorBlock">
-        <section class="payment-card details-card">
-          <app-skeleton width="45%" height="1.75rem" class="mb-3"></app-skeleton>
-
-          <app-skeleton width="100%" height="58px" radius="var(--app-control-radius)" class="mb-3"></app-skeleton>
-          <app-skeleton width="100%" height="58px" radius="var(--app-control-radius)" class="mb-3"></app-skeleton>
-
-          <div class="d-flex gap-3 mb-3">
-            <app-skeleton class="flex-fill" height="58px" radius="var(--app-control-radius)"></app-skeleton>
-            <app-skeleton class="flex-fill" height="58px" radius="var(--app-control-radius)"></app-skeleton>
-          </div>
-
-          <app-skeleton width="70%" height="0.85rem" class="mb-3"></app-skeleton>
-
-          <app-skeleton width="100%" height="3.2rem" radius="1rem"></app-skeleton>
-        </section>
-
-        <aside class="summary-card details-card">
-          <app-skeleton width="55%" height="1.75rem" class="mb-3"></app-skeleton>
-
-          <div class="summary-item" *ngFor="let placeholder of [1, 2, 3]">
-            <app-skeleton width="16px" height="20px" radius="0.25rem"></app-skeleton>
-            <div class="flex-fill">
-              <app-skeleton width="45%" height="0.7rem" class="mb-2"></app-skeleton>
-              <app-skeleton width="70%" height="1rem"></app-skeleton>
-            </div>
-          </div>
-
-          <div class="summary-divider"></div>
-
-          <div class="price-row total">
-            <app-skeleton width="30%" height="1rem"></app-skeleton>
-            <app-skeleton width="25%" height="1.35rem"></app-skeleton>
-          </div>
-        </aside>
-      </div>
-
-      <ng-template #errorBlock>
-        <section class="state-card details-card">
-          <app-load-error-state [message]="errorMessage | translate" (retry)="retryLoadArena()"></app-load-error-state>
-        </section>
-      </ng-template>
-    </ng-template>
+    </app-load-error-state>
   </div>
 </div>

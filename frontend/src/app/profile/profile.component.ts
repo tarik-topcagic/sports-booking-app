@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { UserService } from '../../services/user.service';
+import { tap } from 'rxjs';
 import { User } from '../interfaces/user';
 import { NgIf } from '@angular/common';
 import { NavbarComponent } from '../navbar/navbar.component';
@@ -17,31 +18,18 @@ import { LoadErrorStateComponent } from '../load-error-state/load-error-state.co
 export class ProfileComponent implements OnInit {
   userProfile: User | null = null;
   timestamp = Date.now();
-  isLoading = true;
-  errorMessage = '';
 
   constructor(private userService: UserService) {}
 
   ngOnInit(): void {
     this.timestamp = Date.now();
-    this.loadProfile();
   }
 
-  loadProfile(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-
-    this.userService.getMyProfile().subscribe({
-      next: (data) => {
-        this.userProfile = data;
-        this.isLoading = false;
-      },
-      error: (err) => {
-        this.isLoading = false;
-        this.errorMessage = 'profileLoadError';
-      },
-    });
-  }
+  loadProfile = () => this.userService.getMyProfile().pipe(
+    tap((data) => {
+      this.userProfile = data;
+    }),
+  );
 
   handleImageError(): void {
     if (this.userProfile) {

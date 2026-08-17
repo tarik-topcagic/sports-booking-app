@@ -1,6 +1,18 @@
-<p class="mb-0">{{ message }}</p>
-<div class="mt-3">
-  <button type="button" class="btn btn-outline-primary btn-sm" (click)="retry.emit()">
-    {{ retryLabel ?? ('retry' | translate) }}
-  </button>
+<ng-container *ngIf="isLoading">
+  <ng-content select="[loading]"></ng-content>
+</ng-container>
+
+<div *ngIf="!isLoading && hasError" [ngClass]="errorWrapperClass" [style]="errorWrapperStyle">
+  <div class="load-error-state-card">
+    <p class="mb-0">{{ errorText ?? (errorKey! | translate) }}</p>
+    <div class="mt-3">
+      <button type="button" class="btn btn-outline-primary btn-sm" [disabled]="isLoading" (click)="retry()">
+        {{ retryLabel ?? ('retry' | translate) }}
+      </button>
+    </div>
+  </div>
 </div>
+
+<ng-container *ngIf="!isLoading && !hasError">
+  <ng-content></ng-content>
+</ng-container>

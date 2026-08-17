@@ -1,7 +1,7 @@
 import { NgClass, NgFor, NgIf } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { catchError, Subscription, tap, throwError } from 'rxjs';
 import { GroupService } from '../../services/group.service';
 import { LanguageService } from '../../services/language.service';
 import { NotificationService } from '../../services/notification.service';
@@ -27,9 +27,9 @@ import { LoadErrorStateComponent } from '../load-error-state/load-error-state.co
   styleUrl: './notifications.component.scss',
 })
 export class NotificationsComponent implements OnInit, OnDestroy {
+  @ViewChild('notificationsState') notificationsState!: LoadErrorStateComponent;
+
   notifications: AppNotification[] = [];
-  isLoading = true;
-  errorMessage = '';
   highlightedNotificationIds = new Set<number>();
   respondingInvitationAction = new Map<number, boolean>();
   respondingJoinRequestAction = new Map<number, boolean>();
@@ -55,14 +55,13 @@ export class NotificationsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     void this.systemNotificationRealtimeService.connect();
-    this.loadNotifications();
 
     this.realtimeNotificationSubscription = this.systemNotificationRealtimeService.incomingSystemNotifications$.subscribe((notification) => {
       this.applyRealtimeNotification(notification);
     });
 
     this.notificationRefreshIntervalId = setInterval(() => {
-      this.loadNotifications(false);
+      this.silentRefreshNotifications();
     }, this.notificationRefreshIntervalMs);
     this.relativeTimeRefreshIntervalId = setInterval(() => {
       this.relativeTimeRefreshKey += 1;
@@ -196,41 +195,33 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     this.respondToJoinRequest(notification, false);
   }
 
-  retryLoadNotifications(): void {
-    this.loadNotifications();
+  loadNotifications = () => this.notificationService.getNotifications().pipe(
+    tap((notifications) => this.applyLoadedNotifications(notifications, true)),
+    catchError((error) => {
+      console.error('Error loading notifications:', error);
+      return throwError(() => error);
+    }),
+  );
+
+  private silentRefreshNotifications(): void {
+    this.notificationService.getNotifications().subscribe({
+      next: (notifications) => this.applyLoadedNotifications(notifications, false),
+      error: (error) => console.error('Error loading notifications:', error),
+    });
   }
 
-  private loadNotifications(showLoading = true): void {
-    if (showLoading) {
-      this.isLoading = true;
-      this.errorMessage = '';
+  private applyLoadedNotifications(notifications: AppNotification[], computeHighlights: boolean): void {
+    if (computeHighlights) {
+      this.highlightedNotificationIds = createHighlightedSet(
+        notifications,
+        (notification) => !notification.isRead,
+        (notification) => notification.id,
+      );
     }
 
-    this.notificationService.getNotifications().subscribe({
-      next: (notifications) => {
-        if (showLoading) {
-          this.highlightedNotificationIds = createHighlightedSet(
-            notifications,
-            (notification) => !notification.isRead,
-            (notification) => notification.id,
-          );
-        }
-
-        this.notifications = notifications;
-        this.publishMembershipChangesFromNotifications(notifications);
-        if (showLoading) {
-          this.isLoading = false;
-        }
-        this.markNotificationsAsRead();
-      },
-      error: (error) => {
-        console.error('Error loading notifications:', error);
-        if (showLoading) {
-          this.isLoading = false;
-          this.errorMessage = this.languageService.translate('notificationsLoadError');
-        }
-      },
-    });
+    this.notifications = notifications;
+    this.publishMembershipChangesFromNotifications(notifications);
+    this.markNotificationsAsRead();
   }
 
   private markNotificationsAsRead(): void {
@@ -269,7 +260,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
         this.respondingInvitationAction.delete(notification.membershipId!);
         notification.invitationStatus = accept ? MembershipStatus.Accepted : MembershipStatus.Declined;
         notification.isRead = true;
-        this.loadNotifications();
+        this.notificationsState.reload();
       },
         onError: (error) => {
         this.respondingInvitationAction.delete(notification.membershipId!);
@@ -297,7 +288,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
         this.respondingJoinRequestAction.delete(notification.membershipId!);
         notification.membershipStatus = accept ? MembershipStatus.Accepted : MembershipStatus.Declined;
         notification.isRead = true;
-        this.loadNotifications();
+        this.notificationsState.reload();
       },
         onError: (error) => {
         this.respondingJoinRequestAction.delete(notification.membershipId!);

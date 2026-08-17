@@ -8,7 +8,7 @@ import { ChooseGroupModalComponent } from '../choose-group-modal/choose-group-mo
 import { User } from '../interfaces/user';
 import { AuthService } from '../../services/auth.service';
 import { PresenceService } from '../../services/presence.service';
-import { Subscription } from 'rxjs';
+import { catchError, NEVER, Subscription, tap, throwError } from 'rxjs';
 import { UserPresence } from '../interfaces/user-presence.model';
 import { SkeletonComponent } from '../skeleton/skeleton/skeleton.component';
 import { LoadErrorStateComponent } from '../load-error-state/load-error-state.component';
@@ -23,7 +23,6 @@ export class UserProfileComponent implements OnDestroy {
   userProfile: User | null = null;
   selectedUserForGroupInvite: User | null = null;
   timestamp: number = Date.now();
-  isLoading = true;
   currentUserId: string | null = null;
   canShowPresence = false;
   isProfileUserOnline = false;
@@ -42,10 +41,6 @@ export class UserProfileComponent implements OnDestroy {
     this.presenceSubscription = this.presenceService.presenceUpdates$.subscribe((update) => {
       this.handlePresenceUpdate(update);
     });
-    const username = this.route.snapshot.paramMap.get('username');
-    if (username) {
-      this.getUserProfile(username);
-    }
   }
 
   ngOnDestroy(): void {
@@ -53,32 +48,28 @@ export class UserProfileComponent implements OnDestroy {
     void this.presenceService.disconnectRealtime();
   }
 
-  retryLoadProfile(): void {
+  loadUserProfile = () => {
     const username = this.route.snapshot.paramMap.get('username');
-    if (username) {
-      this.getUserProfile(username);
+    if (!username) {
+      return NEVER;
     }
-  }
 
-  getUserProfile(username: string): void {
-    this.isLoading = true;
     const currentUsername = this.authService.currentUserValue?.username;
     const profileRequest = currentUsername && currentUsername.toLowerCase() === username.toLowerCase()
       ? this.userService.getMyProfile()
       : this.userService.getUserProfileByUsername(username);
 
-    profileRequest.subscribe({
-      next: (user) => {
+    return profileRequest.pipe(
+      tap((user) => {
         this.userProfile = user;
-        this.isLoading = false;
         this.loadPresenceForProfileUser();
-      },
-      error: (error) => {
+      }),
+      catchError((error) => {
         this.userProfile = null;
-        this.isLoading = false;
         console.error('User not found', error);
-      },
-    });
+        return throwError(() => error);
+      }),
+    );
   }
 
   handleImageError(): void {

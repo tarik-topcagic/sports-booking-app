@@ -1,7 +1,7 @@
 import { NgClass, NgFor, NgIf } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { catchError, Subscription, tap, throwError } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { ChatRealtimeService } from '../../services/chat-realtime.service';
 import { ChatInboxService } from '../../services/chat-inbox.service';
@@ -28,8 +28,6 @@ import { SkeletonListItemComponent } from '../skeleton/skeleton-list-item/skelet
 })
 export class MessagesComponent implements OnInit, OnDestroy {
   messages: ChatInboxItem[] = [];
-  isLoading = true;
-  errorMessage = '';
   highlightedMessageKeys = new Set<string>();
   relativeTimeRefreshKey = 0;
 
@@ -82,10 +80,8 @@ export class MessagesComponent implements OnInit, OnDestroy {
       this.applyMessageDeletedToChatListItem('private', event.conversationId, event);
     });
 
-    this.loadMessages();
-
     this.messagesRefreshIntervalId = setInterval(() => {
-      this.loadMessages(false);
+      this.silentRefreshMessages();
     }, this.messagesRefreshIntervalMs);
 
     this.relativeTimeRefreshIntervalId = setInterval(() => {
@@ -164,44 +160,34 @@ export class MessagesComponent implements OnInit, OnDestroy {
     return !!message.groupId && this.groupPresenceByGroupId.get(message.groupId) === true;
   }
 
-  retryLoadMessages(): void {
-    this.loadMessages();
+  loadMessages = () => this.chatInboxService.getInboxItems(this.currentUserId).pipe(
+    tap((messages) => this.applyLoadedMessages(messages, true)),
+    catchError((error) => {
+      console.error('Error loading chat inbox notifications:', error);
+      return throwError(() => error);
+    }),
+  );
+
+  private silentRefreshMessages(): void {
+    this.chatInboxService.getInboxItems(this.currentUserId).subscribe({
+      next: (messages) => this.applyLoadedMessages(messages, false),
+      error: (error) => console.error('Error loading chat inbox notifications:', error),
+    });
   }
 
-  private loadMessages(showLoading = true): void {
-    if (showLoading) {
-      this.isLoading = true;
-      this.errorMessage = '';
+  private applyLoadedMessages(messages: ChatInboxItem[], computeHighlights: boolean): void {
+    const mergedMessages = mergeInboxItemsWithReactionOverlays(messages, this.reactionOverlaysByKey);
+
+    if (computeHighlights) {
+      this.highlightedMessageKeys = createHighlightedSet(
+        mergedMessages,
+        (message) => message.unreadCount > 0,
+        (message) => this.getMessageKey(message),
+      );
     }
 
-    this.chatInboxService.getInboxItems(this.currentUserId).subscribe({
-      next: (messages) => {
-        const mergedMessages = mergeInboxItemsWithReactionOverlays(messages, this.reactionOverlaysByKey);
-
-        if (showLoading) {
-          this.highlightedMessageKeys = createHighlightedSet(
-            mergedMessages,
-            (message) => message.unreadCount > 0,
-            (message) => this.getMessageKey(message),
-          );
-        }
-
-        this.messages = mergedMessages;
-        this.syncPresenceIndicators(mergedMessages);
-
-        if (showLoading) {
-          this.isLoading = false;
-        }
-      },
-      error: (error) => {
-        console.error('Error loading chat inbox notifications:', error);
-
-        if (showLoading) {
-          this.isLoading = false;
-          this.errorMessage = this.languageService.translate('messagesLoadError');
-        }
-      },
-    });
+    this.messages = mergedMessages;
+    this.syncPresenceIndicators(mergedMessages);
   }
 
   private getMessageKey(message: ChatInboxItem): string {

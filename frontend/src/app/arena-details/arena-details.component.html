@@ -7,7 +7,33 @@
       {{ 'backToArenas' | translate }}
     </button>
 
-    <section class="arena-experience" *ngIf="arena; else stateBlock">
+    <app-load-error-state [load]="loadArenaDetails" [errorKey]="arenaErrorKey" errorWrapperClass="my-4">
+    <section loading class="arena-experience">
+      <section class="hero-card details-card skeleton-hero-card">
+        <app-skeleton class="hero-image" width="100%" height="100%" radius="0"></app-skeleton>
+      </section>
+
+      <div class="content-grid">
+        <div class="content-main">
+          <section class="schedule-card details-card">
+            <app-skeleton-calendar-grid
+              [dayCount]="visibleDays.length"
+              [isMobileLayout]="isMobileLayout"
+            ></app-skeleton-calendar-grid>
+          </section>
+
+          <section class="details-copy details-card">
+            <app-skeleton-text-block headingWidth="35%" [lineCount]="4"></app-skeleton-text-block>
+          </section>
+        </div>
+
+        <aside *ngIf="!isMobileLayout" class="summary-card details-card">
+          <app-skeleton-text-block headingWidth="55%" [lineCount]="3"></app-skeleton-text-block>
+        </aside>
+      </div>
+    </section>
+
+    <section class="arena-experience" *ngIf="arena">
       <section class="hero-card details-card">
         <img
           [src]="getArenaImageUrl()"
@@ -277,39 +303,7 @@
         </aside>
       </div>
     </section>
-
-    <ng-template #stateBlock>
-      <section class="arena-experience" *ngIf="isLoading; else errorBlock">
-        <section class="hero-card details-card skeleton-hero-card">
-          <app-skeleton class="hero-image" width="100%" height="100%" radius="0"></app-skeleton>
-        </section>
-
-        <div class="content-grid">
-          <div class="content-main">
-            <section class="schedule-card details-card">
-              <app-skeleton-calendar-grid
-                [dayCount]="visibleDays.length"
-                [isMobileLayout]="isMobileLayout"
-              ></app-skeleton-calendar-grid>
-            </section>
-
-            <section class="details-copy details-card">
-              <app-skeleton-text-block headingWidth="35%" [lineCount]="4"></app-skeleton-text-block>
-            </section>
-          </div>
-
-          <aside *ngIf="!isMobileLayout" class="summary-card details-card">
-            <app-skeleton-text-block headingWidth="55%" [lineCount]="3"></app-skeleton-text-block>
-          </aside>
-        </div>
-      </section>
-
-      <ng-template #errorBlock>
-        <section class="app-state-message">
-          <app-load-error-state [message]="errorMessage | translate" (retry)="retryLoadArenaDetails()"></app-load-error-state>
-        </section>
-      </ng-template>
-    </ng-template>
+    </app-load-error-state>
   </div>
 </div>
 

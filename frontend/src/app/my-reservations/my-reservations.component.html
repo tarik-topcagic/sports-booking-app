@@ -3,7 +3,8 @@
 <div class="container mt-4 mb-5 my-reservations-page">
   <h2 class="mb-4">{{ 'myReservations' | translate }}</h2>
 
-  <ng-container *ngIf="isLoading">
+  <app-load-error-state #reservationsState [load]="loadReservations" errorKey="myReservationsLoadError" errorWrapperClass="my-4">
+  <ng-container loading>
     <section class="reservations-section">
       <h4 class="mb-3">{{ 'upcomingReservations' | translate }}</h4>
       <app-skeleton-list-item
@@ -30,11 +31,8 @@
       ></app-skeleton-list-item>
     </section>
   </ng-container>
-  <div *ngIf="!isLoading && errorMessage" class="app-state-message">
-    <app-load-error-state [message]="errorMessage | translate" (retry)="retryLoadReservations()"></app-load-error-state>
-  </div>
 
-  <ng-container *ngIf="!isLoading && !errorMessage">
+  <ng-container>
     <section class="reservations-section">
       <h4 class="mb-3">{{ 'upcomingReservations' | translate }}</h4>
 
@@ -106,4 +104,5 @@
       </div>
     </section>
   </ng-container>
+  </app-load-error-state>
 </div>

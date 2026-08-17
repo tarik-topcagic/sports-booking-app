@@ -1,48 +1,70 @@
 <app-navbar></app-navbar>
-<div *ngIf="userProfile; else profileState" class="user-profile-page">
+<div class="user-profile-page">
   <div class="container">
     <a class="back-link" routerLink="/users">
       <i class="bi bi-arrow-left"></i>
       {{ 'backToUsers' | translate }}
     </a>
 
-    <div class="card mx-auto shadow-sm profile-card">
-      <div class="card-body text-center">
-        <div class="profile-image-shell mb-3 mx-auto">
-          <span *ngIf="canShowPresence && isProfileUserOnline" class="profile-presence-dot"></span>
-          <ng-container *ngIf="userProfile.profilePictureUrl && userProfile.profilePictureUrl !== 'default-profile.png'; else defaultImage">
-            <img
-              [src]="userProfile.profilePictureUrl + '?t=' + timestamp"
-              (error)="handleImageError()"
-              [alt]="'profilePicture' | translate"
-              class="profile-image"
-            />
-          </ng-container>
-          <ng-template #defaultImage>
-            <div class="profile-image-fallback">
-              <i class="bi bi-person"></i>
+    <app-load-error-state [load]="loadUserProfile" errorKey="userNotFound" errorWrapperClass="my-4">
+      <div loading>
+        <div class="card mx-auto shadow-sm profile-card">
+          <div class="card-body text-center">
+            <app-skeleton [circle]="true" width="150px" height="150px" class="mb-3 mx-auto" style="display: block"></app-skeleton>
+            <app-skeleton width="40%" height="1.6rem" class="mx-auto mb-2" style="display: block"></app-skeleton>
+            <app-skeleton width="28%" height="1.15rem" class="mx-auto mb-3" style="display: block"></app-skeleton>
+            <hr />
+            <app-skeleton width="28%" height="1rem" class="mx-auto" style="display: block"></app-skeleton>
+          </div>
+          <div class="profile-actions text-center">
+            <div class="d-flex justify-content-center gap-2">
+              <app-skeleton width="120px" height="2.4rem" radius="var(--app-control-radius)" style="display: block"></app-skeleton>
+              <app-skeleton width="150px" height="2.4rem" radius="var(--app-control-radius)" style="display: block"></app-skeleton>
             </div>
-          </ng-template>
-        </div>
-        <h2 class="fw-bold">{{ userProfile.username }}</h2>
-        <p class="h5 text-secondary mb-3">{{ userProfile.fullName }}</p>
-        <hr />
-        <p class="mb-3">
-          <i class="bi bi-geo-alt-fill me-2"></i>
-          {{ userProfile.location ? userProfile.location : ('notSet' | translate) }}
-        </p>
-      </div>
-      <div class="profile-actions text-center">
-        <div class="d-flex justify-content-center gap-2">
-          <button *ngIf="!isOwnProfile()" type="button" class="btn btn-primary" (click)="openPrivateChat()">
-            <i class="bi bi-chat-dots me-1"></i> {{ 'message' | translate }}
-          </button>
-          <button type="button" class="btn btn-primary" (click)="openChooseGroupModal()">
-            <i class="bi bi-person-plus me-1"></i> {{ 'addToGroup' | translate }}
-          </button>
+          </div>
         </div>
       </div>
-    </div>
+
+      <div *ngIf="userProfile">
+        <div class="card mx-auto shadow-sm profile-card">
+          <div class="card-body text-center">
+            <div class="profile-image-shell mb-3 mx-auto">
+              <span *ngIf="canShowPresence && isProfileUserOnline" class="profile-presence-dot"></span>
+              <ng-container *ngIf="userProfile.profilePictureUrl && userProfile.profilePictureUrl !== 'default-profile.png'; else defaultImage">
+                <img
+                  [src]="userProfile.profilePictureUrl + '?t=' + timestamp"
+                  (error)="handleImageError()"
+                  [alt]="'profilePicture' | translate"
+                  class="profile-image"
+                />
+              </ng-container>
+              <ng-template #defaultImage>
+                <div class="profile-image-fallback">
+                  <i class="bi bi-person"></i>
+                </div>
+              </ng-template>
+            </div>
+            <h2 class="fw-bold">{{ userProfile.username }}</h2>
+            <p class="h5 text-secondary mb-3">{{ userProfile.fullName }}</p>
+            <hr />
+            <p class="mb-3">
+              <i class="bi bi-geo-alt-fill me-2"></i>
+              {{ userProfile.location ? userProfile.location : ('notSet' | translate) }}
+            </p>
+          </div>
+          <div class="profile-actions text-center">
+            <div class="d-flex justify-content-center gap-2">
+              <button *ngIf="!isOwnProfile()" type="button" class="btn btn-primary" (click)="openPrivateChat()">
+                <i class="bi bi-chat-dots me-1"></i> {{ 'message' | translate }}
+              </button>
+              <button type="button" class="btn btn-primary" (click)="openChooseGroupModal()">
+                <i class="bi bi-person-plus me-1"></i> {{ 'addToGroup' | translate }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </app-load-error-state>
   </div>
 </div>
 
@@ -51,28 +73,3 @@
   [user]="selectedUserForGroupInvite"
   (close)="closeChooseGroupModal()"
 ></app-choose-group-modal>
-
-<ng-template #profileState>
-  <div class="container mt-4">
-    <div *ngIf="isLoading; else profileNotFound" class="card mx-auto shadow-sm profile-card">
-      <div class="card-body text-center">
-        <app-skeleton [circle]="true" width="150px" height="150px" class="mb-3 mx-auto" style="display: block"></app-skeleton>
-        <app-skeleton width="40%" height="1.6rem" class="mx-auto mb-2" style="display: block"></app-skeleton>
-        <app-skeleton width="28%" height="1.15rem" class="mx-auto mb-3" style="display: block"></app-skeleton>
-        <hr />
-        <app-skeleton width="28%" height="1rem" class="mx-auto" style="display: block"></app-skeleton>
-      </div>
-      <div class="profile-actions text-center">
-        <div class="d-flex justify-content-center gap-2">
-          <app-skeleton width="120px" height="2.4rem" radius="var(--app-control-radius)" style="display: block"></app-skeleton>
-          <app-skeleton width="150px" height="2.4rem" radius="var(--app-control-radius)" style="display: block"></app-skeleton>
-        </div>
-      </div>
-    </div>
-    <ng-template #profileNotFound>
-      <div class="app-state-message">
-        <app-load-error-state [message]="'userNotFound' | translate" (retry)="retryLoadProfile()"></app-load-error-state>
-      </div>
-    </ng-template>
-  </div>
-</ng-template>

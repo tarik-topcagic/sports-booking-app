@@ -1,5 +1,5 @@
 import { NgClass, NgFor, NgIf } from '@angular/common';
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../pipes/translate.pipe';
@@ -13,8 +13,7 @@ import { LoadErrorStateComponent } from '../load-error-state/load-error-state.co
 import { PaginationComponent } from '../pagination/pagination.component';
 import { paginate } from '../helpers/pagination.helper';
 import { GroupService } from '../../services/group.service';
-import { LanguageService } from '../../services/language.service';
-import { catchError, forkJoin, of, timeout } from 'rxjs';
+import { catchError, forkJoin, of, tap, throwError, timeout } from 'rxjs';
 import { Group, GroupDetails } from '../interfaces/group.model';
 import { SearchSortDirection, sortItemsByText } from '../helpers/search.helper';
 
@@ -36,9 +35,9 @@ export class SearchUsersComponent implements OnInit {
   showFilterMenu = false;
   showSortMenu = false;
   selectedUserForGroupInvite: User | null = null;
-  isLoadingUsers = false;
+  @ViewChild('usersState') usersState!: LoadErrorStateComponent;
+
   isLoadingCommonGroups = false;
-  errorMessage = '';
   openingChatUserId: string | null = null;
 
   pagedUsers: User[] = [];
@@ -54,7 +53,6 @@ export class SearchUsersComponent implements OnInit {
     private router: Router,
     private authService: AuthService,
     private groupService: GroupService,
-    private languageService: LanguageService,
   ) {
     const currentUser = this.authService.currentUserValue;
     if (currentUser) {
@@ -63,40 +61,28 @@ export class SearchUsersComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadUsers();
     this.loadCommonGroupUsers();
   }
 
-  retryLoadUsers(): void {
-    this.loadUsers();
-  }
-
-  loadUsers(): void {
-    this.isLoadingUsers = true;
-    this.errorMessage = '';
-
-    this.userService.searchUsers(this.searchQuery).subscribe({
-      next: (response) => {
-        this.users = response;
-        this.isLoadingUsers = false;
-        this.applyFiltersAndSort();
-      },
-      error: (error) => {
-        console.error('Error loading users from search page:', error);
-        this.users = [];
-        this.isLoadingUsers = false;
-        this.errorMessage = this.languageService.translate('usersLoadError');
-        this.applyFiltersAndSort();
-      },
-    });
-  }
+  loadUsers = () => this.userService.searchUsers(this.searchQuery).pipe(
+    tap((response) => {
+      this.users = response;
+      this.applyFiltersAndSort();
+    }),
+    catchError((error) => {
+      console.error('Error loading users from search page:', error);
+      this.users = [];
+      this.applyFiltersAndSort();
+      return throwError(() => error);
+    }),
+  );
 
   searchUsers(): void {
-    this.loadUsers();
+    this.usersState.reload();
   }
 
   onSearchQueryChange(): void {
-    this.loadUsers();
+    this.usersState.reload();
   }
 
   onFilterChange(): void {

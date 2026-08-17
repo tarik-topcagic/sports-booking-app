@@ -3,8 +3,17 @@
 <div class="container mt-4 mb-5 settings-page">
   <h2 class="mb-4">{{ 'settings' | translate }}</h2>
 
-  <div *ngIf="errorMessage" class="app-state-message">
-    <app-load-error-state [message]="errorMessage" (retry)="loadSettings()"></app-load-error-state>
+  <app-load-error-state [load]="loadSettings" errorKey="settingsLoadError" errorWrapperClass="my-4">
+  <div loading>
+    <section class="settings-section">
+      <app-skeleton-text-block headingWidth="25%" [lineCount]="2"></app-skeleton-text-block>
+    </section>
+    <section class="settings-section">
+      <app-skeleton-text-block headingWidth="25%" [lineCount]="2"></app-skeleton-text-block>
+    </section>
+    <section class="settings-section">
+      <app-skeleton-text-block headingWidth="25%" [lineCount]="3"></app-skeleton-text-block>
+    </section>
   </div>
 
   <div *ngIf="settings">
@@ -121,16 +130,5 @@
       </dl>
     </section>
   </div>
-
-  <ng-container *ngIf="!settings && !errorMessage">
-    <section class="settings-section">
-      <app-skeleton-text-block headingWidth="25%" [lineCount]="2"></app-skeleton-text-block>
-    </section>
-    <section class="settings-section">
-      <app-skeleton-text-block headingWidth="25%" [lineCount]="2"></app-skeleton-text-block>
-    </section>
-    <section class="settings-section">
-      <app-skeleton-text-block headingWidth="25%" [lineCount]="3"></app-skeleton-text-block>
-    </section>
-  </ng-container>
+  </app-load-error-state>
 </div>

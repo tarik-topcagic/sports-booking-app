@@ -1,5 +1,5 @@
 import { DatePipe, NgFor, NgIf } from '@angular/common';
-import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Group, GroupDetails } from '../interfaces/group.model';
 import { GroupService } from '../../services/group.service';
@@ -9,7 +9,7 @@ import { LanguageService } from '../../services/language.service';
 import { PresenceService } from '../../services/presence.service';
 import { EditGroupModalComponent } from '../edit-group-modal/edit-group-modal.component';
 import { ConfirmDialogService } from '../../services/confirm-dialog.service';
-import { Subscription } from 'rxjs';
+import { catchError, NEVER, Subscription, tap, throwError } from 'rxjs';
 import { GroupInviteMembersModalComponent } from '../group-invite-members-modal/group-invite-members-modal.component';
 import { GroupMembersModalComponent } from '../group-members-modal/group-members-modal.component';
 import { GroupPresence } from '../interfaces/group-presence.model';
@@ -42,9 +42,10 @@ import {
   styleUrl: './group-details.component.scss'
 })
 export class GroupDetailsComponent implements OnInit, OnDestroy {
+  @ViewChild('groupState') groupState!: LoadErrorStateComponent;
+
   group: GroupDetails | null = null;
   selectedGroupToEdit: Group | null = null;
-  isLoading = true;
   isRequestingAccess = false;
   isCancelingAccessRequest = false;
   isRespondingToInvitation = false;
@@ -53,7 +54,6 @@ export class GroupDetailsComponent implements OnInit, OnDestroy {
   showInviteMembersModal = false;
   showMembersModal = false;
   isMemberMenuOpen = false;
-  errorMessage = '';
   canShowPresence = false;
   onlineMemberUserIds = new Set<string>();
   private routeSubscription?: Subscription;
@@ -70,6 +70,8 @@ export class GroupDetailsComponent implements OnInit, OnDestroy {
     private toastService: ToastService,
   ) {}
 
+  private isInitialRouteParamsEmission = true;
+
   ngOnInit(): void {
     this.routeSubscription = this.route.paramMap.subscribe((params) => {
       const groupId = Number(params.get('id'));
@@ -79,13 +81,18 @@ export class GroupDetailsComponent implements OnInit, OnDestroy {
         return;
       }
 
+      if (this.isInitialRouteParamsEmission) {
+        this.isInitialRouteParamsEmission = false;
+        return;
+      }
+
       this.resetViewStateForRouteChange();
-      this.loadGroup(groupId);
+      this.groupState.reload();
     });
 
     this.groupDetailsRefreshSubscription = this.groupService.groupDetailsRefresh$.subscribe((groupId) => {
       if (this.group?.id === groupId) {
-        this.loadGroup(groupId);
+        this.groupState.reload();
       }
     });
 
@@ -111,7 +118,6 @@ export class GroupDetailsComponent implements OnInit, OnDestroy {
     }
 
     this.isRequestingAccess = true;
-    this.errorMessage = '';
 
     requestGroupAccess(this.groupService, this.group.id, {
       languageService: this.languageService,
@@ -135,7 +141,6 @@ export class GroupDetailsComponent implements OnInit, OnDestroy {
     }
 
     this.isCancelingAccessRequest = true;
-    this.errorMessage = '';
 
     cancelGroupAccessRequest(this.groupService, this.group.id, {
       languageService: this.languageService,
@@ -177,7 +182,7 @@ export class GroupDetailsComponent implements OnInit, OnDestroy {
 
   onGroupUpdated(updatedGroup: Group): void {
     this.closeEditGroupModal();
-    this.loadGroup(updatedGroup.id);
+    this.groupState.reload();
   }
 
   onGroupDeleted(): void {
@@ -269,34 +274,26 @@ export class GroupDetailsComponent implements OnInit, OnDestroy {
     this.showInviteMembersModal = false;
     this.showMembersModal = false;
     this.isMemberMenuOpen = false;
-    this.errorMessage = '';
     this.canShowPresence = false;
     this.onlineMemberUserIds.clear();
   }
 
-  retryLoadGroup(): void {
+  loadGroup = () => {
     const groupId = Number(this.route.snapshot.paramMap.get('id'));
-    if (groupId) {
-      this.loadGroup(groupId);
+    if (!groupId) {
+      return NEVER;
     }
-  }
 
-  private loadGroup(groupId: number): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-
-    this.groupService.getGroupDetails(groupId).subscribe(
-      (group) => {
+    return this.groupService.getGroupDetails(groupId).pipe(
+      tap((group) => {
         this.group = group;
         this.isMemberMenuOpen = false;
-        this.isLoading = false;
         this.loadGroupPresence(group.id);
-      },
-      (error) => {
-        this.isLoading = false;
-        this.errorMessage = this.languageService.translate('groupDetailsLoadError');
+      }),
+      catchError((error) => {
         console.error('Error loading group details:', error);
-      },
+        return throwError(() => error);
+      }),
     );
   }
 
@@ -306,7 +303,6 @@ export class GroupDetailsComponent implements OnInit, OnDestroy {
     }
 
     this.isRespondingToInvitation = true;
-    this.errorMessage = '';
 
     respondToGroupInvitation(
       this.groupService,
@@ -317,7 +313,7 @@ export class GroupDetailsComponent implements OnInit, OnDestroy {
         onSuccess: () => {
         this.isRespondingToInvitation = false;
         this.toastService.showSuccess(this.languageService.translate(accept ? 'invitationAccepted' : 'invitationDeclined'));
-        this.loadGroup(this.group!.id);
+        this.groupState.reload();
       },
         onError: (error) => {
         this.isRespondingToInvitation = false;
@@ -345,7 +341,7 @@ export class GroupDetailsComponent implements OnInit, OnDestroy {
 
   onInviteMembersGroupDetailsRefresh(): void {
     if (this.group) {
-      this.loadGroup(this.group.id);
+      this.groupState.reload();
     }
   }
 
