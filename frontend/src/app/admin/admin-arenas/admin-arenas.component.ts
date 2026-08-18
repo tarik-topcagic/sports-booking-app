@@ -11,7 +11,6 @@ import { ArenaService } from '../../../services/arena.service';
 import { AdminArenaService, ArenaFilterOptions } from '../../../services/admin/admin-arena.service';
 import { ToastService } from '../../../services/toast.service';
 import { ConfirmDialogService } from '../../../services/confirm-dialog.service';
-import { paginate } from '../../helpers/pagination.helper';
 import { SkeletonTableRowComponent } from '../../skeleton/skeleton-table-row/skeleton-table-row.component';
 import { LoadErrorStateComponent } from '../../load-error-state/load-error-state.component';
 import { PaginationComponent } from '../../pagination/pagination.component';
@@ -57,10 +56,8 @@ export class AdminArenasComponent implements OnInit {
     return [{ value: '', label: 'All' }, ...this.filterOptions.sports.map((sport) => ({ value: sport, label: sport }))];
   }
 
-  currentPage = 1;
   itemsPerPage = 10;
-  totalPages = 0;
-  totalPagesArray: number[] = [];
+  resetPageSignal = 0;
 
   constructor(
     private arenaService: ArenaService,
@@ -117,8 +114,7 @@ export class AdminArenasComponent implements OnInit {
       tap((arenas) => {
         this.arenas = arenas;
         this.isLoading = false;
-        this.currentPage = 1;
-        this.setupPagination();
+        this.resetPageSignal++;
       }),
       catchError((error) => {
         console.error('Error loading arenas:', error);
@@ -139,16 +135,8 @@ export class AdminArenasComponent implements OnInit {
     this.arenasState.reload();
   }
 
-  private setupPagination(): void {
-    const pagination = paginate(this.arenas, this.currentPage, this.itemsPerPage);
-    this.pagedArenas = pagination.pagedItems;
-    this.totalPages = pagination.totalPages;
-    this.totalPagesArray = pagination.totalPagesArray;
-  }
-
-  onPageChange(page: number): void {
-    this.currentPage = page;
-    this.setupPagination();
+  onPagedArenasChange(pagedArenas: AdminArenaDto[]): void {
+    this.pagedArenas = pagedArenas;
   }
 
   private loadArenaForEdit(id: number): void {

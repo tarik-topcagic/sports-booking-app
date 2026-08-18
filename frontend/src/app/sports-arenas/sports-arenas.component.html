@@ -174,11 +174,11 @@
     </ng-template>
 
     <app-pagination
-      [currentPage]="currentPage"
-      [totalPages]="totalPages"
-      [totalPagesArray]="totalPagesArray"
+      [items]="filteredArenas"
+      [pageSize]="pageSize"
+      [resetKey]="resetPageSignal"
       [ariaLabel]="'sportsArenasTitle' | translate"
-      (pageChange)="onPageChange($event)"
+      (pagedItemsChange)="onPagedArenasChange($event)"
     ></app-pagination>
   </div>
 </div>

@@ -235,11 +235,11 @@
     </ng-template>
 
     <app-pagination
-      [currentPage]="currentPage"
-      [totalPages]="totalPages"
-      [totalPagesArray]="getTotalPagesArray()"
+      [items]="filteredGroups"
+      [pageSize]="pageSize"
+      [resetKey]="resetPageSignal"
       [ariaLabel]="'searchGroupsTitle' | translate"
-      (pageChange)="onPageChange($event)"
+      (pagedItemsChange)="onPagedGroupsChange($event)"
     ></app-pagination>
   </div>
 </div>

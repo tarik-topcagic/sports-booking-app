@@ -82,11 +82,11 @@
     </table>
 
     <app-pagination
-      [currentPage]="currentPage"
-      [totalPages]="totalPages"
-      [totalPagesArray]="totalPagesArray"
+      [items]="users"
+      [pageSize]="itemsPerPage"
+      [resetKey]="resetPageSignal"
       ariaLabel="Users pagination"
-      (pageChange)="onPageChange($event)"
+      (pagedItemsChange)="onPagedUsersChange($event)"
     ></app-pagination>
   </div>
 </div>

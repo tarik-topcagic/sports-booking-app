@@ -586,7 +586,7 @@
     overflow-x: hidden;
   }
   .arena-details-page {
-    padding: 0.85rem 0.7rem 1.4rem;
+    padding: 2rem 0.7rem 1.4rem;
   }
   .arena-details-shell { max-width: 100vw; }
   .arena-experience,
@@ -597,10 +597,6 @@
     display: grid;
     grid-template-columns: 1fr;
     gap: 0.95rem;
-  }
-  .back-button {
-    margin-bottom: 0.75rem;
-    font-size: 0.92rem;
   }
   .details-card,
   .state-card {

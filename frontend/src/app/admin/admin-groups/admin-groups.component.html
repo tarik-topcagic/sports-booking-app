@@ -76,11 +76,11 @@
     </table>
 
     <app-pagination
-      [currentPage]="currentPage"
-      [totalPages]="totalPages"
-      [totalPagesArray]="totalPagesArray"
+      [items]="groups"
+      [pageSize]="itemsPerPage"
+      [resetKey]="resetPageSignal"
       ariaLabel="Groups pagination"
-      (pageChange)="onPageChange($event)"
+      (pagedItemsChange)="onPagedGroupsChange($event)"
     ></app-pagination>
   </div>
 </div>

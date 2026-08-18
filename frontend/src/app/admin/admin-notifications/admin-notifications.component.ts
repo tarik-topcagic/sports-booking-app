@@ -8,7 +8,6 @@ import { AppNotification } from '../../interfaces/notification.model';
 import { AdminNotificationService } from '../../../services/admin/admin-notification.service';
 import { ToastService } from '../../../services/toast.service';
 import { ConfirmDialogService } from '../../../services/confirm-dialog.service';
-import { paginate } from '../../helpers/pagination.helper';
 import { SkeletonTableRowComponent } from '../../skeleton/skeleton-table-row/skeleton-table-row.component';
 import { LoadErrorStateComponent } from '../../load-error-state/load-error-state.component';
 import { PaginationComponent } from '../../pagination/pagination.component';
@@ -54,10 +53,8 @@ export class AdminNotificationsComponent {
   filterIsRead: '' | 'true' | 'false' = '';
   filterUsername = '';
 
-  currentPage = 1;
   itemsPerPage = 10;
-  totalPages = 0;
-  totalPagesArray: number[] = [];
+  resetPageSignal = 0;
 
   constructor(
     private adminNotificationService: AdminNotificationService,
@@ -76,8 +73,7 @@ export class AdminNotificationsComponent {
       tap((notifications) => {
         this.notifications = notifications;
         this.isLoading = false;
-        this.currentPage = 1;
-        this.setupPagination();
+        this.resetPageSignal++;
       }),
       catchError((error) => {
         console.error('Error loading notifications:', error);
@@ -98,16 +94,8 @@ export class AdminNotificationsComponent {
     this.notificationsState.reload();
   }
 
-  private setupPagination(): void {
-    const pagination = paginate(this.notifications, this.currentPage, this.itemsPerPage);
-    this.pagedNotifications = pagination.pagedItems;
-    this.totalPages = pagination.totalPages;
-    this.totalPagesArray = pagination.totalPagesArray;
-  }
-
-  onPageChange(page: number): void {
-    this.currentPage = page;
-    this.setupPagination();
+  onPagedNotificationsChange(pagedNotifications: AppNotification[]): void {
+    this.pagedNotifications = pagedNotifications;
   }
 
   isPending(notification: AppNotification): boolean {
@@ -124,8 +112,7 @@ export class AdminNotificationsComponent {
       next: () => {
         this.pendingNotificationIds.delete(notification.id);
         this.toastService.showSuccess('Notification deleted.');
-        this.notifications = this.notifications.filter((n) => n.id !== notification.id);
-        this.setupPagination();
+        this.notificationsState.reload();
       },
       error: (error) => {
         console.error('Error deleting notification:', error);

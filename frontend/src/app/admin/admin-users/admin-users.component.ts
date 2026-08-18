@@ -9,7 +9,6 @@ import { AdminUserService } from '../../../services/admin/admin-user.service';
 import { ToastService } from '../../../services/toast.service';
 import { AuthService } from '../../../services/auth.service';
 import { getUserIdFromToken } from '../../../services/jwt.util';
-import { paginate } from '../../helpers/pagination.helper';
 import { SkeletonTableRowComponent } from '../../skeleton/skeleton-table-row/skeleton-table-row.component';
 import { LoadErrorStateComponent } from '../../load-error-state/load-error-state.component';
 import { PaginationComponent } from '../../pagination/pagination.component';
@@ -46,10 +45,8 @@ export class AdminUsersComponent implements OnInit {
     { value: 'true', label: 'Locked' },
   ];
 
-  currentPage = 1;
   itemsPerPage = 10;
-  totalPages = 0;
-  totalPagesArray: number[] = [];
+  resetPageSignal = 0;
 
   constructor(
     private adminUserService: AdminUserService,
@@ -77,8 +74,7 @@ export class AdminUsersComponent implements OnInit {
       tap((users) => {
         this.users = users;
         this.isLoading = false;
-        this.currentPage = 1;
-        this.setupPagination();
+        this.resetPageSignal++;
       }),
       catchError((error) => {
         console.error('Error loading users:', error);
@@ -99,16 +95,8 @@ export class AdminUsersComponent implements OnInit {
     this.usersState.reload();
   }
 
-  private setupPagination(): void {
-    const pagination = paginate(this.users, this.currentPage, this.itemsPerPage);
-    this.pagedUsers = pagination.pagedItems;
-    this.totalPages = pagination.totalPages;
-    this.totalPagesArray = pagination.totalPagesArray;
-  }
-
-  onPageChange(page: number): void {
-    this.currentPage = page;
-    this.setupPagination();
+  onPagedUsersChange(pagedUsers: AdminUserDto[]): void {
+    this.pagedUsers = pagedUsers;
   }
 
   isLocked(user: AdminUserDto): boolean {

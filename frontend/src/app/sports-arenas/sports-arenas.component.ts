@@ -7,7 +7,6 @@ import {
   getArenaDescriptionTranslationKey,
   getArenaDisplayImage,
 } from '../helpers/arena-ui.helper';
-import { paginate } from '../helpers/pagination.helper';
 import { SearchSortDirection, sortItemsByText } from '../helpers/search.helper';
 import { Arena } from '../interfaces/arena.model';
 import { FavoriteArena } from '../interfaces/favorite-arena.model';
@@ -55,10 +54,8 @@ export class SportsArenasComponent implements OnInit {
   favoriteArenas: FavoriteArena[] = [];
   removingFavoriteArenaId: number | null = null;
 
-  currentPage = 1;
   pageSize = 6;
-  totalPages = 0;
-  totalPagesArray: number[] = [];
+  resetPageSignal = 0;
 
   constructor(
     private arenaService: ArenaService,
@@ -176,21 +173,8 @@ export class SportsArenasComponent implements OnInit {
     this.router.navigate(['/sports-arenas', arena.id]);
   }
 
-  setupPagination(): void {
-    this.currentPage = 1;
-    this.setPagedArenas();
-  }
-
-  setPagedArenas(): void {
-    const pagination = paginate(this.filteredArenas, this.currentPage, this.pageSize);
-    this.pagedArenas = pagination.pagedItems;
-    this.totalPages = pagination.totalPages;
-    this.totalPagesArray = pagination.totalPagesArray;
-  }
-
-  onPageChange(page: number): void {
-    this.currentPage = page;
-    this.setPagedArenas();
+  onPagedArenasChange(pagedArenas: Arena[]): void {
+    this.pagedArenas = pagedArenas;
   }
 
   getCityLabel(): string {
@@ -221,6 +205,6 @@ export class SportsArenasComponent implements OnInit {
 
   private applyFiltersAndSort(): void {
     this.filteredArenas = sortItemsByText(this.arenas, (arena) => arena.name, this.activeSort);
-    this.setupPagination();
+    this.resetPageSignal++;
   }
 }

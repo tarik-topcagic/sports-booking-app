@@ -12,7 +12,6 @@ import { LoadErrorStateComponent } from '../load-error-state/load-error-state.co
 import { PaginationComponent } from '../pagination/pagination.component';
 import { Router } from '@angular/router';
 import { Observable, Subscription, catchError, forkJoin, of, switchMap, tap, throwError } from 'rxjs';
-import { paginate } from '../helpers/pagination.helper';
 import { matchesSearchQuery, SearchSortDirection, sortItemsByText } from '../helpers/search.helper';
 import { GroupDetails } from '../interfaces/group.model';
 import { LanguageService } from '../../services/language.service';
@@ -51,11 +50,9 @@ export class SearchGroupsComponent implements OnDestroy {
   respondingToInvitationGroupIds = new Set<number>();
   private pendingInvitationMembershipIdByGroupId = new Map<number, number>();
 
-  currentPage = 1;
   pageSize = 6;
-  totalPages = 0;
   pagedGroups: Group[] = [];
-  totalPagesArray: number[] = [];
+  resetPageSignal = 0;
 
   private membershipChangedSubscription?: Subscription;
 
@@ -122,25 +119,8 @@ export class SearchGroupsComponent implements OnDestroy {
     this.showSortMenu = false;
   }
 
-  setupPagination(): void {
-    this.currentPage = 1;
-    this.setPagedGroups();
-  }
-
-  setPagedGroups(): void {
-    const pagination = paginate(this.filteredGroups, this.currentPage, this.pageSize);
-    this.pagedGroups = pagination.pagedItems;
-    this.totalPages = pagination.totalPages;
-    this.totalPagesArray = pagination.totalPagesArray;
-  }
-
-  onPageChange(page: number): void {
-    this.currentPage = page;
-    this.setPagedGroups();
-  }
-
-  getTotalPagesArray(): number[] {
-    return this.totalPagesArray;
+  onPagedGroupsChange(pagedGroups: Group[]): void {
+    this.pagedGroups = pagedGroups;
   }
 
   openCreateGroupModal(): void {
@@ -377,7 +357,7 @@ export class SearchGroupsComponent implements OnDestroy {
     nextGroups = sortItemsByText(nextGroups, (group) => group.name, this.activeSort);
 
     this.filteredGroups = nextGroups;
-    this.setupPagination();
+    this.resetPageSignal++;
   }
 
   private syncAccessRequestStates(): Observable<unknown> {

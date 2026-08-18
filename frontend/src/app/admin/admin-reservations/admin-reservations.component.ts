@@ -8,7 +8,6 @@ import { Reservation, ReservationStatus } from '../../interfaces/reservation.mod
 import { AdminReservationService } from '../../../services/admin/admin-reservation.service';
 import { ToastService } from '../../../services/toast.service';
 import { ConfirmDialogService } from '../../../services/confirm-dialog.service';
-import { paginate } from '../../helpers/pagination.helper';
 import { SkeletonTableRowComponent } from '../../skeleton/skeleton-table-row/skeleton-table-row.component';
 import { LoadErrorStateComponent } from '../../load-error-state/load-error-state.component';
 import { PaginationComponent } from '../../pagination/pagination.component';
@@ -38,10 +37,8 @@ export class AdminReservationsComponent {
     { value: 'Cancelled', label: 'Cancelled' },
   ];
 
-  currentPage = 1;
   itemsPerPage = 10;
-  totalPages = 0;
-  totalPagesArray: number[] = [];
+  resetPageSignal = 0;
 
   constructor(
     private adminReservationService: AdminReservationService,
@@ -60,8 +57,7 @@ export class AdminReservationsComponent {
       tap((reservations) => {
         this.reservations = reservations;
         this.isLoading = false;
-        this.currentPage = 1;
-        this.setupPagination();
+        this.resetPageSignal++;
       }),
       catchError((error) => {
         console.error('Error loading reservations:', error);
@@ -71,16 +67,8 @@ export class AdminReservationsComponent {
     );
   }
 
-  private setupPagination(): void {
-    const pagination = paginate(this.reservations, this.currentPage, this.itemsPerPage);
-    this.pagedReservations = pagination.pagedItems;
-    this.totalPages = pagination.totalPages;
-    this.totalPagesArray = pagination.totalPagesArray;
-  }
-
-  onPageChange(page: number): void {
-    this.currentPage = page;
-    this.setupPagination();
+  onPagedReservationsChange(pagedReservations: Reservation[]): void {
+    this.pagedReservations = pagedReservations;
   }
 
   applyFilters(): void {

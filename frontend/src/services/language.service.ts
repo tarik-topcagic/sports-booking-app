@@ -1031,6 +1031,16 @@ export class LanguageService {
       fr: 'Retour aux arenes',
       it: 'Torna alle arene',
     },
+    backToArenaDetails: {
+      en: 'Back to arena details',
+      de: 'Zurueck zu Arenadetails',
+      bs: 'Nazad na detalje arene',
+      hr: 'Nazad na detalje arene',
+      sr: 'Nazad na detalje arene',
+      es: 'Volver a detalles de la arena',
+      fr: 'Retour aux details de l arene',
+      it: 'Torna ai dettagli dell arena',
+    },
     users: {
       en: 'Users',
       de: 'Benutzer',

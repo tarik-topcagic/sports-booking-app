@@ -8,7 +8,6 @@ import { AdminGroupService } from '../../../services/admin/admin-group.service';
 import { GroupService } from '../../../services/group.service';
 import { ToastService } from '../../../services/toast.service';
 import { ConfirmDialogService } from '../../../services/confirm-dialog.service';
-import { paginate } from '../../helpers/pagination.helper';
 import { SkeletonTableRowComponent } from '../../skeleton/skeleton-table-row/skeleton-table-row.component';
 import { SkeletonListItemComponent } from '../../skeleton/skeleton-list-item/skeleton-list-item.component';
 import { LoadErrorStateComponent } from '../../load-error-state/load-error-state.component';
@@ -40,10 +39,8 @@ export class AdminGroupsComponent {
   filterName = '';
   filterOwner = '';
 
-  currentPage = 1;
   itemsPerPage = 10;
-  totalPages = 0;
-  totalPagesArray: number[] = [];
+  resetPageSignal = 0;
 
   constructor(
     private adminGroupService: AdminGroupService,
@@ -62,8 +59,7 @@ export class AdminGroupsComponent {
       tap((groups) => {
         this.groups = groups;
         this.isLoading = false;
-        this.currentPage = 1;
-        this.setupPagination();
+        this.resetPageSignal++;
       }),
       catchError((error) => {
         console.error('Error loading groups:', error);
@@ -83,16 +79,8 @@ export class AdminGroupsComponent {
     this.groupsState.reload();
   }
 
-  private setupPagination(): void {
-    const pagination = paginate(this.groups, this.currentPage, this.itemsPerPage);
-    this.pagedGroups = pagination.pagedItems;
-    this.totalPages = pagination.totalPages;
-    this.totalPagesArray = pagination.totalPagesArray;
-  }
-
-  onPageChange(page: number): void {
-    this.currentPage = page;
-    this.setupPagination();
+  onPagedGroupsChange(pagedGroups: Group[]): void {
+    this.pagedGroups = pagedGroups;
   }
 
   isPending(group: Group): boolean {

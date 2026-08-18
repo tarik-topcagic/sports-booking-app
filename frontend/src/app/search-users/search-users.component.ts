@@ -11,7 +11,6 @@ import { ChooseGroupModalComponent } from '../choose-group-modal/choose-group-mo
 import { SkeletonListItemComponent } from '../skeleton/skeleton-list-item/skeleton-list-item.component';
 import { LoadErrorStateComponent } from '../load-error-state/load-error-state.component';
 import { PaginationComponent } from '../pagination/pagination.component';
-import { paginate } from '../helpers/pagination.helper';
 import { GroupService } from '../../services/group.service';
 import { catchError, forkJoin, of, tap, throwError, timeout } from 'rxjs';
 import { Group, GroupDetails } from '../interfaces/group.model';
@@ -41,10 +40,8 @@ export class SearchUsersComponent implements OnInit {
   openingChatUserId: string | null = null;
 
   pagedUsers: User[] = [];
-  currentPage = 1;
   itemsPerPage = 6;
-  totalPages = 0;
-  totalPagesArray: number[] = [];
+  resetPageSignal = 0;
 
   private commonGroupUserIds = new Set<string>();
 
@@ -125,21 +122,8 @@ export class SearchUsersComponent implements OnInit {
     this.showSortMenu = false;
   }
 
-  setupPagination(): void {
-    this.currentPage = 1;
-    this.setPagedUsers();
-  }
-
-  setPagedUsers(): void {
-    const pagination = paginate(this.filteredUsers, this.currentPage, this.itemsPerPage);
-    this.pagedUsers = pagination.pagedItems;
-    this.totalPages = pagination.totalPages;
-    this.totalPagesArray = pagination.totalPagesArray;
-  }
-
-  onPageChange(page: number): void {
-    this.currentPage = page;
-    this.setPagedUsers();
+  onPagedUsersChange(pagedUsers: User[]): void {
+    this.pagedUsers = pagedUsers;
   }
 
   goToProfile(user: User): void {
@@ -233,7 +217,7 @@ export class SearchUsersComponent implements OnInit {
     }
 
     this.filteredUsers = sortItemsByText(nextUsers, (user) => this.getDisplayName(user), this.activeSort);
-    this.setupPagination();
+    this.resetPageSignal++;
   }
 
   private loadCommonGroupUsers(): void {

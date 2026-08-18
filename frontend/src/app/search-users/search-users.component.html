@@ -179,11 +179,11 @@
     </ng-template>
 
     <app-pagination
-      [currentPage]="currentPage"
-      [totalPages]="totalPages"
-      [totalPagesArray]="totalPagesArray"
+      [items]="filteredUsers"
+      [pageSize]="itemsPerPage"
+      [resetKey]="resetPageSignal"
       [ariaLabel]="'searchUsersTitle' | translate"
-      (pageChange)="onPageChange($event)"
+      (pagedItemsChange)="onPagedUsersChange($event)"
     ></app-pagination>
   </div>
 </div>
