@@ -25,4 +25,13 @@ export class MessageActionsCoordinatorService {
 
     this.activeInstance = null;
   }
+
+  clearAllActive(): void {
+    if (this.activeInstance === null) {
+      return;
+    }
+
+    this.activeInstance = null;
+    this.activeChangedSubject.next(null);
+  }
 }

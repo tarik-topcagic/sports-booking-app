@@ -1,4 +1,4 @@
-import { Component, HostListener, OnDestroy, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
 import { Group } from '../interfaces/group.model';
 import { GroupService } from '../../services/group.service';
 import { NavbarComponent } from '../navbar/navbar.component';
@@ -16,6 +16,7 @@ import { matchesSearchQuery, SearchSortDirection, sortItemsByText } from '../hel
 import { GroupDetails } from '../interfaces/group.model';
 import { LanguageService } from '../../services/language.service';
 import { ToastService } from '../../services/toast.service';
+import { DropdownCoordinatorService } from '../../services/dropdown-coordinator.service';
 import {
   cancelGroupAccessRequest,
   requestGroupAccess,
@@ -39,6 +40,8 @@ export class SearchGroupsComponent implements OnDestroy {
   showFilterMenu = false;
   showSortMenu = false;
   @ViewChild('groupsState') groupsState!: LoadErrorStateComponent;
+  @ViewChild('filterMenuWrapper') filterMenuWrapperRef!: ElementRef<HTMLElement>;
+  @ViewChild('sortMenuWrapper') sortMenuWrapperRef!: ElementRef<HTMLElement>;
 
   showCreateGroupModal = false;
   showEditGroupModal = false;
@@ -54,21 +57,37 @@ export class SearchGroupsComponent implements OnDestroy {
   pagedGroups: Group[] = [];
   resetPageSignal = 0;
 
+  private readonly filterMenuId: unknown = {};
+  private readonly sortMenuId: unknown = {};
   private membershipChangedSubscription?: Subscription;
+  private coordinatorSubscription?: Subscription;
 
   constructor(
     private groupService: GroupService,
     private router: Router,
     private languageService: LanguageService,
     private toastService: ToastService,
+    private dropdownCoordinator: DropdownCoordinatorService,
   ) {
     this.membershipChangedSubscription = this.groupService.membershipChanged$.subscribe(() => {
       this.groupsState.reload();
+    });
+
+    this.coordinatorSubscription = this.dropdownCoordinator.activeChanged$.subscribe((activeId) => {
+      if (activeId !== this.filterMenuId) {
+        this.showFilterMenu = false;
+      }
+      if (activeId !== this.sortMenuId) {
+        this.showSortMenu = false;
+      }
     });
   }
 
   ngOnDestroy(): void {
     this.membershipChangedSubscription?.unsubscribe();
+    this.coordinatorSubscription?.unsubscribe();
+    this.dropdownCoordinator.close(this.filterMenuId);
+    this.dropdownCoordinator.close(this.sortMenuId);
   }
 
   searchGroups(): void {
@@ -83,16 +102,19 @@ export class SearchGroupsComponent implements OnDestroy {
     this.applyFiltersAndSort();
   }
 
-  toggleFilterMenu(event?: Event): void {
-    event?.stopPropagation();
-    this.showFilterMenu = !this.showFilterMenu;
-    this.showSortMenu = false;
+  toggleFilterMenu(): void {
+    if (this.showFilterMenu) {
+      this.closeFilterMenu();
+      return;
+    }
+
+    this.dropdownCoordinator.open(this.filterMenuId, this.filterMenuWrapperRef.nativeElement);
+    this.showFilterMenu = true;
   }
 
-  selectFilter(filter: 'all' | 'admin' | 'membership', event?: Event): void {
-    event?.stopPropagation();
+  selectFilter(filter: 'all' | 'admin' | 'membership'): void {
     this.activeFilter = filter;
-    this.showFilterMenu = false;
+    this.closeFilterMenu();
     this.onFilterChange();
   }
 
@@ -100,23 +122,30 @@ export class SearchGroupsComponent implements OnDestroy {
     this.applyFiltersAndSort();
   }
 
-  toggleSortMenu(event?: Event): void {
-    event?.stopPropagation();
-    this.showFilterMenu = false;
-    this.showSortMenu = !this.showSortMenu;
+  toggleSortMenu(): void {
+    if (this.showSortMenu) {
+      this.closeSortMenu();
+      return;
+    }
+
+    this.dropdownCoordinator.open(this.sortMenuId, this.sortMenuWrapperRef.nativeElement);
+    this.showSortMenu = true;
   }
 
-  selectSortDirection(direction: SearchSortDirection, event?: Event): void {
-    event?.stopPropagation();
+  selectSortDirection(direction: SearchSortDirection): void {
     this.activeSort = direction;
-    this.showSortMenu = false;
+    this.closeSortMenu();
     this.onSortChange();
   }
 
-  @HostListener('document:click')
-  closeSortMenu(): void {
+  private closeFilterMenu(): void {
     this.showFilterMenu = false;
+    this.dropdownCoordinator.close(this.filterMenuId);
+  }
+
+  private closeSortMenu(): void {
     this.showSortMenu = false;
+    this.dropdownCoordinator.close(this.sortMenuId);
   }
 
   onPagedGroupsChange(pagedGroups: Group[]): void {

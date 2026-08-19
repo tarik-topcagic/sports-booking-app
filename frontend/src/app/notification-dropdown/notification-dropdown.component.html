@@ -18,7 +18,7 @@
       type="button"
       class="notification-button"
       [title]="'notifications' | translate"
-      (click)="toggleNotifications($event)"
+      (click)="toggleNotifications()"
     >
       <i class="bi bi-bell"></i>
       <span *ngIf="unreadNotificationsCount" class="notification-badge">

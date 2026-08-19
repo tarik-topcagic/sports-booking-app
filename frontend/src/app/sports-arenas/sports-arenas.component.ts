@@ -1,6 +1,6 @@
 import { NgClass, NgFor, NgIf } from '@angular/common';
-import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
-import { catchError, tap, throwError } from 'rxjs';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { catchError, Subscription, tap, throwError } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
@@ -19,6 +19,7 @@ import { ArenaService } from '../../services/arena.service';
 import { FavoriteArenaService } from '../../services/favorite-arena.service';
 import { LanguageService } from '../../services/language.service';
 import { ToastService } from '../../services/toast.service';
+import { DropdownCoordinatorService } from '../../services/dropdown-coordinator.service';
 
 @Component({
   selector: 'app-sports-arenas',
@@ -26,7 +27,7 @@ import { ToastService } from '../../services/toast.service';
   templateUrl: './sports-arenas.component.html',
   styleUrl: './sports-arenas.component.scss',
 })
-export class SportsArenasComponent implements OnInit {
+export class SportsArenasComponent implements OnInit, OnDestroy {
   readonly cityOptions = [
     'Sarajevo',
     'Mostar',
@@ -46,6 +47,8 @@ export class SportsArenasComponent implements OnInit {
   showSportMenu = false;
 
   @ViewChild('arenasState') arenasState!: LoadErrorStateComponent;
+  @ViewChild('cityMenuWrapper') cityMenuWrapperRef!: ElementRef<HTMLElement>;
+  @ViewChild('sportMenuWrapper') sportMenuWrapperRef!: ElementRef<HTMLElement>;
 
   arenas: Arena[] = [];
   filteredArenas: Arena[] = [];
@@ -57,16 +60,36 @@ export class SportsArenasComponent implements OnInit {
   pageSize = 6;
   resetPageSignal = 0;
 
+  private readonly cityMenuId: unknown = {};
+  private readonly sportMenuId: unknown = {};
+  private coordinatorSubscription?: Subscription;
+
   constructor(
     private arenaService: ArenaService,
     private favoriteArenaService: FavoriteArenaService,
     private languageService: LanguageService,
     private toastService: ToastService,
     private router: Router,
-  ) {}
+    private dropdownCoordinator: DropdownCoordinatorService,
+  ) {
+    this.coordinatorSubscription = this.dropdownCoordinator.activeChanged$.subscribe((activeId) => {
+      if (activeId !== this.cityMenuId) {
+        this.showCityMenu = false;
+      }
+      if (activeId !== this.sportMenuId) {
+        this.showSportMenu = false;
+      }
+    });
+  }
 
   ngOnInit(): void {
     this.loadFavoriteArenas();
+  }
+
+  ngOnDestroy(): void {
+    this.coordinatorSubscription?.unsubscribe();
+    this.dropdownCoordinator.close(this.cityMenuId);
+    this.dropdownCoordinator.close(this.sportMenuId);
   }
 
   viewFavoriteDetails(favorite: FavoriteArena): void {
@@ -129,44 +152,58 @@ export class SportsArenasComponent implements OnInit {
     this.arenasState.reload();
   }
 
-  toggleCityMenu(event?: Event): void {
-    event?.stopPropagation();
-    this.showCityMenu = !this.showCityMenu;
-    this.showSportMenu = false;
+  toggleCityMenu(): void {
+    if (this.showCityMenu) {
+      this.closeCityMenu();
+      return;
+    }
+
+    this.dropdownCoordinator.open(this.cityMenuId, this.cityMenuWrapperRef.nativeElement);
+    this.showCityMenu = true;
   }
 
-  toggleSportMenu(event?: Event): void {
-    event?.stopPropagation();
-    this.showSportMenu = !this.showSportMenu;
-    this.showCityMenu = false;
+  toggleSportMenu(): void {
+    if (this.showSportMenu) {
+      this.closeSportMenu();
+      return;
+    }
+
+    this.dropdownCoordinator.open(this.sportMenuId, this.sportMenuWrapperRef.nativeElement);
+    this.showSportMenu = true;
   }
 
-  selectCityFilter(city: string, event?: Event): void {
-    event?.stopPropagation();
+  selectCityFilter(city: string): void {
     this.activeCityFilter = city;
-    this.showCityMenu = false;
+    this.closeCityMenu();
     this.arenasState.reload();
   }
 
-  selectSportFilter(sportType: string, event?: Event): void {
-    event?.stopPropagation();
+  selectSportFilter(sportType: string): void {
     this.activeSportFilter = sportType;
-    this.showSportMenu = false;
+    this.closeSportMenu();
     this.arenasState.reload();
   }
 
-  clearCityFilter(event?: Event): void {
-    event?.stopPropagation();
+  clearCityFilter(): void {
     this.activeCityFilter = '';
-    this.showCityMenu = false;
+    this.closeCityMenu();
     this.arenasState.reload();
   }
 
-  clearSportFilter(event?: Event): void {
-    event?.stopPropagation();
+  clearSportFilter(): void {
     this.activeSportFilter = '';
-    this.showSportMenu = false;
+    this.closeSportMenu();
     this.arenasState.reload();
+  }
+
+  private closeCityMenu(): void {
+    this.showCityMenu = false;
+    this.dropdownCoordinator.close(this.cityMenuId);
+  }
+
+  private closeSportMenu(): void {
+    this.showSportMenu = false;
+    this.dropdownCoordinator.close(this.sportMenuId);
   }
 
   viewDetails(arena: Arena): void {
@@ -195,12 +232,6 @@ export class SportsArenasComponent implements OnInit {
 
   getFavoriteArenaImageUrl(favorite: FavoriteArena): string {
     return getArenaDisplayImage({ id: favorite.arenaId } as Arena);
-  }
-
-  @HostListener('document:click')
-  closeMenus(): void {
-    this.showCityMenu = false;
-    this.showSportMenu = false;
   }
 
   private applyFiltersAndSort(): void {

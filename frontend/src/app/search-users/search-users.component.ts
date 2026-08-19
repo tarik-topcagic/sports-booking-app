@@ -1,5 +1,5 @@
 import { NgClass, NgFor, NgIf } from '@angular/common';
-import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../pipes/translate.pipe';
@@ -12,9 +12,10 @@ import { SkeletonListItemComponent } from '../skeleton/skeleton-list-item/skelet
 import { LoadErrorStateComponent } from '../load-error-state/load-error-state.component';
 import { PaginationComponent } from '../pagination/pagination.component';
 import { GroupService } from '../../services/group.service';
-import { catchError, forkJoin, of, tap, throwError, timeout } from 'rxjs';
+import { catchError, forkJoin, of, Subscription, tap, throwError, timeout } from 'rxjs';
 import { Group, GroupDetails } from '../interfaces/group.model';
 import { SearchSortDirection, sortItemsByText } from '../helpers/search.helper';
+import { DropdownCoordinatorService } from '../../services/dropdown-coordinator.service';
 
 const OPEN_CHAT_TIMEOUT_MS = 15000;
 
@@ -24,7 +25,7 @@ const OPEN_CHAT_TIMEOUT_MS = 15000;
   templateUrl: './search-users.component.html',
   styleUrl: './search-users.component.scss',
 })
-export class SearchUsersComponent implements OnInit {
+export class SearchUsersComponent implements OnInit, OnDestroy {
   searchQuery = '';
   users: User[] = [];
   filteredUsers: User[] = [];
@@ -35,6 +36,8 @@ export class SearchUsersComponent implements OnInit {
   showSortMenu = false;
   selectedUserForGroupInvite: User | null = null;
   @ViewChild('usersState') usersState!: LoadErrorStateComponent;
+  @ViewChild('filterMenuWrapper') filterMenuWrapperRef!: ElementRef<HTMLElement>;
+  @ViewChild('sortMenuWrapper') sortMenuWrapperRef!: ElementRef<HTMLElement>;
 
   isLoadingCommonGroups = false;
   openingChatUserId: string | null = null;
@@ -44,21 +47,40 @@ export class SearchUsersComponent implements OnInit {
   resetPageSignal = 0;
 
   private commonGroupUserIds = new Set<string>();
+  private readonly filterMenuId: unknown = {};
+  private readonly sortMenuId: unknown = {};
+  private coordinatorSubscription?: Subscription;
 
   constructor(
     private userService: UserService,
     private router: Router,
     private authService: AuthService,
     private groupService: GroupService,
+    private dropdownCoordinator: DropdownCoordinatorService,
   ) {
     const currentUser = this.authService.currentUserValue;
     if (currentUser) {
       this.currentUsername = currentUser.username;
     }
+
+    this.coordinatorSubscription = this.dropdownCoordinator.activeChanged$.subscribe((activeId) => {
+      if (activeId !== this.filterMenuId) {
+        this.showFilterMenu = false;
+      }
+      if (activeId !== this.sortMenuId) {
+        this.showSortMenu = false;
+      }
+    });
   }
 
   ngOnInit(): void {
     this.loadCommonGroupUsers();
+  }
+
+  ngOnDestroy(): void {
+    this.coordinatorSubscription?.unsubscribe();
+    this.dropdownCoordinator.close(this.filterMenuId);
+    this.dropdownCoordinator.close(this.sortMenuId);
   }
 
   loadUsers = () => this.userService.searchUsers(this.searchQuery).pipe(
@@ -86,16 +108,19 @@ export class SearchUsersComponent implements OnInit {
     this.applyFiltersAndSort();
   }
 
-  toggleFilterMenu(event?: Event): void {
-    event?.stopPropagation();
-    this.showFilterMenu = !this.showFilterMenu;
-    this.showSortMenu = false;
+  toggleFilterMenu(): void {
+    if (this.showFilterMenu) {
+      this.closeFilterMenu();
+      return;
+    }
+
+    this.dropdownCoordinator.open(this.filterMenuId, this.filterMenuWrapperRef.nativeElement);
+    this.showFilterMenu = true;
   }
 
-  selectFilter(filter: 'allUsers' | 'commonGroups', event?: Event): void {
-    event?.stopPropagation();
+  selectFilter(filter: 'allUsers' | 'commonGroups'): void {
     this.activeFilter = filter;
-    this.showFilterMenu = false;
+    this.closeFilterMenu();
     this.onFilterChange();
   }
 
@@ -103,23 +128,30 @@ export class SearchUsersComponent implements OnInit {
     this.applyFiltersAndSort();
   }
 
-  toggleSortMenu(event?: Event): void {
-    event?.stopPropagation();
-    this.showFilterMenu = false;
-    this.showSortMenu = !this.showSortMenu;
+  toggleSortMenu(): void {
+    if (this.showSortMenu) {
+      this.closeSortMenu();
+      return;
+    }
+
+    this.dropdownCoordinator.open(this.sortMenuId, this.sortMenuWrapperRef.nativeElement);
+    this.showSortMenu = true;
   }
 
-  selectSortDirection(direction: SearchSortDirection, event?: Event): void {
-    event?.stopPropagation();
+  selectSortDirection(direction: SearchSortDirection): void {
     this.activeSort = direction;
-    this.showSortMenu = false;
+    this.closeSortMenu();
     this.onSortChange();
   }
 
-  @HostListener('document:click')
-  closeSortMenu(): void {
+  private closeFilterMenu(): void {
     this.showFilterMenu = false;
+    this.dropdownCoordinator.close(this.filterMenuId);
+  }
+
+  private closeSortMenu(): void {
     this.showSortMenu = false;
+    this.dropdownCoordinator.close(this.sortMenuId);
   }
 
   onPagedUsersChange(pagedUsers: User[]): void {

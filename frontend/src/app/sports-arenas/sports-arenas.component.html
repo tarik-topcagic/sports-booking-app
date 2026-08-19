@@ -49,24 +49,24 @@
     <section class="toolbar">
       <div class="toolbar-row">
         <div class="toolbar-slot toolbar-slot-start">
-          <div class="select-shell filter-dropdown-shell">
+          <div class="select-shell filter-dropdown-shell" #cityMenuWrapper>
             <span>{{ 'city' | translate }}</span>
             <button
               type="button"
               class="filter-dropdown-trigger"
-              (click)="toggleCityMenu($event)"
+              (click)="toggleCityMenu()"
               [attr.aria-expanded]="showCityMenu"
             >
               <span>{{ getCityLabel() | translate }}</span>
               <i class="bi" [ngClass]="showCityMenu ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
             </button>
 
-            <div class="filter-dropdown-menu" *ngIf="showCityMenu" (click)="$event.stopPropagation()">
+            <div class="filter-dropdown-menu" *ngIf="showCityMenu">
               <button
                 type="button"
                 class="filter-dropdown-option"
                 [class.active]="!activeCityFilter"
-                (click)="clearCityFilter($event)"
+                (click)="clearCityFilter()"
               >
                 {{ 'allCities' | translate }}
               </button>
@@ -75,7 +75,7 @@
                 class="filter-dropdown-option"
                 *ngFor="let city of cityOptions"
                 [class.active]="activeCityFilter === city"
-                (click)="selectCityFilter(city, $event)"
+                (click)="selectCityFilter(city)"
               >
                 {{ city }}
               </button>
@@ -84,24 +84,24 @@
         </div>
 
         <div class="toolbar-slot toolbar-slot-end">
-          <div class="select-shell filter-dropdown-shell">
+          <div class="select-shell filter-dropdown-shell" #sportMenuWrapper>
             <span>{{ 'sport' | translate }}</span>
             <button
               type="button"
               class="filter-dropdown-trigger"
-              (click)="toggleSportMenu($event)"
+              (click)="toggleSportMenu()"
               [attr.aria-expanded]="showSportMenu"
             >
               <span>{{ getSportLabel() | translate }}</span>
               <i class="bi" [ngClass]="showSportMenu ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
             </button>
 
-            <div class="filter-dropdown-menu" *ngIf="showSportMenu" (click)="$event.stopPropagation()">
+            <div class="filter-dropdown-menu" *ngIf="showSportMenu">
               <button
                 type="button"
                 class="filter-dropdown-option"
                 [class.active]="!activeSportFilter"
-                (click)="clearSportFilter($event)"
+                (click)="clearSportFilter()"
               >
                 {{ 'allSports' | translate }}
               </button>
@@ -110,7 +110,7 @@
                 class="filter-dropdown-option"
                 *ngFor="let sport of sportOptions"
                 [class.active]="activeSportFilter === sport"
-                (click)="selectSportFilter(sport, $event)"
+                (click)="selectSportFilter(sport)"
               >
                 {{ sport | translate }}
               </button>

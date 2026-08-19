@@ -1,16 +1,17 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { LanguageService } from '../../services/language.service';
 import { ToastService } from '../../services/toast.service';
 import { UserService, UserSettings } from '../../services/user.service';
-import { tap } from 'rxjs';
+import { Subscription, tap } from 'rxjs';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { SkeletonTextBlockComponent } from '../skeleton/skeleton-text-block/skeleton-text-block.component';
 import { LoadErrorStateComponent } from '../load-error-state/load-error-state.component';
+import { DropdownCoordinatorService } from '../../services/dropdown-coordinator.service';
 
 @Component({
   selector: 'app-settings',
@@ -18,7 +19,9 @@ import { LoadErrorStateComponent } from '../load-error-state/load-error-state.co
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
 })
-export class SettingsComponent implements OnInit {
+export class SettingsComponent implements OnInit, OnDestroy {
+  @ViewChild('languageMenuWrapper') languageMenuWrapperRef!: ElementRef<HTMLElement>;
+
   languages: { code: string; name: string }[] = [];
   settings: UserSettings | null = null;
   emailNotificationsEnabled = false;
@@ -28,13 +31,27 @@ export class SettingsComponent implements OnInit {
   newUsername = '';
   isChangingUsername = false;
 
+  private coordinatorSubscription?: Subscription;
+
   constructor(
     private userService: UserService,
     private authService: AuthService,
     private router: Router,
     private languageService: LanguageService,
     private toastService: ToastService,
-  ) {}
+    private dropdownCoordinator: DropdownCoordinatorService,
+  ) {
+    this.coordinatorSubscription = this.dropdownCoordinator.activeChanged$.subscribe((activeId) => {
+      if (activeId !== this && this.showLanguageMenu) {
+        this.showLanguageMenu = false;
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.coordinatorSubscription?.unsubscribe();
+    this.dropdownCoordinator.close(this);
+  }
 
   ngOnInit(): void {
     this.languages = this.languageService.languages;
@@ -152,21 +169,24 @@ export class SettingsComponent implements OnInit {
     });
   }
 
-  toggleLanguageMenu(event?: Event): void {
-    event?.stopPropagation();
-    this.showLanguageMenu = !this.showLanguageMenu;
+  toggleLanguageMenu(): void {
+    if (this.showLanguageMenu) {
+      this.closeLanguageMenu();
+      return;
+    }
+
+    this.dropdownCoordinator.open(this, this.languageMenuWrapperRef.nativeElement);
+    this.showLanguageMenu = true;
   }
 
-  selectLanguage(languageCode: string, event?: Event): void {
-    event?.stopPropagation();
-
+  selectLanguage(languageCode: string): void {
     if (this.selectedLanguage === languageCode) {
-      this.showLanguageMenu = false;
+      this.closeLanguageMenu();
       return;
     }
 
     this.selectedLanguage = languageCode;
-    this.showLanguageMenu = false;
+    this.closeLanguageMenu();
     this.saveLanguage();
   }
 
@@ -188,8 +208,8 @@ export class SettingsComponent implements OnInit {
     document.body.classList.toggle('dark-mode', this.darkModeEnabled);
   }
 
-  @HostListener('document:click')
-  closeLanguageMenu(): void {
+  private closeLanguageMenu(): void {
     this.showLanguageMenu = false;
+    this.dropdownCoordinator.close(this);
   }
 }

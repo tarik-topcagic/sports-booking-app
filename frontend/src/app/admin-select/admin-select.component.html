@@ -2,7 +2,7 @@
   <button
     type="button"
     class="form-select admin-select-trigger"
-    (click)="toggle($event)"
+    (click)="toggle()"
     [attr.aria-expanded]="isOpen"
     [disabled]="disabled"
   >
@@ -15,7 +15,7 @@
       class="dropdown-item"
       *ngFor="let option of options"
       [class.active]="option.value === value"
-      (click)="select(option, $event)"
+      (click)="select(option)"
     >
       {{ option.label }}
     </button>

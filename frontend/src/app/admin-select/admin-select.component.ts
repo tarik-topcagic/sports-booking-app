@@ -1,7 +1,8 @@
 import { NgFor, NgIf } from '@angular/common';
-import { Component, ElementRef, HostListener, Input, OnDestroy, OnInit } from '@angular/core';
+import { Component, ElementRef, Input, OnDestroy } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { AdminSelectCoordinatorService } from '../../services/admin/admin-select-coordinator.service';
+import { Subscription } from 'rxjs';
+import { DropdownCoordinatorService } from '../../services/dropdown-coordinator.service';
 
 export interface AdminSelectOption {
   value: string;
@@ -22,7 +23,7 @@ export interface AdminSelectOption {
     },
   ],
 })
-export class AdminSelectComponent implements ControlValueAccessor, OnInit, OnDestroy {
+export class AdminSelectComponent implements ControlValueAccessor, OnDestroy {
   @Input() options: AdminSelectOption[] = [];
 
   value = '';
@@ -31,21 +32,23 @@ export class AdminSelectComponent implements ControlValueAccessor, OnInit, OnDes
 
   private onChange: (value: string) => void = () => {};
   private onTouched: () => void = () => {};
-  private readonly onOtherDropdownOpened = () => this.forceClose();
+  private readonly coordinatorSubscription: Subscription;
 
   constructor(
     private elementRef: ElementRef<HTMLElement>,
-    private coordinator: AdminSelectCoordinatorService,
-  ) {}
-
-  ngOnInit(): void {
-    window.addEventListener('app-message-dropdown-opened', this.onOtherDropdownOpened);
-    window.addEventListener('app-notification-dropdown-opened', this.onOtherDropdownOpened);
+    private dropdownCoordinator: DropdownCoordinatorService,
+  ) {
+    this.coordinatorSubscription = this.dropdownCoordinator.activeChanged$.subscribe((activeId) => {
+      if (activeId !== this && this.isOpen) {
+        this.isOpen = false;
+        this.onTouched();
+      }
+    });
   }
 
   ngOnDestroy(): void {
-    window.removeEventListener('app-message-dropdown-opened', this.onOtherDropdownOpened);
-    window.removeEventListener('app-notification-dropdown-opened', this.onOtherDropdownOpened);
+    this.coordinatorSubscription.unsubscribe();
+    this.dropdownCoordinator.close(this);
   }
 
   get selectedLabel(): string {
@@ -53,45 +56,28 @@ export class AdminSelectComponent implements ControlValueAccessor, OnInit, OnDes
     return match ? match.label : (this.options[0]?.label ?? '');
   }
 
-  toggle(event?: Event): void {
-    // Deliberately not stopping propagation: letting the click reach `document` lets
-    // native Bootstrap dropdowns (e.g. the navbar profile menu) detect it as an outside
-    // click and close themselves. This component's own onDocumentClick already ignores
-    // clicks on its own trigger via the contains() check below, so this is safe.
+  toggle(): void {
     if (this.disabled) {
       return;
     }
     if (this.isOpen) {
       this.close();
     } else {
-      this.coordinator.opened(this);
+      this.dropdownCoordinator.open(this, this.elementRef.nativeElement);
       this.isOpen = true;
-      window.dispatchEvent(new CustomEvent('app-admin-select-opened'));
     }
   }
 
-  select(option: AdminSelectOption, event?: Event): void {
+  select(option: AdminSelectOption): void {
     this.value = option.value;
     this.onChange(this.value);
     this.close();
   }
 
-  forceClose(): void {
-    this.isOpen = false;
-    this.onTouched();
-  }
-
   private close(): void {
     this.isOpen = false;
-    this.coordinator.closed(this);
+    this.dropdownCoordinator.close(this);
     this.onTouched();
-  }
-
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent): void {
-    if (this.isOpen && !this.elementRef.nativeElement.contains(event.target as Node)) {
-      this.close();
-    }
   }
 
   writeValue(value: string): void {

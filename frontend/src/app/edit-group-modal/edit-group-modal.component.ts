@@ -1,4 +1,4 @@
-import { Component, EventEmitter, HostListener, Input, OnInit, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Group } from '../interfaces/group.model';
 import { GroupService } from '../../services/group.service';
@@ -7,6 +7,8 @@ import { ConfirmDialogService } from '../../services/confirm-dialog.service';
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
 import { ToastService } from '../../services/toast.service';
+import { Subscription } from 'rxjs';
+import { DropdownCoordinatorService } from '../../services/dropdown-coordinator.service';
 
 @Component({
   selector: 'app-edit-group-modal',
@@ -14,11 +16,13 @@ import { ToastService } from '../../services/toast.service';
   templateUrl: './edit-group-modal.component.html',
   styleUrl: './edit-group-modal.component.scss'
 })
-export class EditGroupModalComponent implements OnInit {
-  @Input() group!: Group; 
+export class EditGroupModalComponent implements OnInit, OnDestroy {
+  @Input() group!: Group;
   @Output() close = new EventEmitter<void>();
   @Output() groupUpdated = new EventEmitter<Group>();
   @Output() groupDeleted = new EventEmitter<number>();
+
+  @ViewChild('groupActionsMenu') groupActionsMenuRef?: ElementRef<HTMLElement>;
 
   editGroupForm: FormGroup;
   selectedImage: File | null = null;
@@ -26,18 +30,27 @@ export class EditGroupModalComponent implements OnInit {
   isSubmitting: boolean = false;
   showActionsMenu = false;
 
+  private coordinatorSubscription: Subscription;
+
   constructor(
     private groupService: GroupService,
     private fb: FormBuilder,
     private confirmDialogService: ConfirmDialogService,
     private languageService: LanguageService,
     private toastService: ToastService,
+    private dropdownCoordinator: DropdownCoordinatorService,
   ) {
     this.editGroupForm = this.fb.group({
       name: ['', Validators.required],
       city: ['', Validators.required],
       sportCategory: ['', Validators.required],
       description: ['']
+    });
+
+    this.coordinatorSubscription = this.dropdownCoordinator.activeChanged$.subscribe((activeId) => {
+      if (activeId !== this && this.showActionsMenu) {
+        this.showActionsMenu = false;
+      }
     });
   }
 
@@ -54,27 +67,37 @@ export class EditGroupModalComponent implements OnInit {
     }
   }
 
+  ngOnDestroy(): void {
+    this.coordinatorSubscription.unsubscribe();
+    this.dropdownCoordinator.close(this);
+  }
+
   get canDeleteGroup(): boolean {
     return !!this.group;
   }
 
-  @HostListener('document:click')
-  closeActionsMenu(): void {
-    this.showActionsMenu = false;
-  }
-
   onModalContentClick(event: Event): void {
     event.stopPropagation();
-
-    const target = event.target as HTMLElement | null;
-    if (!target?.closest('.group-actions-menu')) {
-      this.showActionsMenu = false;
-    }
   }
 
   toggleActionsMenu(event: Event): void {
     event.stopPropagation();
-    this.showActionsMenu = !this.showActionsMenu;
+
+    if (this.showActionsMenu) {
+      this.closeActionsMenu();
+      return;
+    }
+
+    if (this.groupActionsMenuRef) {
+      this.dropdownCoordinator.open(this, this.groupActionsMenuRef.nativeElement);
+    }
+
+    this.showActionsMenu = true;
+  }
+
+  private closeActionsMenu(): void {
+    this.showActionsMenu = false;
+    this.dropdownCoordinator.close(this);
   }
 
   onFileSelected(event: any): void {
@@ -98,7 +121,7 @@ export class EditGroupModalComponent implements OnInit {
 
   async deleteGroup(event?: Event): Promise<void> {
     event?.stopPropagation();
-    this.showActionsMenu = false;
+    this.closeActionsMenu();
 
     if (!this.canDeleteGroup || this.isSubmitting) {
       return;
@@ -165,7 +188,7 @@ export class EditGroupModalComponent implements OnInit {
   }
   
   async onClose(): Promise<void> {
-    this.showActionsMenu = false;
+    this.closeActionsMenu();
     if (this.editGroupForm.dirty) {
       if (!(await this.confirmDialogService.confirm('unsavedChangesConfirm'))) {
         return;

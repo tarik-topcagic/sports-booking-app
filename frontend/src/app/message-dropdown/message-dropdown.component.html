@@ -4,7 +4,7 @@
       type="button"
       class="message-button"
       [title]="'messages' | translate"
-      (click)="toggleMessages($event)"
+      (click)="toggleMessages()"
     >
       <i class="bi bi-chat-dots"></i>
       <span *ngIf="unreadCount" class="message-badge">

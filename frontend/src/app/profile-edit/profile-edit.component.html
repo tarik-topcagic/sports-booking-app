@@ -86,14 +86,14 @@
           </div>
         </div>
 
-        <div class="mb-3 position-relative form-floating">
+        <div class="mb-3 position-relative form-floating" #locationFieldWrapper>
           <input
             type="text"
             id="location"
             formControlName="location"
             class="form-control"
             [placeholder]="'location' | translate"
-            (focus)="showDropdown = true"
+            (focus)="openLocationDropdown()"
           />
           <label for="location">{{ 'location' | translate }}</label>
 

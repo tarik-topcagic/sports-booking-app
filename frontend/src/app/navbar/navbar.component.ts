@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, ElementRef, HostListener } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ElementRef, HostListener, ViewChild } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
 import { NgClass, NgIf } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
@@ -7,6 +7,7 @@ import { TranslatePipe } from '../pipes/translate.pipe';
 import { Subscription } from 'rxjs';
 import { NotificationDropdownComponent } from '../notification-dropdown/notification-dropdown.component';
 import { MessageDropdownComponent } from '../message-dropdown/message-dropdown.component';
+import { DropdownCoordinatorService } from '../../services/dropdown-coordinator.service';
 import { getRolesFromToken } from '../../services/jwt.util';
 
 @Component({
@@ -16,18 +17,28 @@ import { getRolesFromToken } from '../../services/jwt.util';
   styleUrls: ['./navbar.component.scss'],
 })
 export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild('mobileProfileMenuWrapper') mobileProfileMenuWrapperRef!: ElementRef<HTMLElement>;
+
   username: string | null = null;
   isDropdownOpen = false;
   profileImageUrl: string | null = null;
   isAdmin = false;
   private currentUserSubscription?: Subscription;
+  private coordinatorSubscription?: Subscription;
 
   constructor(
     private authService: AuthService,
     private userService: UserService,
     private router: Router,
     private elementRef: ElementRef<HTMLElement>,
-  ) {}
+    private dropdownCoordinator: DropdownCoordinatorService,
+  ) {
+    this.coordinatorSubscription = this.dropdownCoordinator.activeChanged$.subscribe((activeId) => {
+      if (activeId !== this && this.isDropdownOpen) {
+        this.isDropdownOpen = false;
+      }
+    });
+  }
 
   ngOnInit(): void {
     this.currentUserSubscription = this.authService.currentUser.subscribe((user) => {
@@ -47,6 +58,7 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
     if (navbarCollapse) {
       navbarCollapse.addEventListener('hidden.bs.collapse', () => {
         this.isDropdownOpen = false;
+        this.dropdownCoordinator.close(this);
       });
     }
   }
@@ -58,10 +70,19 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.currentUserSubscription?.unsubscribe();
+    this.coordinatorSubscription?.unsubscribe();
+    this.dropdownCoordinator.close(this);
   }
 
   toggleDropdown() {
-    this.isDropdownOpen = !this.isDropdownOpen;
+    if (this.isDropdownOpen) {
+      this.isDropdownOpen = false;
+      this.dropdownCoordinator.close(this);
+      return;
+    }
+
+    this.dropdownCoordinator.open(this, this.mobileProfileMenuWrapperRef.nativeElement);
+    this.isDropdownOpen = true;
   }
 
   @HostListener('document:click', ['$event'])
@@ -73,7 +94,6 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.closeMobileNavbarCollapse();
-    this.isDropdownOpen = false;
   }
 
   closeProfileDropdown(): void {

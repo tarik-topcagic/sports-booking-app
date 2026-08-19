@@ -5,7 +5,7 @@
     <div class="mb-3 text-center">
       <label for="groupImage" class="form-label">{{ 'groupImage' | translate }}</label>
       <div class="mb-2 image-preview-shell">
-        <div *ngIf="canDeleteGroup" class="group-actions-menu" (click)="$event.stopPropagation()">
+        <div *ngIf="canDeleteGroup" class="group-actions-menu" #groupActionsMenu>
           <button
             type="button"
             class="btn btn-sm action-menu-trigger"

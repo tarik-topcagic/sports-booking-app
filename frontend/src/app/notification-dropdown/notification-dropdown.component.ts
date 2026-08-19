@@ -1,8 +1,9 @@
 import { NgClass, NgFor, NgIf } from '@angular/common';
-import { Component, EventEmitter, HostListener, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
+import { DropdownCoordinatorService } from '../../services/dropdown-coordinator.service';
 import { GroupService } from '../../services/group.service';
 import { LanguageService } from '../../services/language.service';
 import { NotificationService } from '../../services/notification.service';
@@ -50,13 +51,12 @@ export class NotificationDropdownComponent implements OnInit, OnDestroy {
   private currentUserSubscription?: Subscription;
   private unreadCountSubscription?: Subscription;
   private realtimeNotificationSubscription?: Subscription;
+  private coordinatorSubscription?: Subscription;
   private readonly notificationRefreshIntervalMs = 30000;
   private notificationRefreshIntervalId?: ReturnType<typeof setInterval>;
   private processedMembershipNotificationIds = new Set<number>();
   private readonly desktopMediaQuery = window.matchMedia('(min-width: 992px)');
   private readonly onViewportChange = () => this.syncViewportActivity();
-  private readonly onMessageDropdownOpened = () => this.closeNotifications();
-  private readonly onAdminSelectOpened = () => this.closeNotifications();
   private isActiveForViewport = false;
 
   constructor(
@@ -67,7 +67,15 @@ export class NotificationDropdownComponent implements OnInit, OnDestroy {
     private systemNotificationRealtimeService: SystemNotificationRealtimeService,
     private toastService: ToastService,
     private router: Router,
-  ) {}
+    private elementRef: ElementRef<HTMLElement>,
+    private dropdownCoordinator: DropdownCoordinatorService,
+  ) {
+    this.coordinatorSubscription = this.dropdownCoordinator.activeChanged$.subscribe((activeId) => {
+      if (activeId !== this && this.isNotificationsOpen) {
+        this.closeNotifications();
+      }
+    });
+  }
 
   ngOnInit(): void {
     this.currentUserSubscription = this.authService.currentUser.subscribe((user) => {
@@ -97,8 +105,6 @@ export class NotificationDropdownComponent implements OnInit, OnDestroy {
     });
 
     this.desktopMediaQuery.addEventListener('change', this.onViewportChange);
-    window.addEventListener('app-message-dropdown-opened', this.onMessageDropdownOpened);
-    window.addEventListener('app-admin-select-opened', this.onAdminSelectOpened);
     this.syncViewportActivity();
   }
 
@@ -106,29 +112,27 @@ export class NotificationDropdownComponent implements OnInit, OnDestroy {
     this.currentUserSubscription?.unsubscribe();
     this.unreadCountSubscription?.unsubscribe();
     this.realtimeNotificationSubscription?.unsubscribe();
+    this.coordinatorSubscription?.unsubscribe();
+    this.dropdownCoordinator.close(this);
     this.desktopMediaQuery.removeEventListener('change', this.onViewportChange);
-    window.removeEventListener('app-message-dropdown-opened', this.onMessageDropdownOpened);
-    window.removeEventListener('app-admin-select-opened', this.onAdminSelectOpened);
     this.stopTimers();
     void this.systemNotificationRealtimeService.disconnect();
   }
 
-  toggleNotifications(event?: Event): void {
+  toggleNotifications(): void {
     if (this.mode !== 'desktop') {
       return;
     }
 
-    event?.stopPropagation();
-    this.isNotificationsOpen = !this.isNotificationsOpen;
-
     if (this.isNotificationsOpen) {
-      this.opened.emit();
-      window.dispatchEvent(new CustomEvent('app-notification-dropdown-opened'));
-      this.loadNotifications(true);
+      this.closeNotifications();
       return;
     }
 
-    this.highlightedNotificationIds.clear();
+    this.dropdownCoordinator.open(this, this.elementRef.nativeElement);
+    this.isNotificationsOpen = true;
+    this.opened.emit();
+    this.loadNotifications(true);
   }
 
   openNotification(notification: AppNotification): void {
@@ -230,19 +234,6 @@ export class NotificationDropdownComponent implements OnInit, OnDestroy {
     return this.highlightedNotificationIds.has(notification.id);
   }
 
-  @HostListener('document:click', ['$event'])
-  closeNotificationsOnOutsideClick(event: MouseEvent): void {
-    if (this.mode !== 'desktop' || !this.isNotificationsOpen) {
-      return;
-    }
-
-    const target = event.target as HTMLElement | null;
-
-    if (!target?.closest('.notifications-wrapper')) {
-      this.closeNotifications();
-    }
-  }
-
   private syncViewportActivity(): void {
     const shouldBeActive = isDropdownActiveForViewport(this.mode, this.desktopMediaQuery);
 
@@ -289,6 +280,7 @@ export class NotificationDropdownComponent implements OnInit, OnDestroy {
   private closeNotifications(): void {
     this.isNotificationsOpen = false;
     this.highlightedNotificationIds.clear();
+    this.dropdownCoordinator.close(this);
   }
 
   private loadNotifications(captureUnreadHighlights = false): void {

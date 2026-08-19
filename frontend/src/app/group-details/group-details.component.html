@@ -57,7 +57,7 @@
           </div>
         </div>
         <div class="actions">
-          <div *ngIf="group.isMember && !group.isAdmin" class="member-status-dropdown">
+          <div *ngIf="group.isMember && !group.isAdmin" class="member-status-dropdown" #memberStatusDropdown>
             <button type="button" class="btn btn-outline-primary member-status-button" (click)="toggleMemberMenu()">
               {{ 'memberOfGroup' | translate }}
               <i class="bi bi-caret-down-fill"></i>

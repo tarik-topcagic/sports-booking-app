@@ -28,12 +28,12 @@
 
     <section class="toolbar">
       <div class="toolbar-row">
-        <div class="select-shell filter-dropdown-shell">
+        <div class="select-shell filter-dropdown-shell" #filterMenuWrapper>
           <span>{{ 'filter' | translate }}</span>
           <button
             type="button"
             class="filter-dropdown-trigger"
-            (click)="toggleFilterMenu($event)"
+            (click)="toggleFilterMenu()"
             [attr.aria-expanded]="showFilterMenu"
           >
             <span>
@@ -48,12 +48,12 @@
             <i class="bi" [ngClass]="showFilterMenu ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
           </button>
 
-          <div class="filter-dropdown-menu" *ngIf="showFilterMenu" (click)="$event.stopPropagation()">
+          <div class="filter-dropdown-menu" *ngIf="showFilterMenu">
             <button
               type="button"
               class="filter-dropdown-option"
               [class.active]="activeFilter === 'all'"
-              (click)="selectFilter('all', $event)"
+              (click)="selectFilter('all')"
             >
               {{ 'allGroups' | translate }}
             </button>
@@ -61,7 +61,7 @@
               type="button"
               class="filter-dropdown-option"
               [class.active]="activeFilter === 'admin'"
-              (click)="selectFilter('admin', $event)"
+              (click)="selectFilter('admin')"
             >
               {{ 'admin' | translate }}
             </button>
@@ -69,31 +69,31 @@
               type="button"
               class="filter-dropdown-option"
               [class.active]="activeFilter === 'membership'"
-              (click)="selectFilter('membership', $event)"
+              (click)="selectFilter('membership')"
             >
               {{ 'membership' | translate }}
             </button>
           </div>
         </div>
 
-        <div class="select-shell sort-dropdown-shell">
+        <div class="select-shell sort-dropdown-shell" #sortMenuWrapper>
           <span>{{ 'sortBy' | translate }}</span>
           <button
             type="button"
             class="sort-dropdown-trigger"
-            (click)="toggleSortMenu($event)"
+            (click)="toggleSortMenu()"
             [attr.aria-expanded]="showSortMenu"
           >
             <span>{{ 'alphabetical' | translate }}</span>
             <i class="bi" [ngClass]="showSortMenu ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
           </button>
 
-          <div class="sort-dropdown-menu" *ngIf="showSortMenu" (click)="$event.stopPropagation()">
+          <div class="sort-dropdown-menu" *ngIf="showSortMenu">
             <button
               type="button"
               class="sort-dropdown-option"
               [class.active]="activeSort === 'asc'"
-              (click)="selectSortDirection('asc', $event)"
+              (click)="selectSortDirection('asc')"
             >
               {{ 'alphabeticalAsc' | translate }}
             </button>
@@ -101,7 +101,7 @@
               type="button"
               class="sort-dropdown-option"
               [class.active]="activeSort === 'desc'"
-              (click)="selectSortDirection('desc', $event)"
+              (click)="selectSortDirection('desc')"
             >
               {{ 'alphabeticalDesc' | translate }}
             </button>

@@ -1,5 +1,5 @@
 import { DatePipe, NgFor, NgIf } from '@angular/common';
-import { Component, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Group, GroupDetails } from '../interfaces/group.model';
 import { GroupService } from '../../services/group.service';
@@ -9,6 +9,7 @@ import { LanguageService } from '../../services/language.service';
 import { PresenceService } from '../../services/presence.service';
 import { EditGroupModalComponent } from '../edit-group-modal/edit-group-modal.component';
 import { ConfirmDialogService } from '../../services/confirm-dialog.service';
+import { DropdownCoordinatorService } from '../../services/dropdown-coordinator.service';
 import { catchError, NEVER, Subscription, tap, throwError } from 'rxjs';
 import { GroupInviteMembersModalComponent } from '../group-invite-members-modal/group-invite-members-modal.component';
 import { GroupMembersModalComponent } from '../group-members-modal/group-members-modal.component';
@@ -43,6 +44,7 @@ import {
 })
 export class GroupDetailsComponent implements OnInit, OnDestroy {
   @ViewChild('groupState') groupState!: LoadErrorStateComponent;
+  @ViewChild('memberStatusDropdown') memberStatusDropdownRef?: ElementRef<HTMLElement>;
 
   group: GroupDetails | null = null;
   selectedGroupToEdit: Group | null = null;
@@ -59,6 +61,7 @@ export class GroupDetailsComponent implements OnInit, OnDestroy {
   private routeSubscription?: Subscription;
   private groupDetailsRefreshSubscription?: Subscription;
   private presenceSubscription?: Subscription;
+  private coordinatorSubscription?: Subscription;
 
   constructor(
     private route: ActivatedRoute,
@@ -68,7 +71,14 @@ export class GroupDetailsComponent implements OnInit, OnDestroy {
     private confirmDialogService: ConfirmDialogService,
     private presenceService: PresenceService,
     private toastService: ToastService,
-  ) {}
+    private dropdownCoordinator: DropdownCoordinatorService,
+  ) {
+    this.coordinatorSubscription = this.dropdownCoordinator.activeChanged$.subscribe((activeId) => {
+      if (activeId !== this && this.isMemberMenuOpen) {
+        this.isMemberMenuOpen = false;
+      }
+    });
+  }
 
   private isInitialRouteParamsEmission = true;
 
@@ -105,6 +115,8 @@ export class GroupDetailsComponent implements OnInit, OnDestroy {
     this.routeSubscription?.unsubscribe();
     this.groupDetailsRefreshSubscription?.unsubscribe();
     this.presenceSubscription?.unsubscribe();
+    this.coordinatorSubscription?.unsubscribe();
+    this.dropdownCoordinator.close(this);
     void this.presenceService.disconnectRealtime();
   }
 
@@ -217,16 +229,17 @@ export class GroupDetailsComponent implements OnInit, OnDestroy {
   }
 
   toggleMemberMenu(): void {
-    this.isMemberMenuOpen = !this.isMemberMenuOpen;
-  }
-
-  @HostListener('document:click', ['$event'])
-  closeMemberMenuOnOutsideClick(event: MouseEvent): void {
-    const target = event.target as HTMLElement | null;
-
-    if (this.isMemberMenuOpen && !target?.closest('.member-status-dropdown')) {
+    if (this.isMemberMenuOpen) {
       this.isMemberMenuOpen = false;
+      this.dropdownCoordinator.close(this);
+      return;
     }
+
+    if (this.memberStatusDropdownRef) {
+      this.dropdownCoordinator.open(this, this.memberStatusDropdownRef.nativeElement);
+    }
+
+    this.isMemberMenuOpen = true;
   }
 
   async leaveGroup(): Promise<void> {
@@ -240,6 +253,7 @@ export class GroupDetailsComponent implements OnInit, OnDestroy {
 
     const currentUserId = this.group.currentUserId;
     this.isMemberMenuOpen = false;
+    this.dropdownCoordinator.close(this);
     this.isLeavingGroup = true;
 
     this.groupService.removeMember(this.group.id, currentUserId).subscribe(

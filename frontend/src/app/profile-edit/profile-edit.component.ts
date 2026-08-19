@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -6,7 +6,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { City } from '../interfaces/city';
-import { map, Observable, startWith } from 'rxjs';
+import { map, Observable, startWith, Subscription } from 'rxjs';
 import { UserService } from '../../services/user.service';
 import { CityService } from '../../services/city.service';
 import { CommonModule, NgFor, NgIf } from '@angular/common';
@@ -18,6 +18,7 @@ import { LanguageService } from '../../services/language.service';
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { ToastService } from '../../services/toast.service';
 import { SkeletonComponent } from '../skeleton/skeleton/skeleton.component';
+import { DropdownCoordinatorService } from '../../services/dropdown-coordinator.service';
 
 @Component({
   selector: 'app-profile-edit',
@@ -36,6 +37,8 @@ import { SkeletonComponent } from '../skeleton/skeleton/skeleton.component';
 export class ProfileEditComponent
   implements OnInit, OnDestroy, CanComponentDeactivate
 {
+  @ViewChild('locationFieldWrapper') locationFieldWrapperRef!: ElementRef<HTMLElement>;
+
   editForm!: FormGroup;
   cities: City[] = [];
   filteredCities$!: Observable<City[]>;
@@ -49,8 +52,8 @@ export class ProfileEditComponent
   isSaving = false;
   isRemovingPicture = false;
 
-  private handleClickOutsideBound = this.handleClickOutside.bind(this);
   private beforeUnloadHandlerBound = this.beforeUnloadHandler.bind(this);
+  private coordinatorSubscription?: Subscription;
 
   constructor(
     private fb: FormBuilder,
@@ -60,7 +63,14 @@ export class ProfileEditComponent
     private confirmDialogService: ConfirmDialogService,
     private languageService: LanguageService,
     private toastService: ToastService,
-  ) {}
+    private dropdownCoordinator: DropdownCoordinatorService,
+  ) {
+    this.coordinatorSubscription = this.dropdownCoordinator.activeChanged$.subscribe((activeId) => {
+      if (activeId !== this && this.showDropdown) {
+        this.showDropdown = false;
+      }
+    });
+  }
 
   ngOnInit(): void {
     this.timestamp = Date.now();
@@ -108,28 +118,18 @@ export class ProfileEditComponent
         map((value) => this._filterCities(value)),
       );
     });
-    document.addEventListener('click', this.handleClickOutsideBound);
     window.addEventListener('beforeunload', this.beforeUnloadHandlerBound);
   }
 
   ngOnDestroy(): void {
-    document.removeEventListener('click', this.handleClickOutsideBound);
     window.removeEventListener('beforeunload', this.beforeUnloadHandlerBound);
+    this.coordinatorSubscription?.unsubscribe();
+    this.dropdownCoordinator.close(this);
   }
 
-  handleClickOutside(event: Event): void {
-    const inputElement = document.getElementById('location');
-    const dropdownElement = document.querySelector('.list-group');
-
-    if (
-      this.showDropdown &&
-      inputElement &&
-      dropdownElement &&
-      !inputElement.contains(event.target as Node) &&
-      !dropdownElement.contains(event.target as Node)
-    ) {
-      this.showDropdown = false;
-    }
+  openLocationDropdown(): void {
+    this.dropdownCoordinator.open(this, this.locationFieldWrapperRef.nativeElement);
+    this.showDropdown = true;
   }
 
   private _filterCities(value: string): City[] {
@@ -145,6 +145,7 @@ export class ProfileEditComponent
     this.editForm.get('location')?.markAsDirty();
 
     this.showDropdown = false;
+    this.dropdownCoordinator.close(this);
   }
 
   onFileSelected(event: Event): void {

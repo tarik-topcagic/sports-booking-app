@@ -1,10 +1,11 @@
 import { NgClass, NgFor, NgIf } from '@angular/common';
-import { Component, EventEmitter, HostListener, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { filter, Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { ChatRealtimeService } from '../../services/chat-realtime.service';
 import { ChatInboxService } from '../../services/chat-inbox.service';
+import { DropdownCoordinatorService } from '../../services/dropdown-coordinator.service';
 import { GroupChatNotificationService } from '../../services/group-chat-notification.service';
 import { PresenceService } from '../../services/presence.service';
 import { PrivateChatNotificationService } from '../../services/private-chat-notification.service';
@@ -64,12 +65,11 @@ export class MessageDropdownComponent implements OnInit, OnDestroy {
   private realtimeGroupMessageDeletedSubscription?: Subscription;
   private realtimePrivateMessageDeletedSubscription?: Subscription;
   private presenceSubscription?: Subscription;
+  private coordinatorSubscription?: Subscription;
   private readonly refreshIntervalMs = 30000;
   private refreshIntervalId?: ReturnType<typeof setInterval>;
   private readonly desktopMediaQuery = window.matchMedia('(min-width: 992px)');
   private readonly onViewportChange = () => this.syncViewportActivity();
-  private readonly onNotificationDropdownOpened = () => this.closeMessages();
-  private readonly onAdminSelectOpened = () => this.closeMessages();
   private isActiveForViewport = false;
   private currentGroupId: number | null = null;
   private currentConversationId: number | null = null;
@@ -93,7 +93,15 @@ export class MessageDropdownComponent implements OnInit, OnDestroy {
     private presenceService: PresenceService,
     private router: Router,
     private languageService: LanguageService,
-  ) {}
+    private elementRef: ElementRef<HTMLElement>,
+    private dropdownCoordinator: DropdownCoordinatorService,
+  ) {
+    this.coordinatorSubscription = this.dropdownCoordinator.activeChanged$.subscribe((activeId) => {
+      if (activeId !== this && this.isOpen) {
+        this.closeMessages();
+      }
+    });
+  }
 
   ngOnInit(): void {
     this.currentUserSubscription = this.authService.currentUser.subscribe((user) => {
@@ -151,8 +159,6 @@ export class MessageDropdownComponent implements OnInit, OnDestroy {
     });
 
     this.desktopMediaQuery.addEventListener('change', this.onViewportChange);
-    window.addEventListener('app-notification-dropdown-opened', this.onNotificationDropdownOpened);
-    window.addEventListener('app-admin-select-opened', this.onAdminSelectOpened);
     this.syncViewportActivity();
   }
 
@@ -165,31 +171,28 @@ export class MessageDropdownComponent implements OnInit, OnDestroy {
     this.realtimeGroupMessageDeletedSubscription?.unsubscribe();
     this.realtimePrivateMessageDeletedSubscription?.unsubscribe();
     this.presenceSubscription?.unsubscribe();
+    this.coordinatorSubscription?.unsubscribe();
+    this.dropdownCoordinator.close(this);
     this.desktopMediaQuery.removeEventListener('change', this.onViewportChange);
-    window.removeEventListener('app-notification-dropdown-opened', this.onNotificationDropdownOpened);
-    window.removeEventListener('app-admin-select-opened', this.onAdminSelectOpened);
     this.stopTimers();
     void this.chatRealtimeService.disconnect();
   }
 
-  toggleMessages(event?: Event): void {
+  toggleMessages(): void {
     if (this.mode === 'mobile') {
-      event?.stopPropagation();
       this.router.navigate(['/messages']);
       return;
     }
 
-    event?.stopPropagation();
-    this.isOpen = !this.isOpen;
-
     if (this.isOpen) {
-      this.opened.emit();
-      window.dispatchEvent(new CustomEvent('app-message-dropdown-opened'));
-      this.loadMessages(true);
+      this.closeMessages();
       return;
     }
 
-    this.highlightedMessageKeys.clear();
+    this.dropdownCoordinator.open(this, this.elementRef.nativeElement);
+    this.isOpen = true;
+    this.opened.emit();
+    this.loadMessages(true);
   }
 
   openMessage(message: ChatInboxItem): void {
@@ -311,18 +314,6 @@ export class MessageDropdownComponent implements OnInit, OnDestroy {
     return false;
   }
 
-  @HostListener('document:click', ['$event'])
-  closeMessagesOnOutsideClick(event: MouseEvent): void {
-    if (!this.isOpen) {
-      return;
-    }
-
-    const target = event.target as HTMLElement | null;
-    if (!target?.closest('.messages-wrapper')) {
-      this.closeMessages();
-    }
-  }
-
   private syncViewportActivity(): void {
     const shouldBeActive = isDropdownActiveForViewport(this.mode, this.desktopMediaQuery);
 
@@ -413,6 +404,7 @@ export class MessageDropdownComponent implements OnInit, OnDestroy {
   private closeMessages(): void {
     this.isOpen = false;
     this.highlightedMessageKeys.clear();
+    this.dropdownCoordinator.close(this);
   }
 
   private resetState(): void {
