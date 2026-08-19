@@ -1,4 +1,4 @@
-import { DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
+import { NgClass, NgFor, NgIf } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -49,6 +49,7 @@ import { LongPressDirective } from '../directives/long-press.directive';
 import { MessageActionsComponent } from '../message-actions/message-actions.component';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslatePipe } from '../pipes/translate.pipe';
+import { LiveRelativeTimePipe } from '../pipes/live-relative-time.pipe';
 import { SkeletonComponent } from '../skeleton/skeleton/skeleton.component';
 import { LoadErrorStateComponent } from '../load-error-state/load-error-state.component';
 import { ToastService } from '../../services/toast.service';
@@ -56,7 +57,6 @@ import { ToastService } from '../../services/toast.service';
 @Component({
   selector: 'app-group-chat',
   imports: [
-    DatePipe,
     NgIf,
     NgFor,
     NgClass,
@@ -64,6 +64,7 @@ import { ToastService } from '../../services/toast.service';
     RouterLink,
     NavbarComponent,
     TranslatePipe,
+    LiveRelativeTimePipe,
     ChatEmojiPickerComponent,
     SkeletonComponent,
     LongPressDirective,
@@ -95,6 +96,9 @@ export class GroupChatComponent implements OnInit, AfterViewInit, OnDestroy {
   privateChatListPresenceByUserId = new Map<string, boolean>();
   groupChatListPresenceByGroupId = new Map<number, boolean>();
   replyTarget: GroupChatMessage | null = null;
+  relativeTimeRefreshKey = 0;
+  private readonly relativeTimeRefreshIntervalMs = 60000;
+  private relativeTimeRefreshIntervalId?: ReturnType<typeof setInterval>;
   private currentUserId: string | null = null;
   private isInitialRouteParamsEmission = true;
   private currentUserSubscription?: Subscription;
@@ -199,6 +203,10 @@ export class GroupChatComponent implements OnInit, AfterViewInit, OnDestroy {
       this.resetViewState();
       void this.initializeGroupChat(groupId);
     });
+
+    this.relativeTimeRefreshIntervalId = setInterval(() => {
+      this.relativeTimeRefreshKey += 1;
+    }, this.relativeTimeRefreshIntervalMs);
   }
 
   ngAfterViewInit(): void {
@@ -219,6 +227,11 @@ export class GroupChatComponent implements OnInit, AfterViewInit, OnDestroy {
     this.realtimeReconnectedSubscription?.unsubscribe();
     window.removeEventListener('online', this.onConnectionRestored);
     this.presenceSubscription?.unsubscribe();
+
+    if (this.relativeTimeRefreshIntervalId) {
+      clearInterval(this.relativeTimeRefreshIntervalId);
+    }
+
     this.stopTypingLocally();
     if (this.connectedGroupId !== null) {
       void this.chatRealtimeService.leaveGroup(this.connectedGroupId);

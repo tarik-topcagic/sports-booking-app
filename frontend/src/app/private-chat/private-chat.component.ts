@@ -1,4 +1,4 @@
-import { DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
+import { NgClass, NgFor, NgIf } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -50,6 +50,7 @@ import { LongPressDirective } from '../directives/long-press.directive';
 import { MessageActionsComponent } from '../message-actions/message-actions.component';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslatePipe } from '../pipes/translate.pipe';
+import { LiveRelativeTimePipe } from '../pipes/live-relative-time.pipe';
 import { SkeletonComponent } from '../skeleton/skeleton/skeleton.component';
 import { LoadErrorStateComponent } from '../load-error-state/load-error-state.component';
 import { ToastService } from '../../services/toast.service';
@@ -57,7 +58,6 @@ import { ToastService } from '../../services/toast.service';
 @Component({
   selector: 'app-private-chat',
   imports: [
-    DatePipe,
     NgIf,
     NgFor,
     NgClass,
@@ -65,6 +65,7 @@ import { ToastService } from '../../services/toast.service';
     RouterLink,
     NavbarComponent,
     TranslatePipe,
+    LiveRelativeTimePipe,
     ChatEmojiPickerComponent,
     SkeletonComponent,
     LongPressDirective,
@@ -99,6 +100,9 @@ export class PrivateChatComponent implements OnInit, AfterViewInit, OnDestroy {
   privateChatListPresenceByUserId = new Map<string, boolean>();
   groupChatListPresenceByGroupId = new Map<number, boolean>();
   replyTarget: PrivateMessage | null = null;
+  relativeTimeRefreshKey = 0;
+  private readonly relativeTimeRefreshIntervalMs = 60000;
+  private relativeTimeRefreshIntervalId?: ReturnType<typeof setInterval>;
   private currentUserId: string | null = null;
   private isInitialRouteParamsEmission = true;
   private currentUserSubscription?: Subscription;
@@ -196,9 +200,6 @@ export class PrivateChatComponent implements OnInit, AfterViewInit, OnDestroy {
         return;
       }
 
-      // The initial emission is handled by the component's own [load] call on
-      // creation (loadChat reads the route fresh); only subsequent route
-      // changes need an explicit reload.
       if (this.isInitialRouteParamsEmission) {
         this.isInitialRouteParamsEmission = false;
         if (conversationId) {
@@ -216,6 +217,10 @@ export class PrivateChatComponent implements OnInit, AfterViewInit, OnDestroy {
 
       this.chatState.reload();
     });
+
+    this.relativeTimeRefreshIntervalId = setInterval(() => {
+      this.relativeTimeRefreshKey += 1;
+    }, this.relativeTimeRefreshIntervalMs);
   }
 
   ngAfterViewInit(): void {
@@ -236,6 +241,11 @@ export class PrivateChatComponent implements OnInit, AfterViewInit, OnDestroy {
     this.realtimeReconnectedSubscription?.unsubscribe();
     window.removeEventListener('online', this.onConnectionRestored);
     this.presenceSubscription?.unsubscribe();
+
+    if (this.relativeTimeRefreshIntervalId) {
+      clearInterval(this.relativeTimeRefreshIntervalId);
+    }
+
     this.stopTypingLocally();
     if (this.connectedConversationId !== null) {
       void this.chatRealtimeService.leaveConversation(this.connectedConversationId);

@@ -81,7 +81,7 @@
             <div class="conversation-item-content">
               <div class="conversation-item-topline">
                 <strong>{{ item.title }}</strong>
-                <span>{{ item.createdAt | date:'dd.MM.' }}</span>
+                <span>{{ item.createdAt | liveRelativeTime:true }}</span>
               </div>
               <p *ngIf="item.subtitle" class="conversation-item-subtitle">{{ item.subtitle }}</p>
               <p class="conversation-item-preview">
@@ -178,7 +178,7 @@
 
               <div class="message-meta">
                 <strong *ngIf="isFirstInSenderRun(i)">{{ getDisplayName(message.senderUserId, message.senderFullName) }}</strong>
-                <span>{{ message.createdAt | date:'dd.MM.yyyy. HH:mm' }}</span>
+                <span>{{ message.createdAt | liveRelativeTime:false:true }}</span>
               </div>
               <p>{{ message.messageText }}</p>
 

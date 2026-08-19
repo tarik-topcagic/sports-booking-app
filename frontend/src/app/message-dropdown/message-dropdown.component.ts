@@ -6,7 +6,6 @@ import { AuthService } from '../../services/auth.service';
 import { ChatRealtimeService } from '../../services/chat-realtime.service';
 import { ChatInboxService } from '../../services/chat-inbox.service';
 import { GroupChatNotificationService } from '../../services/group-chat-notification.service';
-import { NotificationTimeService } from '../../services/notification-time.service';
 import { PresenceService } from '../../services/presence.service';
 import { PrivateChatNotificationService } from '../../services/private-chat-notification.service';
 import {
@@ -37,11 +36,12 @@ import { ChatMessageNotification } from '../interfaces/chat-message-notification
 import { ChatMessageDeletedEvent } from '../interfaces/chat-message-mutation-event.model';
 import { ChatInboxItem } from '../interfaces/chat-inbox-item.model';
 import { TranslatePipe } from '../pipes/translate.pipe';
+import { RelativeTimePipe } from '../pipes/relative-time.pipe';
 import { SkeletonListItemComponent } from '../skeleton/skeleton-list-item/skeleton-list-item.component';
 
 @Component({
   selector: 'app-message-dropdown',
-  imports: [NgIf, NgFor, NgClass, RouterModule, TranslatePipe, SkeletonListItemComponent],
+  imports: [NgIf, NgFor, NgClass, RouterModule, TranslatePipe, RelativeTimePipe, SkeletonListItemComponent],
   templateUrl: './message-dropdown.component.html',
   styleUrl: './message-dropdown.component.scss',
 })
@@ -55,7 +55,6 @@ export class MessageDropdownComponent implements OnInit, OnDestroy {
   messages: ChatInboxItem[] = [];
   unreadCount = 0;
   highlightedMessageKeys = new Set<string>();
-  relativeTimeRefreshKey = 0;
 
   private currentUserSubscription?: Subscription;
   private routeSubscription?: Subscription;
@@ -66,9 +65,7 @@ export class MessageDropdownComponent implements OnInit, OnDestroy {
   private realtimePrivateMessageDeletedSubscription?: Subscription;
   private presenceSubscription?: Subscription;
   private readonly refreshIntervalMs = 30000;
-  private readonly relativeTimeRefreshIntervalMs = 60000;
   private refreshIntervalId?: ReturnType<typeof setInterval>;
-  private relativeTimeRefreshIntervalId?: ReturnType<typeof setInterval>;
   private readonly desktopMediaQuery = window.matchMedia('(min-width: 992px)');
   private readonly onViewportChange = () => this.syncViewportActivity();
   private readonly onNotificationDropdownOpened = () => this.closeMessages();
@@ -93,7 +90,6 @@ export class MessageDropdownComponent implements OnInit, OnDestroy {
     private chatInboxService: ChatInboxService,
     private groupChatNotificationService: GroupChatNotificationService,
     private privateChatNotificationService: PrivateChatNotificationService,
-    private notificationTimeService: NotificationTimeService,
     private presenceService: PresenceService,
     private router: Router,
     private languageService: LanguageService,
@@ -283,10 +279,6 @@ export class MessageDropdownComponent implements OnInit, OnDestroy {
     }
   }
 
-  getMessageAge(message: ChatInboxItem): string {
-    return this.notificationTimeService.formatRelativeTime(message.createdAt);
-  }
-
   hasUnreadMessages(message: ChatInboxItem): boolean {
     return message.unreadCount > 0;
   }
@@ -363,15 +355,10 @@ export class MessageDropdownComponent implements OnInit, OnDestroy {
 
       void this.refreshViewportData();
     }, this.refreshIntervalMs);
-
-    this.relativeTimeRefreshIntervalId = startDropdownTimer(() => {
-      this.relativeTimeRefreshKey += 1;
-    }, this.relativeTimeRefreshIntervalMs);
   }
 
   private stopTimers(): void {
     this.refreshIntervalId = clearDropdownTimer(this.refreshIntervalId);
-    this.relativeTimeRefreshIntervalId = clearDropdownTimer(this.relativeTimeRefreshIntervalId);
   }
 
   private loadMessages(captureUnreadHighlights = false): void {

@@ -6,7 +6,6 @@ import { AuthService } from '../../services/auth.service';
 import { GroupService } from '../../services/group.service';
 import { LanguageService } from '../../services/language.service';
 import { NotificationService } from '../../services/notification.service';
-import { NotificationTimeService } from '../../services/notification-time.service';
 import { SystemNotificationRealtimeService } from '../../services/system-notification-realtime.service';
 import { ToastService } from '../../services/toast.service';
 import {
@@ -24,11 +23,12 @@ import {
 import { MembershipStatus } from '../interfaces/group.model';
 import { AppNotification, AppNotificationType } from '../interfaces/notification.model';
 import { TranslatePipe } from '../pipes/translate.pipe';
+import { RelativeTimePipe } from '../pipes/relative-time.pipe';
 import { SkeletonListItemComponent } from '../skeleton/skeleton-list-item/skeleton-list-item.component';
 
 @Component({
   selector: 'app-notification-dropdown',
-  imports: [NgIf, NgFor, NgClass, RouterModule, TranslatePipe, SkeletonListItemComponent],
+  imports: [NgIf, NgFor, NgClass, RouterModule, TranslatePipe, RelativeTimePipe, SkeletonListItemComponent],
   templateUrl: './notification-dropdown.component.html',
   styleUrl: './notification-dropdown.component.scss',
 })
@@ -46,15 +46,12 @@ export class NotificationDropdownComponent implements OnInit, OnDestroy {
   respondingJoinRequestAction = new Map<number, boolean>();
   notificationType = AppNotificationType;
   membershipStatus = MembershipStatus;
-  relativeTimeRefreshKey = 0;
 
   private currentUserSubscription?: Subscription;
   private unreadCountSubscription?: Subscription;
   private realtimeNotificationSubscription?: Subscription;
   private readonly notificationRefreshIntervalMs = 30000;
-  private readonly relativeTimeRefreshIntervalMs = 60000;
   private notificationRefreshIntervalId?: ReturnType<typeof setInterval>;
-  private relativeTimeRefreshIntervalId?: ReturnType<typeof setInterval>;
   private processedMembershipNotificationIds = new Set<number>();
   private readonly desktopMediaQuery = window.matchMedia('(min-width: 992px)');
   private readonly onViewportChange = () => this.syncViewportActivity();
@@ -67,7 +64,6 @@ export class NotificationDropdownComponent implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private groupService: GroupService,
     private languageService: LanguageService,
-    private notificationTimeService: NotificationTimeService,
     private systemNotificationRealtimeService: SystemNotificationRealtimeService,
     private toastService: ToastService,
     private router: Router,
@@ -201,10 +197,6 @@ export class NotificationDropdownComponent implements OnInit, OnDestroy {
     });
   }
 
-  getNotificationAge(notification: AppNotification): string {
-    return this.notificationTimeService.formatRelativeTime(notification.createdAt);
-  }
-
   canRespondToInvitation(notification: AppNotification): boolean {
     return notification.type === AppNotificationType.GroupInvitationReceived
       && !!notification.membershipId
@@ -288,15 +280,10 @@ export class NotificationDropdownComponent implements OnInit, OnDestroy {
       this.loadUnreadNotificationsCount();
       this.loadNotifications();
     }, this.notificationRefreshIntervalMs);
-
-    this.relativeTimeRefreshIntervalId = startDropdownTimer(() => {
-      this.relativeTimeRefreshKey += 1;
-    }, this.relativeTimeRefreshIntervalMs);
   }
 
   private stopTimers(): void {
     this.notificationRefreshIntervalId = clearDropdownTimer(this.notificationRefreshIntervalId);
-    this.relativeTimeRefreshIntervalId = clearDropdownTimer(this.relativeTimeRefreshIntervalId);
   }
 
   private closeNotifications(): void {

@@ -6,7 +6,6 @@ import { AuthService } from '../../services/auth.service';
 import { ChatRealtimeService } from '../../services/chat-realtime.service';
 import { ChatInboxService } from '../../services/chat-inbox.service';
 import { GroupChatNotificationService } from '../../services/group-chat-notification.service';
-import { NotificationTimeService } from '../../services/notification-time.service';
 import { PresenceService } from '../../services/presence.service';
 import { PrivateChatNotificationService } from '../../services/private-chat-notification.service';
 import { createHighlightedSet, moveItemToTop, prependIfNotExists } from '../helpers/dropdown-ui.helper';
@@ -16,13 +15,14 @@ import { ChatMessageDeletedEvent } from '../interfaces/chat-message-mutation-eve
 import { ChatInboxItem } from '../interfaces/chat-inbox-item.model';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslatePipe } from '../pipes/translate.pipe';
+import { LiveRelativeTimePipe } from '../pipes/live-relative-time.pipe';
 import { LanguageService } from '../../services/language.service';
 import { LoadErrorStateComponent } from '../load-error-state/load-error-state.component';
 import { SkeletonListItemComponent } from '../skeleton/skeleton-list-item/skeleton-list-item.component';
 
 @Component({
   selector: 'app-messages',
-  imports: [NgFor, NgIf, NgClass, NavbarComponent, TranslatePipe, LoadErrorStateComponent, SkeletonListItemComponent],
+  imports: [NgFor, NgIf, NgClass, NavbarComponent, TranslatePipe, LiveRelativeTimePipe, LoadErrorStateComponent, SkeletonListItemComponent],
   templateUrl: './messages.component.html',
   styleUrl: './messages.component.scss',
 })
@@ -51,7 +51,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
     private chatInboxService: ChatInboxService,
     private groupChatNotificationService: GroupChatNotificationService,
     private privateChatNotificationService: PrivateChatNotificationService,
-    private notificationTimeService: NotificationTimeService,
     private presenceService: PresenceService,
     private router: Router,
     private languageService: LanguageService,
@@ -136,10 +135,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
         },
       });
     }
-  }
-
-  getMessageAge(message: ChatInboxItem): string {
-    return this.notificationTimeService.formatRelativeTime(message.createdAt);
   }
 
   hasUnreadMessages(message: ChatInboxItem): boolean {

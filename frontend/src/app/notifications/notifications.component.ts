@@ -10,8 +10,8 @@ import { AppNotification, AppNotificationType } from '../interfaces/notification
 import { MembershipStatus } from '../interfaces/group.model';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslatePipe } from '../pipes/translate.pipe';
+import { RelativeTimePipe } from '../pipes/relative-time.pipe';
 import { SkeletonListItemComponent } from '../skeleton/skeleton-list-item/skeleton-list-item.component';
-import { NotificationTimeService } from '../../services/notification-time.service';
 import { ToastService } from '../../services/toast.service';
 import { createHighlightedSet, prependIfNotExists } from '../helpers/dropdown-ui.helper';
 import {
@@ -22,7 +22,7 @@ import { LoadErrorStateComponent } from '../load-error-state/load-error-state.co
 
 @Component({
   selector: 'app-notifications',
-  imports: [NgClass, NgFor, NgIf, NavbarComponent, TranslatePipe, SkeletonListItemComponent, LoadErrorStateComponent],
+  imports: [NgClass, NgFor, NgIf, NavbarComponent, TranslatePipe, RelativeTimePipe, SkeletonListItemComponent, LoadErrorStateComponent],
   templateUrl: './notifications.component.html',
   styleUrl: './notifications.component.scss',
 })
@@ -36,18 +36,14 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   notificationType = AppNotificationType;
   membershipStatus = MembershipStatus;
   private readonly notificationRefreshIntervalMs = 30000;
-  private readonly relativeTimeRefreshIntervalMs = 60000;
   private notificationRefreshIntervalId?: ReturnType<typeof setInterval>;
-  private relativeTimeRefreshIntervalId?: ReturnType<typeof setInterval>;
   private processedMembershipNotificationIds = new Set<number>();
   private realtimeNotificationSubscription?: Subscription;
-  relativeTimeRefreshKey = 0;
 
   constructor(
     private notificationService: NotificationService,
     private groupService: GroupService,
     private languageService: LanguageService,
-    private notificationTimeService: NotificationTimeService,
     private systemNotificationRealtimeService: SystemNotificationRealtimeService,
     private toastService: ToastService,
     private router: Router,
@@ -63,9 +59,6 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     this.notificationRefreshIntervalId = setInterval(() => {
       this.silentRefreshNotifications();
     }, this.notificationRefreshIntervalMs);
-    this.relativeTimeRefreshIntervalId = setInterval(() => {
-      this.relativeTimeRefreshKey += 1;
-    }, this.relativeTimeRefreshIntervalMs);
   }
 
   ngOnDestroy(): void {
@@ -73,10 +66,6 @@ export class NotificationsComponent implements OnInit, OnDestroy {
 
     if (this.notificationRefreshIntervalId) {
       clearInterval(this.notificationRefreshIntervalId);
-    }
-
-    if (this.relativeTimeRefreshIntervalId) {
-      clearInterval(this.relativeTimeRefreshIntervalId);
     }
 
     void this.systemNotificationRealtimeService.disconnect();
@@ -136,10 +125,6 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       userName: notification.actorName || '',
       groupName,
     });
-  }
-
-  getNotificationAge(notification: AppNotification): string {
-    return this.notificationTimeService.formatRelativeTime(notification.createdAt);
   }
 
   isHighlightedNotification(notification: AppNotification): boolean {
