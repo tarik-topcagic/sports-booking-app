@@ -170,7 +170,7 @@
         </div>
         <div class="detail-item">
           <span>{{ 'dateCreated' | translate }}</span>
-          <strong>{{ group.dateCreated | date:'dd.MM.yyyy.' }}</strong>
+          <strong>{{ formatDateCreated(group.dateCreated) }}</strong>
         </div>
         <button
           *ngIf="group.isMember; else readonlyMembersCount"

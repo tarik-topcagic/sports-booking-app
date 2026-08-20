@@ -4,7 +4,7 @@ import { FormsModule, NgForm } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, tap, throwError } from 'rxjs';
 import { Arena } from '../interfaces/arena.model';
-import { formatReadableDate } from '../helpers/date-format.helper';
+import { getMonthAbbreviationKey, getWeekdayAbbreviationKey } from '../helpers/date-format.helper';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { SkeletonComponent } from '../skeleton/skeleton/skeleton.component';
@@ -111,7 +111,11 @@ export class ReservationPaymentComponent {
       return '';
     }
 
-    return formatReadableDate(date, this.currentLocale);
+    const month = this.languageService.translate(getMonthAbbreviationKey(date));
+    const day = new Intl.DateTimeFormat('en-US', { day: 'numeric' }).format(date);
+    const weekday = this.languageService.translate(getWeekdayAbbreviationKey(date));
+
+    return `${month} ${day}, ${weekday}`;
   }
 
   formatTime(date: Date | null): string {

@@ -8,7 +8,7 @@ import {
   getArenaGalleryImages,
   getArenaDisplayImage,
 } from '../helpers/arena-ui.helper';
-import { formatReadableDate, getReadableMonthLabel } from '../helpers/date-format.helper';
+import { getMonthAbbreviationKey, getWeekdayAbbreviationKey } from '../helpers/date-format.helper';
 import { Arena } from '../interfaces/arena.model';
 import { Reservation } from '../interfaces/reservation.model';
 import { TimeRange } from '../interfaces/availability.model';
@@ -414,15 +414,11 @@ export class ArenaDetailsComponent implements OnInit, OnDestroy {
       return this.languageService.translate('today');
     }
 
-    return this.capitalize(
-      new Intl.DateTimeFormat(this.currentLocale, {
-        weekday: 'short',
-      }).format(date),
-    );
+    return this.languageService.translate(getWeekdayAbbreviationKey(date));
   }
 
   formatDayDate(date: Date): string {
-    const month = getReadableMonthLabel(date, this.currentLocale);
+    const month = this.languageService.translate(getMonthAbbreviationKey(date));
     const day = new Intl.DateTimeFormat('en-US', {
       day: 'numeric',
     }).format(date);
@@ -435,7 +431,11 @@ export class ArenaDetailsComponent implements OnInit, OnDestroy {
       return this.languageService.translate('notSelected');
     }
 
-    return formatReadableDate(date, this.currentLocale);
+    const month = this.languageService.translate(getMonthAbbreviationKey(date));
+    const day = new Intl.DateTimeFormat('en-US', { day: 'numeric' }).format(date);
+    const weekday = this.languageService.translate(getWeekdayAbbreviationKey(date));
+
+    return `${month} ${day}, ${weekday}`;
   }
 
   formatTimeLabel(slotStart: number): string {
@@ -695,9 +695,5 @@ export class ArenaDetailsComponent implements OnInit, OnDestroy {
       left.getMonth() === right.getMonth() &&
       left.getDate() === right.getDate()
     );
-  }
-
-  private capitalize(value: string): string {
-    return value ? value.charAt(0).toUpperCase() + value.slice(1) : value;
   }
 }

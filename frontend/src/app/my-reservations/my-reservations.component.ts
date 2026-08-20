@@ -2,7 +2,7 @@ import { NgClass, NgFor, NgIf } from '@angular/common';
 import { Component, ViewChild } from '@angular/core';
 import { catchError, tap, throwError } from 'rxjs';
 import { Reservation } from '../interfaces/reservation.model';
-import { formatReadableDate } from '../helpers/date-format.helper';
+import { getMonthAbbreviationKey, getWeekdayAbbreviationKey } from '../helpers/date-format.helper';
 import { getArenaDisplayImage } from '../helpers/arena-ui.helper';
 import { Arena } from '../interfaces/arena.model';
 import { NavbarComponent } from '../navbar/navbar.component';
@@ -77,7 +77,12 @@ export class MyReservationsComponent {
       hour12: false,
     }).format(date);
 
-    return `${formatReadableDate(date, this.currentLocale)}, ${year}, ${time}`;
+    const month = this.languageService.translate(getMonthAbbreviationKey(date));
+    const day = new Intl.DateTimeFormat('en-US', { day: 'numeric' }).format(date);
+    const weekday = this.languageService.translate(getWeekdayAbbreviationKey(date));
+    const readableDate = `${month} ${day}, ${weekday}`;
+
+    return `${readableDate}, ${year}, ${time}`;
   }
 
   formatDuration(hours: number): string {

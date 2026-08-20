@@ -1,4 +1,4 @@
-import { DatePipe, NgFor, NgIf } from '@angular/common';
+import { NgFor, NgIf } from '@angular/common';
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Group, GroupDetails } from '../interfaces/group.model';
@@ -10,6 +10,7 @@ import { PresenceService } from '../../services/presence.service';
 import { EditGroupModalComponent } from '../edit-group-modal/edit-group-modal.component';
 import { ConfirmDialogService } from '../../services/confirm-dialog.service';
 import { DropdownCoordinatorService } from '../../services/dropdown-coordinator.service';
+import { getMonthAbbreviationKey } from '../helpers/date-format.helper';
 import { catchError, NEVER, Subscription, tap, throwError } from 'rxjs';
 import { GroupInviteMembersModalComponent } from '../group-invite-members-modal/group-invite-members-modal.component';
 import { GroupMembersModalComponent } from '../group-members-modal/group-members-modal.component';
@@ -27,7 +28,6 @@ import {
 @Component({
   selector: 'app-group-details',
   imports: [
-    DatePipe,
     NgIf,
     NgFor,
     RouterLink,
@@ -122,6 +122,15 @@ export class GroupDetailsComponent implements OnInit, OnDestroy {
 
   hasOnlineMembers(): boolean {
     return this.onlineMemberUserIds.size > 0;
+  }
+
+  formatDateCreated(date: Date | string): string {
+    const parsedDate = date instanceof Date ? date : new Date(date);
+    const month = this.languageService.translate(getMonthAbbreviationKey(parsedDate));
+    const day = new Intl.DateTimeFormat('en-US', { day: 'numeric' }).format(parsedDate);
+    const year = new Intl.DateTimeFormat('en-US', { year: 'numeric' }).format(parsedDate);
+
+    return `${day} ${month} ${year}`;
   }
 
   requestAccess(): void {
