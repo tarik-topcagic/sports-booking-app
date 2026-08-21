@@ -116,7 +116,7 @@
 
     <app-load-error-state #groupsState [load]="loadGroupCollections" errorKey="groupsLoadError" errorWrapperClass="my-4"></app-load-error-state>
 
-    <section class="results-card" *ngIf="groupsState.isLoading">
+    <section class="results-card" *ngIf="groupsState.isLoading; else groupsResults">
       <app-skeleton-list-item
         *ngFor="let placeholder of [1, 2, 3, 4]"
         avatarShape="circle"
@@ -127,7 +127,8 @@
       ></app-skeleton-list-item>
     </section>
 
-    <section class="results-card" *ngIf="!groupsState.isLoading && !groupsState.hasError && pagedGroups.length; else emptyGroupsState">
+    <ng-template #groupsResults>
+    <section class="results-card" *ngIf="!groupsState.hasError && filteredGroups.length; else emptyGroupsState">
       <article class="result-row" *ngFor="let group of pagedGroups">
         <div class="result-main">
           <div class="avatar-shell">
@@ -226,11 +227,11 @@
         </div>
       </article>
     </section>
+    </ng-template>
 
     <ng-template #emptyGroupsState>
       <section class="empty-state" *ngIf="!groupsState.hasError">
-        <p *ngIf="groupsState.isLoading">{{ 'loading' | translate }}</p>
-        <p *ngIf="!groupsState.isLoading">{{ getEmptyStateKey() | translate }}</p>
+        <p>{{ getEmptyStateKey() | translate }}</p>
       </section>
     </ng-template>
 

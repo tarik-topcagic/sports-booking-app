@@ -139,7 +139,7 @@
     </section>
 
     <ng-template #arenaResults>
-      <section class="results-card" *ngIf="pagedArenas.length && !arenasState.hasError; else emptyArenasState">
+      <section class="results-card" *ngIf="filteredArenas.length && !arenasState.hasError; else emptyArenasState">
         <article class="result-row arena-row" *ngFor="let arena of pagedArenas">
           <div class="result-main arena-main">
             <div class="arena-image-shell">

@@ -93,7 +93,7 @@
 
     <app-load-error-state #usersState [load]="loadUsers" errorKey="usersLoadError" errorWrapperClass="my-4"></app-load-error-state>
 
-    <section class="results-card" *ngIf="usersState.isLoading || (activeFilter === 'commonGroups' && isLoadingCommonGroups)">
+    <section class="results-card" *ngIf="usersState.isLoading || (activeFilter === 'commonGroups' && isLoadingCommonGroups); else usersResults">
       <app-skeleton-list-item
         *ngFor="let placeholder of [1, 2, 3, 4]"
         avatarShape="circle"
@@ -104,9 +104,10 @@
       ></app-skeleton-list-item>
     </section>
 
+    <ng-template #usersResults>
     <section
       class="results-card"
-      *ngIf="!usersState.isLoading && !(activeFilter === 'commonGroups' && isLoadingCommonGroups) && !usersState.hasError && pagedUsers.length; else emptyUsersState"
+      *ngIf="!usersState.hasError && filteredUsers.length; else emptyUsersState"
     >
       <article class="result-row" *ngFor="let user of pagedUsers">
         <div class="result-main">
@@ -171,6 +172,7 @@
         </div>
       </article>
     </section>
+    </ng-template>
 
     <ng-template #emptyUsersState>
       <section class="empty-state" *ngIf="!usersState.hasError">
