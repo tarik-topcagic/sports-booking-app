@@ -54,6 +54,7 @@ export class ProfileEditComponent
 
   private beforeUnloadHandlerBound = this.beforeUnloadHandler.bind(this);
   private coordinatorSubscription?: Subscription;
+  private originalProfile: { fullName: string; phoneNumber: string; location: string; profilePictureUrl: string | null } | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -103,7 +104,12 @@ export class ProfileEditComponent
           this.previewUrl = null;
         }
 
-        this.editForm.markAsPristine();
+        this.originalProfile = {
+          fullName: (profile.fullName ?? '').trim(),
+          phoneNumber: (profile.phoneNumber ?? '').trim(),
+          location: (profile.location || '').trim(),
+          profilePictureUrl: profile.profilePictureUrl ?? null,
+        };
       },
       error: (error) => {
         this.isLoading = false;
@@ -142,8 +148,6 @@ export class ProfileEditComponent
   selectCity(city: City): void {
     this.editForm.get('location')?.setValue(city.name);
 
-    this.editForm.get('location')?.markAsDirty();
-
     this.showDropdown = false;
     this.dropdownCoordinator.close(this);
   }
@@ -166,7 +170,6 @@ export class ProfileEditComponent
     const reader = new FileReader();
     reader.onload = () => {
       this.previewUrl = reader.result;
-      this.editForm.markAsDirty();
     };
     reader.readAsDataURL(file);
   }
@@ -202,6 +205,23 @@ export class ProfileEditComponent
     this.editForm.get('profilePictureUrl')?.setValue(null);
   }
 
+  get hasUnsavedChanges(): boolean {
+    if (this.selectedFile) {
+      return true;
+    }
+    if (!this.originalProfile) {
+      return false;
+    }
+
+    const value = this.editForm.value;
+    return (
+      (value.fullName ?? '').trim() !== this.originalProfile.fullName ||
+      (value.phoneNumber ?? '').trim() !== this.originalProfile.phoneNumber ||
+      (value.location ?? '').trim() !== this.originalProfile.location ||
+      (value.profilePictureUrl ?? null) !== this.originalProfile.profilePictureUrl
+    );
+  }
+
   private updateProfile(): void {
     this.userService.updateProfile(this.editForm.value).subscribe({
       next: () => {
@@ -210,7 +230,14 @@ export class ProfileEditComponent
         this.toastService.showSuccess(
           this.languageService.translate('profileUpdated'),
         );
-        this.editForm.markAsPristine();
+        this.selectedFile = null;
+        const value = this.editForm.value;
+        this.originalProfile = {
+          fullName: (value.fullName ?? '').trim(),
+          phoneNumber: (value.phoneNumber ?? '').trim(),
+          location: (value.location ?? '').trim(),
+          profilePictureUrl: value.profilePictureUrl ?? null,
+        };
         setTimeout(() => {
           this.router.navigate(['/profile']);
         }, 0);
@@ -248,7 +275,6 @@ export class ProfileEditComponent
     this.userService.deleteProfilePicture().subscribe({
       next: () => {
         this.isRemovingPicture = false;
-        this.editForm.markAsDirty();
         const fileInput = document.getElementById(
           'profilePicture',
         ) as HTMLInputElement;
@@ -259,17 +285,16 @@ export class ProfileEditComponent
         console.error('Error removing image', err);
       },
     });
-    this.editForm.markAsDirty();
   }
 
   beforeUnloadHandler(event: BeforeUnloadEvent) {
-    if (this.editForm.dirty) {
+    if (this.hasUnsavedChanges) {
       event.returnValue = this.languageService.translate('unsavedChangesConfirm');
     }
   }
 
   canDeactivate(): boolean | Observable<boolean> | Promise<boolean> {
-    if (this.editForm.dirty) {
+    if (this.hasUnsavedChanges) {
       return this.confirmDialogService.confirm('unsavedChangesConfirm');
     }
     return true;

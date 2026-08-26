@@ -141,7 +141,7 @@
           <button
             type="submit"
             class="btn btn-primary mb-2"
-            [disabled]="editForm.pristine || editForm.invalid || isSaving"
+            [disabled]="!hasUnsavedChanges || editForm.invalid || isSaving"
           >
             <span *ngIf="!isSaving">{{ 'saveChanges' | translate }}</span>
             <span *ngIf="isSaving">

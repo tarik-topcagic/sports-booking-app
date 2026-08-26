@@ -44,7 +44,6 @@ export class CreateGroupModalComponent {
       const reader = new FileReader();
       reader.onload = () => {
         this.previewUrl = reader.result as string;
-        this.createGroupForm.markAsDirty();
       };
       reader.readAsDataURL(file);
     }
@@ -53,7 +52,17 @@ export class CreateGroupModalComponent {
   removeImage(): void {
     this.selectedImage = null;
     this.previewUrl = null;
-    this.createGroupForm.markAsDirty();
+  }
+
+  get hasUnsavedChanges(): boolean {
+    const value = this.createGroupForm.value;
+    return !!(
+      (value.name ?? '').trim() ||
+      (value.city ?? '').trim() ||
+      (value.sportCategory ?? '').trim() ||
+      (value.description ?? '').trim() ||
+      this.selectedImage
+    );
   }
 
   submitGroup(): void {
@@ -87,7 +96,7 @@ export class CreateGroupModalComponent {
   }
 
   async onClose(): Promise<void> {
-    if (this.createGroupForm.dirty) {
+    if (this.hasUnsavedChanges) {
       if (!(await this.confirmDialogService.confirm('unsavedChangesConfirm'))) {
         return;
       }

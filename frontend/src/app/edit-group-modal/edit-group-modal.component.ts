@@ -31,6 +31,7 @@ export class EditGroupModalComponent implements OnInit, OnDestroy {
   showActionsMenu = false;
 
   private coordinatorSubscription: Subscription;
+  private originalGroup: { name: string; city: string; sportCategory: string; description: string; imageUrl: string | null } | null = null;
 
   constructor(
     private groupService: GroupService,
@@ -65,6 +66,32 @@ export class EditGroupModalComponent implements OnInit, OnDestroy {
     if (this.group.imageUrl && this.group.imageUrl !== 'default-group.png') {
       this.previewUrl = this.group.imageUrl;
     }
+
+    this.originalGroup = {
+      name: (this.group.name ?? '').trim(),
+      city: (this.group.city ?? '').trim(),
+      sportCategory: (this.group.sportCategory ?? '').trim(),
+      description: (this.group.description ?? '').trim(),
+      imageUrl: this.previewUrl,
+    };
+  }
+
+  get hasUnsavedChanges(): boolean {
+    if (this.selectedImage) {
+      return true;
+    }
+    if (!this.originalGroup) {
+      return false;
+    }
+
+    const value = this.editGroupForm.value;
+    return (
+      (value.name ?? '').trim() !== this.originalGroup.name ||
+      (value.city ?? '').trim() !== this.originalGroup.city ||
+      (value.sportCategory ?? '').trim() !== this.originalGroup.sportCategory ||
+      (value.description ?? '').trim() !== this.originalGroup.description ||
+      this.previewUrl !== this.originalGroup.imageUrl
+    );
   }
 
   ngOnDestroy(): void {
@@ -107,7 +134,6 @@ export class EditGroupModalComponent implements OnInit, OnDestroy {
       const reader = new FileReader();
       reader.onload = () => {
         this.previewUrl = reader.result as string;
-        this.editGroupForm.markAsDirty();
       };
       reader.readAsDataURL(file);
     }
@@ -116,7 +142,6 @@ export class EditGroupModalComponent implements OnInit, OnDestroy {
   removeImage(): void {
     this.selectedImage = null;
     this.previewUrl = null;
-    this.editGroupForm.markAsDirty();
   }
 
   async deleteGroup(event?: Event): Promise<void> {
@@ -177,6 +202,15 @@ export class EditGroupModalComponent implements OnInit, OnDestroy {
         this.toastService.showSuccess(
           this.languageService.translate('groupUpdatedSuccessfully'),
         );
+        this.selectedImage = null;
+        const value = this.editGroupForm.value;
+        this.originalGroup = {
+          name: (value.name ?? '').trim(),
+          city: (value.city ?? '').trim(),
+          sportCategory: (value.sportCategory ?? '').trim(),
+          description: (value.description ?? '').trim(),
+          imageUrl: this.previewUrl,
+        };
         this.groupUpdated.emit(response);
       },
       (error) => {
@@ -189,7 +223,7 @@ export class EditGroupModalComponent implements OnInit, OnDestroy {
   
   async onClose(): Promise<void> {
     this.closeActionsMenu();
-    if (this.editGroupForm.dirty) {
+    if (this.hasUnsavedChanges) {
       if (!(await this.confirmDialogService.confirm('unsavedChangesConfirm'))) {
         return;
       }

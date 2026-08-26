@@ -88,7 +88,7 @@
       <label for="groupDescription">{{ 'description' | translate }}</label>
     </div>
     <div class="d-flex justify-content-between">
-      <button type="submit" class="btn btn-primary" [disabled]="isSubmitting || editGroupForm.invalid || editGroupForm.pristine">
+      <button type="submit" class="btn btn-primary" [disabled]="isSubmitting || editGroupForm.invalid || !hasUnsavedChanges">
         {{ (isSubmitting ? 'updating' : 'updateGroup') | translate }}
       </button>
       <button type="button" class="btn btn-secondary cancel-button" (click)="onClose()">{{ 'cancel' | translate }}</button>
