@@ -1,4 +1,4 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { UserService } from '../../services/user.service';
 import { NgIf } from '@angular/common';
@@ -8,7 +8,7 @@ import { ChooseGroupModalComponent } from '../choose-group-modal/choose-group-mo
 import { User } from '../interfaces/user';
 import { AuthService } from '../../services/auth.service';
 import { PresenceService } from '../../services/presence.service';
-import { catchError, NEVER, Subscription, tap, throwError } from 'rxjs';
+import { catchError, NEVER, Subscription, tap, throwError, of } from 'rxjs';
 import { UserPresence } from '../interfaces/user-presence.model';
 import { SkeletonComponent } from '../skeleton/skeleton/skeleton.component';
 import { LoadErrorStateComponent } from '../load-error-state/load-error-state.component';
@@ -19,7 +19,9 @@ import { LoadErrorStateComponent } from '../load-error-state/load-error-state.co
   templateUrl: './user-profile.component.html',
   styleUrl: './user-profile.component.scss'
 })
-export class UserProfileComponent implements OnDestroy {
+export class UserProfileComponent implements OnInit, OnDestroy {
+  @ViewChild('profileState') profileState!: LoadErrorStateComponent;
+
   userProfile: User | null = null;
   selectedUserForGroupInvite: User | null = null;
   timestamp: number = Date.now();
@@ -27,6 +29,8 @@ export class UserProfileComponent implements OnDestroy {
   canShowPresence = false;
   isProfileUserOnline = false;
   private presenceSubscription?: Subscription;
+  private routeSubscription?: Subscription;
+  private isInitialRouteParamsEmission = true;
 
   constructor(
     private route: ActivatedRoute,
@@ -41,10 +45,20 @@ export class UserProfileComponent implements OnDestroy {
     this.presenceSubscription = this.presenceService.presenceUpdates$.subscribe((update) => {
       this.handlePresenceUpdate(update);
     });
+
+    this.routeSubscription = this.route.paramMap.subscribe(() => {
+      if (this.isInitialRouteParamsEmission) {
+        this.isInitialRouteParamsEmission = false;
+        return;
+      }
+
+      this.profileState.reload();
+    });
   }
 
   ngOnDestroy(): void {
     this.presenceSubscription?.unsubscribe();
+    this.routeSubscription?.unsubscribe();
     void this.presenceService.disconnectRealtime();
   }
 
@@ -66,6 +80,12 @@ export class UserProfileComponent implements OnDestroy {
       }),
       catchError((error) => {
         this.userProfile = null;
+
+        if (error?.status === 404 && error.error?.redirectUsername) {
+          this.router.navigate(['/users', error.error.redirectUsername], { replaceUrl: true });
+          return of(undefined);
+        }
+
         console.error('User not found', error);
         return throwError(() => error);
       }),

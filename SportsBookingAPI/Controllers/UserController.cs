@@ -34,11 +34,15 @@ namespace SportsBookingAPI.Controllers
         [HttpGet("{username}")]
         public async Task<IActionResult> GetUserProfileByUsername(string username)
         {
-            var user = await _userService.GetUserProfileByUsernameAsync(username);
-            if (user == null)
-                return NotFound();
+            var result = await _userService.GetUserProfileByUsernameAsync(username);
 
-            return Ok(user);
+            if (result.Profile != null)
+                return Ok(result.Profile);
+
+            if (result.RedirectUsername != null)
+                return NotFound(new { message = "User not found", redirectUsername = result.RedirectUsername });
+
+            return NotFound(new { message = "User not found" });
         }
 
         [HttpGet("get-users")]

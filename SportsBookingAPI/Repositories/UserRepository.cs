@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+using SportsBookingAPI.Data;
 using SportsBookingAPI.Interfaces;
 using SportsBookingAPI.Models;
 
@@ -8,10 +10,12 @@ namespace SportsBookingAPI.Repositories
     public class UserRepository : IUserRepository
     {
         private readonly UserManager<AppUser> _userManager;
+        private readonly ApplicationDBContext _context;
 
-        public UserRepository(UserManager<AppUser> userManager)
+        public UserRepository(UserManager<AppUser> userManager, ApplicationDBContext context)
         {
             _userManager = userManager;
+            _context = context;
         }
 
         public async Task<List<AppUser>> GetAllUsersAsync()
@@ -47,6 +51,27 @@ namespace SportsBookingAPI.Repositories
         {
             return await _userManager.Users
                 .AnyAsync(user => user.Id != excludedUserId && user.NormalizedUserName == normalizedUsername);
+        }
+
+        public async Task<AppUser?> GetUserByHistoricalUsernameAsync(string normalizedUsername)
+        {
+            var mostRecent = await _context.UsernameHistories
+                .Where(h => h.OldNormalizedUsername == normalizedUsername)
+                .OrderByDescending(h => h.ChangedAt)
+                .FirstOrDefaultAsync();
+
+            return mostRecent == null ? null : await _userManager.FindByIdAsync(mostRecent.UserId);
+        }
+
+        public async Task<IDbContextTransaction> BeginTransactionAsync()
+        {
+            return await _context.Database.BeginTransactionAsync();
+        }
+
+        public async Task AddUsernameHistoryAsync(UsernameHistory entry)
+        {
+            _context.UsernameHistories.Add(entry);
+            await _context.SaveChangesAsync();
         }
 
         public async Task<List<AppUser>> SearchUsersAsync(string? searchTerm)

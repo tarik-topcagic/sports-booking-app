@@ -74,7 +74,12 @@
           >
             <span class="ms-2">{{ 'welcome' | translate }}, {{ username }}</span>
             <ng-container *ngIf="profileImageUrl; else defaultIcon">
-              <img [src]="profileImageUrl" [alt]="'profilePicture' | translate" class="profile-img rounded-circle" />
+              <img
+                [src]="profileImageUrl"
+                (error)="handleImageError()"
+                [alt]="'profilePicture' | translate"
+                class="profile-img rounded-circle"
+              />
             </ng-container>
             <ng-template #defaultIcon>
               <div class="default-profile-img">

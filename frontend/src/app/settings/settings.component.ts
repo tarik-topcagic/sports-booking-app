@@ -6,12 +6,14 @@ import { AuthService } from '../../services/auth.service';
 import { LanguageService } from '../../services/language.service';
 import { ToastService } from '../../services/toast.service';
 import { UserService, UserSettings } from '../../services/user.service';
-import { Subscription, tap } from 'rxjs';
+import { Observable, Subscription, tap } from 'rxjs';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { SkeletonTextBlockComponent } from '../skeleton/skeleton-text-block/skeleton-text-block.component';
 import { LoadErrorStateComponent } from '../load-error-state/load-error-state.component';
 import { DropdownCoordinatorService } from '../../services/dropdown-coordinator.service';
+import { CanComponentDeactivate } from '../guards/can-component-deactivate';
+import { ConfirmDialogService } from '../../services/confirm-dialog.service';
 
 @Component({
   selector: 'app-settings',
@@ -19,7 +21,7 @@ import { DropdownCoordinatorService } from '../../services/dropdown-coordinator.
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
 })
-export class SettingsComponent implements OnInit, OnDestroy {
+export class SettingsComponent implements OnInit, OnDestroy, CanComponentDeactivate {
   @ViewChild('languageMenuWrapper') languageMenuWrapperRef!: ElementRef<HTMLElement>;
 
   languages: { code: string; name: string }[] = [];
@@ -32,6 +34,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   isChangingUsername = false;
 
   private coordinatorSubscription?: Subscription;
+  private beforeUnloadHandlerBound = this.beforeUnloadHandler.bind(this);
 
   constructor(
     private userService: UserService,
@@ -40,6 +43,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     private languageService: LanguageService,
     private toastService: ToastService,
     private dropdownCoordinator: DropdownCoordinatorService,
+    private confirmDialogService: ConfirmDialogService,
   ) {
     this.coordinatorSubscription = this.dropdownCoordinator.activeChanged$.subscribe((activeId) => {
       if (activeId !== this && this.showLanguageMenu) {
@@ -51,6 +55,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.coordinatorSubscription?.unsubscribe();
     this.dropdownCoordinator.close(this);
+    window.removeEventListener('beforeunload', this.beforeUnloadHandlerBound);
   }
 
   ngOnInit(): void {
@@ -58,6 +63,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.darkModeEnabled = localStorage.getItem('darkMode') === 'true';
     this.selectedLanguage = this.languageService.currentLanguage;
     this.applyDarkMode();
+    window.addEventListener('beforeunload', this.beforeUnloadHandlerBound);
   }
 
   loadSettings = () => this.userService.getSettings().pipe(
@@ -202,6 +208,25 @@ export class SettingsComponent implements OnInit, OnDestroy {
     const currentUsername = this.settings?.username?.trim() || '';
 
     return !!username && username !== currentUsername;
+  }
+
+  get hasUnconfirmedUsernameChange(): boolean {
+    const current = this.newUsername.trim();
+    const original = this.settings?.username?.trim() || '';
+    return current !== original;
+  }
+
+  beforeUnloadHandler(event: BeforeUnloadEvent) {
+    if (this.hasUnconfirmedUsernameChange) {
+      event.returnValue = this.languageService.translate('unsavedChangesConfirm');
+    }
+  }
+
+  canDeactivate(): boolean | Observable<boolean> | Promise<boolean> {
+    if (this.hasUnconfirmedUsernameChange) {
+      return this.confirmDialogService.confirm('unsavedChangesConfirm');
+    }
+    return true;
   }
 
   private applyDarkMode(): void {

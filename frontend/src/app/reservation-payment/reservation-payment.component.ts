@@ -1,8 +1,8 @@
 import { NgFor, NgIf } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { catchError, tap, throwError } from 'rxjs';
+import { catchError, Observable, tap, throwError } from 'rxjs';
 import { Arena } from '../interfaces/arena.model';
 import { getMonthAbbreviationKey, getWeekdayAbbreviationKey } from '../helpers/date-format.helper';
 import { NavbarComponent } from '../navbar/navbar.component';
@@ -13,6 +13,8 @@ import { ArenaService } from '../../services/arena.service';
 import { LanguageService } from '../../services/language.service';
 import { ReservationService } from '../../services/reservation.service';
 import { ToastService } from '../../services/toast.service';
+import { CanComponentDeactivate } from '../guards/can-component-deactivate';
+import { ConfirmDialogService } from '../../services/confirm-dialog.service';
 
 const ADDITIONAL_HALF_HOUR_PRICE = 10;
 
@@ -22,7 +24,7 @@ const ADDITIONAL_HALF_HOUR_PRICE = 10;
   templateUrl: './reservation-payment.component.html',
   styleUrl: './reservation-payment.component.scss',
 })
-export class ReservationPaymentComponent {
+export class ReservationPaymentComponent implements OnInit, OnDestroy, CanComponentDeactivate {
   private readonly localeByLanguage: Record<string, string> = {
     en: 'en-US',
     de: 'de-DE',
@@ -51,6 +53,8 @@ export class ReservationPaymentComponent {
   readonly cardNumberPattern =
     '^(\\d{4} \\d{4} \\d{4} \\d{4}|\\d{4} \\d{6} \\d{5}|\\d{4} \\d{6} \\d{4}|\\d{4} \\d{4} \\d{4} \\d{4} \\d{3})$';
 
+  private beforeUnloadHandlerBound = this.beforeUnloadHandler.bind(this);
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -58,7 +62,38 @@ export class ReservationPaymentComponent {
     private languageService: LanguageService,
     private reservationService: ReservationService,
     private toastService: ToastService,
+    private confirmDialogService: ConfirmDialogService,
   ) {}
+
+  ngOnInit(): void {
+    window.addEventListener('beforeunload', this.beforeUnloadHandlerBound);
+  }
+
+  ngOnDestroy(): void {
+    window.removeEventListener('beforeunload', this.beforeUnloadHandlerBound);
+  }
+
+  get hasUnconfirmedPaymentInfo(): boolean {
+    return !!(
+      this.cardholderName.trim() ||
+      this.cardNumber.trim() ||
+      this.expiry.trim() ||
+      this.cvv.trim()
+    );
+  }
+
+  beforeUnloadHandler(event: BeforeUnloadEvent) {
+    if (this.hasUnconfirmedPaymentInfo) {
+      event.returnValue = this.languageService.translate('unsavedChangesConfirm');
+    }
+  }
+
+  canDeactivate(): boolean | Observable<boolean> | Promise<boolean> {
+    if (this.hasUnconfirmedPaymentInfo) {
+      return this.confirmDialogService.confirm('unsavedChangesConfirm');
+    }
+    return true;
+  }
 
   loadArena = () => {
     const queryParams = this.route.snapshot.queryParamMap;
@@ -234,6 +269,10 @@ export class ReservationPaymentComponent {
       .subscribe({
         next: (reservation) => {
           this.isProcessing = false;
+          this.cardholderName = '';
+          this.cardNumber = '';
+          this.expiry = '';
+          this.cvv = '';
           this.router.navigate(['/sports-arenas', this.arenaId], {
             queryParams: { justBooked: reservation.id },
           });

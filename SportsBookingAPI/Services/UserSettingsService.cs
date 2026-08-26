@@ -99,12 +99,30 @@ namespace SportsBookingAPI.Services
             if (usernameExists)
                 return ServiceResult.BadRequest(new { field = "username", message = "Username is already taken" });
 
+            var oldUsername = user.UserName!;
+            var oldNormalizedUsername = user.NormalizedUserName!;
+
             user.UserName = newUsername;
             user.NormalizedUserName = normalizedUsername;
 
+            await using var transaction = await _userRepository.BeginTransactionAsync();
+
             var updateResult = await _userRepository.UpdateUserAsync(user);
             if (!updateResult.Succeeded)
+            {
+                await transaction.RollbackAsync();
                 return ServiceResult.BadRequest(updateResult.Errors);
+            }
+
+            await _userRepository.AddUsernameHistoryAsync(new UsernameHistory
+            {
+                UserId = user.Id,
+                OldUsername = oldUsername,
+                OldNormalizedUsername = oldNormalizedUsername,
+                ChangedAt = DateTime.UtcNow,
+            });
+
+            await transaction.CommitAsync();
 
             var stampResult = await _userRepository.UpdateSecurityStampAsync(user);
             if (!stampResult.Succeeded)

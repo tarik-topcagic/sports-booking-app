@@ -36,6 +36,7 @@ export const routes: Routes = [
       path: 'settings',
       loadComponent: () => import('./settings/settings.component').then((module) => module.SettingsComponent),
       canActivate: [AuthGuard],
+      canDeactivate: [PendingChangesGuard],
     },
     {
       path: 'users',
@@ -61,6 +62,7 @@ export const routes: Routes = [
       path: 'payment',
       loadComponent: () => import('./reservation-payment/reservation-payment.component').then((module) => module.ReservationPaymentComponent),
       canActivate: [AuthGuard],
+      canDeactivate: [PendingChangesGuard],
     },
     {
       path: 'my-reservations',

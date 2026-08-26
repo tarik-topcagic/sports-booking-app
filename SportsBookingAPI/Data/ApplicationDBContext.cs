@@ -26,6 +26,7 @@ namespace SportsBookingAPI.Data
         public DbSet<AppNotification> Notifications { get; set; }
         public DbSet<Reservation> Reservations { get; set; }
         public DbSet<FavoriteArena> FavoriteArenas { get; set; }
+        public DbSet<UsernameHistory> UsernameHistories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -292,6 +293,15 @@ namespace SportsBookingAPI.Data
             modelBuilder.Entity<FavoriteArena>()
                 .HasIndex(f => new { f.UserId, f.ArenaId })
                 .IsUnique();
+
+            modelBuilder.Entity<UsernameHistory>()
+                .HasOne(h => h.User)
+                .WithMany()
+                .HasForeignKey(h => h.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<UsernameHistory>()
+                .HasIndex(h => h.OldNormalizedUsername);
         }
 
     }

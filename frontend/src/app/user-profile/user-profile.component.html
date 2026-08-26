@@ -6,7 +6,7 @@
       {{ 'backToUsers' | translate }}
     </a>
 
-    <app-load-error-state [load]="loadUserProfile" errorKey="userNotFound" errorWrapperClass="my-4">
+    <app-load-error-state #profileState [load]="loadUserProfile" errorKey="userNotFound" errorWrapperClass="my-4">
       <div loading>
         <div class="card mx-auto shadow-sm profile-card">
           <div class="card-body text-center">

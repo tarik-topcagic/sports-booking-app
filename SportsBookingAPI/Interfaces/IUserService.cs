@@ -7,7 +7,7 @@ namespace SportsBookingAPI.Interfaces
     public interface IUserService
     {
         Task<UserProfileDto?> GetMyProfileAsync(string userId);
-        Task<UserProfileDto?> GetUserProfileByUsernameAsync(string username);
+        Task<UserProfileLookupResult> GetUserProfileByUsernameAsync(string username);
         Task<IEnumerable<UserProfileDto>> SearchUsersAsync(string? query, string? currentUserId);
         Task<IEnumerable<AdminUserDto>> GetAllUsersForAdminAsync(string? username, string? role, bool? locked);
         Task<ServiceResult> SetUserLockoutAsync(string userId, bool locked, string callerId);

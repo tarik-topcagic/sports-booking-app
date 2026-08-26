@@ -25,12 +25,18 @@ namespace SportsBookingAPI.Services
             return user == null ? null : UserMappingHelper.ToUserProfileDto(user);
         }
 
-        public async Task<UserProfileDto?> GetUserProfileByUsernameAsync(string username)
+        public async Task<UserProfileLookupResult> GetUserProfileByUsernameAsync(string username)
         {
             var normalizedUsername = _userManager.NormalizeName(username.Trim());
             var user = await _userRepository.GetUserByNormalizedUsernameAsync(normalizedUsername);
+            if (user != null)
+                return UserProfileLookupResult.Found(UserMappingHelper.ToUserProfileDto(user));
 
-            return user == null ? null : UserMappingHelper.ToUserProfileDto(user);
+            var historicalOwner = await _userRepository.GetUserByHistoricalUsernameAsync(normalizedUsername);
+            if (historicalOwner?.UserName != null)
+                return UserProfileLookupResult.Redirect(historicalOwner.UserName);
+
+            return UserProfileLookupResult.NotFound();
         }
 
         public async Task<IEnumerable<UserProfileDto>> SearchUsersAsync(string? query, string? currentUserId)

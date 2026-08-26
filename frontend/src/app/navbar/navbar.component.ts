@@ -64,8 +64,11 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   logout() {
-    this.authService.logout();
-    this.router.navigate(['']);
+    this.router.navigate(['']).then((navigated) => {
+      if (navigated) {
+        this.authService.logout();
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -132,5 +135,9 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
         this.profileImageUrl = null;
       },
     });
+  }
+
+  handleImageError(): void {
+    this.profileImageUrl = null;
   }
 }
