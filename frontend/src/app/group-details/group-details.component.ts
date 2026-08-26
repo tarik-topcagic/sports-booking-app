@@ -4,7 +4,6 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Group, GroupDetails } from '../interfaces/group.model';
 import { GroupService } from '../../services/group.service';
 import { TranslatePipe } from '../pipes/translate.pipe';
-import { NavbarComponent } from '../navbar/navbar.component';
 import { LanguageService } from '../../services/language.service';
 import { PresenceService } from '../../services/presence.service';
 import { EditGroupModalComponent } from '../edit-group-modal/edit-group-modal.component';
@@ -31,7 +30,6 @@ import {
     NgIf,
     NgFor,
     RouterLink,
-    NavbarComponent,
     TranslatePipe,
     EditGroupModalComponent,
     GroupInviteMembersModalComponent,

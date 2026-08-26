@@ -1,7 +1,6 @@
 import { Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
 import { Group } from '../interfaces/group.model';
 import { GroupService } from '../../services/group.service';
-import { NavbarComponent } from '../navbar/navbar.component';
 import { FormsModule } from '@angular/forms';
 import { NgClass, NgFor, NgIf } from '@angular/common';
 import { CreateGroupModalComponent } from '../create-group-modal/create-group-modal.component';
@@ -25,7 +24,7 @@ import {
 
 @Component({
   selector: 'app-search-groups',
-  imports: [NgIf, NgFor, NgClass, NavbarComponent, FormsModule, CreateGroupModalComponent, EditGroupModalComponent, TranslatePipe, SkeletonListItemComponent, LoadErrorStateComponent, PaginationComponent],
+  imports: [NgIf, NgFor, NgClass, FormsModule, CreateGroupModalComponent, EditGroupModalComponent, TranslatePipe, SkeletonListItemComponent, LoadErrorStateComponent, PaginationComponent],
   templateUrl: './search-groups.component.html',
   styleUrl: './search-groups.component.scss',
 })

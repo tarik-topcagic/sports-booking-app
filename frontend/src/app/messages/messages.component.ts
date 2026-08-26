@@ -13,7 +13,6 @@ import { buildNotificationPreviewText, formatGroupPreviewText, mergeInboxItemsWi
 import { ChatMessageNotification } from '../interfaces/chat-message-notification.model';
 import { ChatMessageDeletedEvent } from '../interfaces/chat-message-mutation-event.model';
 import { ChatInboxItem } from '../interfaces/chat-inbox-item.model';
-import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { LiveRelativeTimePipe } from '../pipes/live-relative-time.pipe';
 import { LanguageService } from '../../services/language.service';
@@ -22,7 +21,7 @@ import { SkeletonListItemComponent } from '../skeleton/skeleton-list-item/skelet
 
 @Component({
   selector: 'app-messages',
-  imports: [NgFor, NgIf, NgClass, NavbarComponent, TranslatePipe, LiveRelativeTimePipe, LoadErrorStateComponent, SkeletonListItemComponent],
+  imports: [NgFor, NgIf, NgClass, TranslatePipe, LiveRelativeTimePipe, LoadErrorStateComponent, SkeletonListItemComponent],
   templateUrl: './messages.component.html',
   styleUrl: './messages.component.scss',
 })

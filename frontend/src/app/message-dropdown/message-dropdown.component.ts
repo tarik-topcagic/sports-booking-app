@@ -175,7 +175,10 @@ export class MessageDropdownComponent implements OnInit, OnDestroy {
     this.dropdownCoordinator.close(this);
     this.desktopMediaQuery.removeEventListener('change', this.onViewportChange);
     this.stopTimers();
-    void this.chatRealtimeService.disconnect();
+
+    if (this.isActiveForViewport) {
+      void this.chatRealtimeService.disconnect();
+    }
   }
 
   toggleMessages(): void {

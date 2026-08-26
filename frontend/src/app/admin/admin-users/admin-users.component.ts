@@ -2,7 +2,6 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { catchError, tap, throwError } from 'rxjs';
 import { DatePipe, NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { NavbarComponent } from '../../navbar/navbar.component';
 import { AdminSelectComponent, AdminSelectOption } from '../../admin-select/admin-select.component';
 import { AdminUserDto } from '../../interfaces/admin/admin-user.model';
 import { AdminUserService } from '../../../services/admin/admin-user.service';
@@ -16,7 +15,7 @@ import { PaginationComponent } from '../../pagination/pagination.component';
 @Component({
   selector: 'app-admin-users',
   standalone: true,
-  imports: [NgFor, NgIf, FormsModule, DatePipe, NavbarComponent, AdminSelectComponent, SkeletonTableRowComponent, LoadErrorStateComponent, PaginationComponent],
+  imports: [NgFor, NgIf, FormsModule, DatePipe, AdminSelectComponent, SkeletonTableRowComponent, LoadErrorStateComponent, PaginationComponent],
   templateUrl: './admin-users.component.html',
   styleUrl: './admin-users.component.scss',
 })

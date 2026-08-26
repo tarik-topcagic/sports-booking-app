@@ -2,7 +2,6 @@ import { Component, ViewChild } from '@angular/core';
 import { catchError, tap, throwError } from 'rxjs';
 import { DatePipe, NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { NavbarComponent } from '../../navbar/navbar.component';
 import { AdminSelectComponent, AdminSelectOption } from '../../admin-select/admin-select.component';
 import { AppNotification } from '../../interfaces/notification.model';
 import { AdminNotificationService } from '../../../services/admin/admin-notification.service';
@@ -24,7 +23,7 @@ const NOTIFICATION_TYPES = [
 @Component({
   selector: 'app-admin-notifications',
   standalone: true,
-  imports: [NgFor, NgIf, FormsModule, DatePipe, NavbarComponent, AdminSelectComponent, SkeletonTableRowComponent, LoadErrorStateComponent, PaginationComponent],
+  imports: [NgFor, NgIf, FormsModule, DatePipe, AdminSelectComponent, SkeletonTableRowComponent, LoadErrorStateComponent, PaginationComponent],
   templateUrl: './admin-notifications.component.html',
   styleUrl: './admin-notifications.component.scss',
 })

@@ -2,7 +2,6 @@ import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { UserService } from '../../services/user.service';
 import { NgIf } from '@angular/common';
-import { NavbarComponent } from "../navbar/navbar.component";
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { ChooseGroupModalComponent } from '../choose-group-modal/choose-group-modal.component';
 import { User } from '../interfaces/user';
@@ -15,7 +14,7 @@ import { LoadErrorStateComponent } from '../load-error-state/load-error-state.co
 
 @Component({
   selector: 'app-user-profile',
-  imports: [NgIf, NavbarComponent, TranslatePipe, RouterLink, ChooseGroupModalComponent, SkeletonComponent, LoadErrorStateComponent],
+  imports: [NgIf, TranslatePipe, RouterLink, ChooseGroupModalComponent, SkeletonComponent, LoadErrorStateComponent],
   templateUrl: './user-profile.component.html',
   styleUrl: './user-profile.component.scss'
 })

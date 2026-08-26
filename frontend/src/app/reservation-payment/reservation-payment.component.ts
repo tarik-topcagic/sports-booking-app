@@ -5,7 +5,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, Observable, tap, throwError } from 'rxjs';
 import { Arena } from '../interfaces/arena.model';
 import { getMonthAbbreviationKey, getWeekdayAbbreviationKey } from '../helpers/date-format.helper';
-import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { SkeletonComponent } from '../skeleton/skeleton/skeleton.component';
 import { LoadErrorStateComponent } from '../load-error-state/load-error-state.component';
@@ -20,7 +19,7 @@ const ADDITIONAL_HALF_HOUR_PRICE = 10;
 
 @Component({
   selector: 'app-reservation-payment',
-  imports: [NgIf, NgFor, FormsModule, NavbarComponent, TranslatePipe, SkeletonComponent, LoadErrorStateComponent],
+  imports: [NgIf, NgFor, FormsModule, TranslatePipe, SkeletonComponent, LoadErrorStateComponent],
   templateUrl: './reservation-payment.component.html',
   styleUrl: './reservation-payment.component.scss',
 })

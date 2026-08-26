@@ -7,7 +7,6 @@ import { LanguageService } from '../../services/language.service';
 import { ToastService } from '../../services/toast.service';
 import { UserService, UserSettings } from '../../services/user.service';
 import { Observable, Subscription, tap } from 'rxjs';
-import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { SkeletonTextBlockComponent } from '../skeleton/skeleton-text-block/skeleton-text-block.component';
 import { LoadErrorStateComponent } from '../load-error-state/load-error-state.component';
@@ -17,7 +16,7 @@ import { ConfirmDialogService } from '../../services/confirm-dialog.service';
 
 @Component({
   selector: 'app-settings',
-  imports: [CommonModule, FormsModule, NavbarComponent, TranslatePipe, SkeletonTextBlockComponent, LoadErrorStateComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, SkeletonTextBlockComponent, LoadErrorStateComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
 })

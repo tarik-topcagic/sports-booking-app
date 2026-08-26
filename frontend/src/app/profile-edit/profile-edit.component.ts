@@ -11,7 +11,6 @@ import { UserService } from '../../services/user.service';
 import { CityService } from '../../services/city.service';
 import { CommonModule, NgFor, NgIf } from '@angular/common';
 import { Router } from '@angular/router';
-import { NavbarComponent } from '../navbar/navbar.component';
 import { CanComponentDeactivate } from '../guards/can-component-deactivate';
 import { ConfirmDialogService } from '../../services/confirm-dialog.service';
 import { LanguageService } from '../../services/language.service';
@@ -27,7 +26,6 @@ import { DropdownCoordinatorService } from '../../services/dropdown-coordinator.
     CommonModule,
     NgIf,
     NgFor,
-    NavbarComponent,
     TranslatePipe,
     SkeletonComponent,
   ],

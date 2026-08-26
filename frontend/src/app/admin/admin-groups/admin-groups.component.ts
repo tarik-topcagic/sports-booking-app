@@ -2,7 +2,6 @@ import { Component, ViewChild } from '@angular/core';
 import { catchError, tap, throwError } from 'rxjs';
 import { DatePipe, NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { NavbarComponent } from '../../navbar/navbar.component';
 import { Group, GroupDetails, GroupMember, UpdateGroupDto } from '../../interfaces/group.model';
 import { AdminGroupService } from '../../../services/admin/admin-group.service';
 import { GroupService } from '../../../services/group.service';
@@ -16,7 +15,7 @@ import { PaginationComponent } from '../../pagination/pagination.component';
 @Component({
   selector: 'app-admin-groups',
   standalone: true,
-  imports: [NgFor, NgIf, FormsModule, DatePipe, NavbarComponent, SkeletonTableRowComponent, SkeletonListItemComponent, LoadErrorStateComponent, PaginationComponent],
+  imports: [NgFor, NgIf, FormsModule, DatePipe, SkeletonTableRowComponent, SkeletonListItemComponent, LoadErrorStateComponent, PaginationComponent],
   templateUrl: './admin-groups.component.html',
   styleUrl: './admin-groups.component.scss',
 })

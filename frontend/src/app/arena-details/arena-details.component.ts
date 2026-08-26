@@ -12,7 +12,6 @@ import { getMonthAbbreviationKey, getWeekdayAbbreviationKey } from '../helpers/d
 import { Arena } from '../interfaces/arena.model';
 import { Reservation } from '../interfaces/reservation.model';
 import { TimeRange } from '../interfaces/availability.model';
-import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { SkeletonComponent } from '../skeleton/skeleton/skeleton.component';
 import { SkeletonCalendarGridComponent } from '../skeleton/skeleton-calendar-grid/skeleton-calendar-grid.component';
@@ -43,7 +42,6 @@ const CLOSING_HOUR = 23;
     NgIf,
     NgFor,
     NgClass,
-    NavbarComponent,
     TranslatePipe,
     SkeletonComponent,
     SkeletonCalendarGridComponent,

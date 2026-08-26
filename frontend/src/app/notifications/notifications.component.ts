@@ -8,7 +8,6 @@ import { NotificationService } from '../../services/notification.service';
 import { SystemNotificationRealtimeService } from '../../services/system-notification-realtime.service';
 import { AppNotification, AppNotificationType } from '../interfaces/notification.model';
 import { MembershipStatus } from '../interfaces/group.model';
-import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { RelativeTimePipe } from '../pipes/relative-time.pipe';
 import { SkeletonListItemComponent } from '../skeleton/skeleton-list-item/skeleton-list-item.component';
@@ -22,7 +21,7 @@ import { LoadErrorStateComponent } from '../load-error-state/load-error-state.co
 
 @Component({
   selector: 'app-notifications',
-  imports: [NgClass, NgFor, NgIf, NavbarComponent, TranslatePipe, RelativeTimePipe, SkeletonListItemComponent, LoadErrorStateComponent],
+  imports: [NgClass, NgFor, NgIf, TranslatePipe, RelativeTimePipe, SkeletonListItemComponent, LoadErrorStateComponent],
   templateUrl: './notifications.component.html',
   styleUrl: './notifications.component.scss',
 })

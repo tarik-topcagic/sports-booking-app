@@ -5,7 +5,6 @@ import { Reservation } from '../interfaces/reservation.model';
 import { getMonthAbbreviationKey, getWeekdayAbbreviationKey } from '../helpers/date-format.helper';
 import { getArenaDisplayImage } from '../helpers/arena-ui.helper';
 import { Arena } from '../interfaces/arena.model';
-import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { SkeletonListItemComponent } from '../skeleton/skeleton-list-item/skeleton-list-item.component';
 import { LoadErrorStateComponent } from '../load-error-state/load-error-state.component';
@@ -16,7 +15,7 @@ import { ConfirmDialogService } from '../../services/confirm-dialog.service';
 
 @Component({
   selector: 'app-my-reservations',
-  imports: [NgIf, NgFor, NgClass, NavbarComponent, TranslatePipe, SkeletonListItemComponent, LoadErrorStateComponent],
+  imports: [NgIf, NgFor, NgClass, TranslatePipe, SkeletonListItemComponent, LoadErrorStateComponent],
   templateUrl: './my-reservations.component.html',
   styleUrl: './my-reservations.component.scss',
 })

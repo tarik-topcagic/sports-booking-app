@@ -2,7 +2,6 @@ import { Component, ViewChild } from '@angular/core';
 import { catchError, tap, throwError } from 'rxjs';
 import { DatePipe, NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { NavbarComponent } from '../../navbar/navbar.component';
 import { AdminSelectComponent, AdminSelectOption } from '../../admin-select/admin-select.component';
 import { Reservation, ReservationStatus } from '../../interfaces/reservation.model';
 import { AdminReservationService } from '../../../services/admin/admin-reservation.service';
@@ -15,7 +14,7 @@ import { PaginationComponent } from '../../pagination/pagination.component';
 @Component({
   selector: 'app-admin-reservations',
   standalone: true,
-  imports: [NgFor, NgIf, FormsModule, DatePipe, NavbarComponent, AdminSelectComponent, SkeletonTableRowComponent, LoadErrorStateComponent, PaginationComponent],
+  imports: [NgFor, NgIf, FormsModule, DatePipe, AdminSelectComponent, SkeletonTableRowComponent, LoadErrorStateComponent, PaginationComponent],
   templateUrl: './admin-reservations.component.html',
   styleUrl: './admin-reservations.component.scss',
 })

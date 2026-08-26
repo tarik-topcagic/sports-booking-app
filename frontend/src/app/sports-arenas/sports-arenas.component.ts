@@ -10,7 +10,6 @@ import {
 import { SearchSortDirection, sortItemsByText } from '../helpers/search.helper';
 import { Arena } from '../interfaces/arena.model';
 import { FavoriteArena } from '../interfaces/favorite-arena.model';
-import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { SkeletonListItemComponent } from '../skeleton/skeleton-list-item/skeleton-list-item.component';
 import { LoadErrorStateComponent } from '../load-error-state/load-error-state.component';
@@ -23,7 +22,7 @@ import { DropdownCoordinatorService } from '../../services/dropdown-coordinator.
 
 @Component({
   selector: 'app-sports-arenas',
-  imports: [NgIf, NgFor, NgClass, FormsModule, NavbarComponent, TranslatePipe, SkeletonListItemComponent, LoadErrorStateComponent, PaginationComponent],
+  imports: [NgIf, NgFor, NgClass, FormsModule, TranslatePipe, SkeletonListItemComponent, LoadErrorStateComponent, PaginationComponent],
   templateUrl: './sports-arenas.component.html',
   styleUrl: './sports-arenas.component.scss',
 })

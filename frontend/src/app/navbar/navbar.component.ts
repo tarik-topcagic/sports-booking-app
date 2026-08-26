@@ -1,10 +1,10 @@
 import { Component, OnInit, AfterViewInit, OnDestroy, ElementRef, HostListener, ViewChild } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
 import { NgClass, NgIf } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { UserService } from '../../services/user.service';
 import { TranslatePipe } from '../pipes/translate.pipe';
-import { Subscription } from 'rxjs';
+import { filter, Subscription } from 'rxjs';
 import { NotificationDropdownComponent } from '../notification-dropdown/notification-dropdown.component';
 import { MessageDropdownComponent } from '../message-dropdown/message-dropdown.component';
 import { DropdownCoordinatorService } from '../../services/dropdown-coordinator.service';
@@ -25,6 +25,7 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
   isAdmin = false;
   private currentUserSubscription?: Subscription;
   private coordinatorSubscription?: Subscription;
+  private routerEventsSubscription?: Subscription;
 
   constructor(
     private authService: AuthService,
@@ -51,6 +52,12 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
         this.profileImageUrl = null;
       }
     });
+
+    this.routerEventsSubscription = this.router.events
+      .pipe(filter((event) => event instanceof NavigationEnd))
+      .subscribe(() => {
+        this.closeMobileMenus();
+      });
   }
 
   ngAfterViewInit(): void {
@@ -74,6 +81,7 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     this.currentUserSubscription?.unsubscribe();
     this.coordinatorSubscription?.unsubscribe();
+    this.routerEventsSubscription?.unsubscribe();
     this.dropdownCoordinator.close(this);
   }
 
@@ -120,6 +128,15 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
 
     navbarCollapse.classList.remove('show');
     navbarToggler?.setAttribute('aria-expanded', 'false');
+  }
+
+  private closeMobileMenus(): void {
+    this.closeMobileNavbarCollapse();
+
+    if (this.isDropdownOpen) {
+      this.isDropdownOpen = false;
+      this.dropdownCoordinator.close(this);
+    }
   }
 
   getUserProfileImage() {

@@ -48,7 +48,6 @@ import { insertTextAtSelection } from '../helpers/chat-input.helper';
 import { ChatEmojiPickerComponent } from '../chat-emoji-picker/chat-emoji-picker.component';
 import { LongPressDirective } from '../directives/long-press.directive';
 import { MessageActionsComponent } from '../message-actions/message-actions.component';
-import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { LiveRelativeTimePipe } from '../pipes/live-relative-time.pipe';
 import { SkeletonComponent } from '../skeleton/skeleton/skeleton.component';
@@ -63,7 +62,6 @@ import { ToastService } from '../../services/toast.service';
     NgClass,
     FormsModule,
     RouterLink,
-    NavbarComponent,
     TranslatePipe,
     LiveRelativeTimePipe,
     ChatEmojiPickerComponent,

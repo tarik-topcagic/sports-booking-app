@@ -1,6 +1,5 @@
 import { NgClass, NgFor, NgIf } from '@angular/common';
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { NavbarComponent } from '../navbar/navbar.component';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { UserService } from '../../services/user.service';
@@ -21,7 +20,7 @@ const OPEN_CHAT_TIMEOUT_MS = 15000;
 
 @Component({
   selector: 'app-search-users',
-  imports: [NgFor, NgIf, NgClass, NavbarComponent, FormsModule, TranslatePipe, ChooseGroupModalComponent, SkeletonListItemComponent, LoadErrorStateComponent, PaginationComponent],
+  imports: [NgFor, NgIf, NgClass, FormsModule, TranslatePipe, ChooseGroupModalComponent, SkeletonListItemComponent, LoadErrorStateComponent, PaginationComponent],
   templateUrl: './search-users.component.html',
   styleUrl: './search-users.component.scss',
 })

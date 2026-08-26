@@ -3,7 +3,6 @@ import { UserService } from '../../services/user.service';
 import { tap } from 'rxjs';
 import { User } from '../interfaces/user';
 import { NgIf } from '@angular/common';
-import { NavbarComponent } from '../navbar/navbar.component';
 import { RouterModule } from '@angular/router';
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { SkeletonComponent } from '../skeleton/skeleton/skeleton.component';
@@ -11,7 +10,7 @@ import { LoadErrorStateComponent } from '../load-error-state/load-error-state.co
 
 @Component({
   selector: 'app-profile',
-  imports: [NgIf, NavbarComponent, RouterModule, TranslatePipe, SkeletonComponent, LoadErrorStateComponent],
+  imports: [NgIf, RouterModule, TranslatePipe, SkeletonComponent, LoadErrorStateComponent],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss',
 })

@@ -3,7 +3,6 @@ import { catchError, tap, throwError } from 'rxjs';
 import { NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { NavbarComponent } from '../../navbar/navbar.component';
 import { AdminSelectComponent, AdminSelectOption } from '../../admin-select/admin-select.component';
 import { Arena, CreateArenaDto, UpdateArenaDto } from '../../interfaces/arena.model';
 import { AdminArenaDto } from '../../interfaces/admin/admin-arena.model';
@@ -20,7 +19,7 @@ type AdminArenaMode = 'list' | 'create' | 'edit';
 @Component({
   selector: 'app-admin-arenas',
   standalone: true,
-  imports: [NgFor, NgIf, FormsModule, RouterModule, NavbarComponent, AdminSelectComponent, SkeletonTableRowComponent, LoadErrorStateComponent, PaginationComponent],
+  imports: [NgFor, NgIf, FormsModule, RouterModule, AdminSelectComponent, SkeletonTableRowComponent, LoadErrorStateComponent, PaginationComponent],
   templateUrl: './admin-arenas.component.html',
   styleUrl: './admin-arenas.component.scss',
 })

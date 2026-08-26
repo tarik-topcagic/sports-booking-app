@@ -116,7 +116,10 @@ export class NotificationDropdownComponent implements OnInit, OnDestroy {
     this.dropdownCoordinator.close(this);
     this.desktopMediaQuery.removeEventListener('change', this.onViewportChange);
     this.stopTimers();
-    void this.systemNotificationRealtimeService.disconnect();
+
+    if (this.isActiveForViewport) {
+      void this.systemNotificationRealtimeService.disconnect();
+    }
   }
 
   toggleNotifications(): void {

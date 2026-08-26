@@ -1,12 +1,11 @@
 import { Component } from '@angular/core';
 import { NgFor } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { NavbarComponent } from '../../navbar/navbar.component';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [NgFor, RouterModule, NavbarComponent],
+  imports: [NgFor, RouterModule],
   templateUrl: './admin-dashboard.component.html',
   styleUrl: './admin-dashboard.component.scss',
 })
