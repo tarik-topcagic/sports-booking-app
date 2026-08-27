@@ -245,6 +245,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
         notification.invitationStatus = accept ? MembershipStatus.Accepted : MembershipStatus.Declined;
         notification.isRead = true;
         this.notificationsState.reload();
+        this.notificationService.notifyUnreadCountChanged();
       },
         onError: (error) => {
         this.respondingInvitationAction.delete(notification.membershipId!);
@@ -273,6 +274,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
         notification.membershipStatus = accept ? MembershipStatus.Accepted : MembershipStatus.Declined;
         notification.isRead = true;
         this.notificationsState.reload();
+        this.notificationService.notifyUnreadCountChanged();
       },
         onError: (error) => {
         this.respondingJoinRequestAction.delete(notification.membershipId!);
