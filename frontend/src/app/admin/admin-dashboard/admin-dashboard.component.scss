@@ -3,6 +3,12 @@
   padding-bottom: 60px;
 }
 
+@media (max-width: 576px) {
+  .admin-dashboard-page {
+    padding-top: 24px;
+  }
+}
+
 .admin-card {
   color: inherit;
   border-radius: 15px;

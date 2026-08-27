@@ -13,17 +13,20 @@ namespace SportsBookingAPI.Hubs
         private readonly IPrivateChatService _privateChatService;
         private readonly IPresenceService _presenceService;
         private readonly IPresenceAccessService _presenceAccessService;
+        private readonly ITypingTrackingService _typingTrackingService;
 
         public ChatHub(
             IGroupChatService groupChatService,
             IPrivateChatService privateChatService,
             IPresenceService presenceService,
-            IPresenceAccessService presenceAccessService)
+            IPresenceAccessService presenceAccessService,
+            ITypingTrackingService typingTrackingService)
         {
             _groupChatService = groupChatService;
             _privateChatService = privateChatService;
             _presenceService = presenceService;
             _presenceAccessService = presenceAccessService;
+            _typingTrackingService = typingTrackingService;
         }
 
         public override async Task OnConnectedAsync()
@@ -53,6 +56,13 @@ namespace SportsBookingAPI.Hubs
                 {
                     await BroadcastPresenceChangedAsync(userId, false);
                 }
+            }
+
+            var abandonedTyping = _typingTrackingService.ClearTyping(Context.ConnectionId);
+            if (abandonedTyping != null)
+            {
+                await Clients.Group(GetChannelName(abandonedTyping.Type, abandonedTyping.TargetId))
+                    .SendAsync("UserStoppedTyping", abandonedTyping);
             }
 
             await base.OnDisconnectedAsync(exception);
@@ -120,6 +130,8 @@ namespace SportsBookingAPI.Hubs
             if (payload == null)
                 return;
 
+            _typingTrackingService.SetTyping(Context.ConnectionId, payload);
+
             await Clients.Group(GetChannelName(type, targetId))
                 .SendAsync("UserTyping", payload);
         }
@@ -129,6 +141,8 @@ namespace SportsBookingAPI.Hubs
             var payload = CreateTypingPayload(type, targetId);
             if (payload == null)
                 return;
+
+            _typingTrackingService.ClearTyping(Context.ConnectionId);
 
             await Clients.Group(GetChannelName(type, targetId))
                 .SendAsync("UserStoppedTyping", payload);

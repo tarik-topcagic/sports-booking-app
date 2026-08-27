@@ -156,7 +156,7 @@ namespace SportsBookingAPI.Services
             membership.Status = MembershipStatus.Declined;
             membership.RespondedAt = DateTime.UtcNow;
             await _groupRepository.UpdateMembershipAsync(membership);
-            await _groupNotificationService.MarkInvitationNotificationsAsReadAsync(membership.Id, userId);
+            await _groupNotificationService.DeleteGroupInvitationNotificationsAsync(membership.GroupId, userId, membership.Id);
 
             return ServiceResult.Ok(new { message = "Invitation declined" });
         }
@@ -230,6 +230,7 @@ namespace SportsBookingAPI.Services
             membership.Status = MembershipStatus.Declined;
             membership.RespondedAt = DateTime.UtcNow;
             await _groupRepository.UpdateMembershipAsync(membership);
+            await _groupNotificationService.DeleteGroupJoinRequestNotificationsAsync(groupId, adminId, membership.UserId, membership.Id);
 
             return ServiceResult.Ok(new { message = "Join request declined" });
         }

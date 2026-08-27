@@ -82,7 +82,6 @@ export class MessageDropdownComponent implements OnInit, OnDestroy {
   private loadingGroupPresenceIds = new Set<number>();
   private privatePresenceRequestVersions = new Map<string, number>();
   private groupPresenceRequestVersions = new Map<number, number>();
-  private reactionOverlaysByKey = new Map<string, ChatInboxItem>();
 
   constructor(
     private authService: AuthService,
@@ -368,7 +367,7 @@ export class MessageDropdownComponent implements OnInit, OnDestroy {
       next: (messages) => {
         this.isLoading = false;
 
-        const mergedMessages = mergeInboxItemsWithReactionOverlays(messages, this.reactionOverlaysByKey);
+        const mergedMessages = mergeInboxItemsWithReactionOverlays(messages, this.chatInboxService.getReactionOverlays());
 
         if (captureUnreadHighlights) {
           this.highlightedMessageKeys = createHighlightedSet(
@@ -486,7 +485,7 @@ export class MessageDropdownComponent implements OnInit, OnDestroy {
       );
 
       if (notification.kind === 'reaction') {
-        this.reactionOverlaysByKey.set(getChatListItemKey(newMessage), newMessage);
+        this.chatInboxService.recordReactionOverlay(getChatListItemKey(newMessage), newMessage);
       }
 
       if (shouldIncrementUnread) {
@@ -509,7 +508,7 @@ export class MessageDropdownComponent implements OnInit, OnDestroy {
     };
 
     if (notification.kind === 'reaction') {
-      this.reactionOverlaysByKey.set(getChatListItemKey(updatedMessage), updatedMessage);
+      this.chatInboxService.recordReactionOverlay(getChatListItemKey(updatedMessage), updatedMessage);
     }
 
     this.messages = moveItemToTop(

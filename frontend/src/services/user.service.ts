@@ -63,7 +63,7 @@ export class UserService {
   }
 
   deleteProfilePicture(): Observable<any> {
-    return this.http.delete('api/user/delete-profile-picture');
+    return this.http.delete(`${this.apiUrl}/delete-profile-picture`);
   }
 
   getUserProfileByUsername(username: string): Observable<User> {

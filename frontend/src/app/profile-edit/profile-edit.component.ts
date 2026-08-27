@@ -258,9 +258,10 @@ export class ProfileEditComponent
       return;
     }
 
-    this.previewUrl = null;
+    const previousPreviewUrl = this.previewUrl;
+    const previousProfilePictureUrl = this.editForm.get('profilePictureUrl')?.value;
+
     this.selectedFile = null;
-    this.editForm.get('profilePictureUrl')?.setValue(null);
     this.isRemovingPicture = true;
 
     const fileInput = document.getElementById(
@@ -273,14 +274,17 @@ export class ProfileEditComponent
     this.userService.deleteProfilePicture().subscribe({
       next: () => {
         this.isRemovingPicture = false;
-        const fileInput = document.getElementById(
-          'profilePicture',
-        ) as HTMLInputElement;
-        if (fileInput) fileInput.value = '';
+        this.previewUrl = null;
+        this.editForm.get('profilePictureUrl')?.setValue(null);
       },
       error: (err) => {
         this.isRemovingPicture = false;
+        this.previewUrl = previousPreviewUrl;
+        this.editForm.get('profilePictureUrl')?.setValue(previousProfilePictureUrl);
         console.error('Error removing image', err);
+        this.toastService.showError(
+          this.languageService.translate('removeProfilePictureError'),
+        );
       },
     });
   }

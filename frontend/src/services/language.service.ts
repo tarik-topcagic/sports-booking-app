@@ -2221,6 +2221,16 @@ export class LanguageService {
       fr: 'Erreur lors de envoi de image.',
       it: 'Errore durante il caricamento.',
     },
+    removeProfilePictureError: {
+      en: 'Error removing image. Please try again.',
+      de: 'Fehler beim Entfernen des Bildes. Bitte erneut versuchen.',
+      bs: 'Greška pri uklanjanju slike. Pokušajte ponovo.',
+      hr: 'Greška pri uklanjanju slike. Pokušajte ponovno.',
+      sr: 'Greška pri uklanjanju slike. Pokušajte ponovo.',
+      es: 'Error al eliminar la imagen. Intentelo de nuevo.',
+      fr: 'Erreur lors de la suppression de image. Veuillez reessayer.',
+      it: "Errore durante la rimozione dell'immagine. Riprova.",
+    },
     unsavedChangesConfirm: {
       en: 'You have unsaved changes. Are you sure you want to leave this page?',
       de: 'Sie haben ungespeicherte Aenderungen. Diese Seite verlassen?',

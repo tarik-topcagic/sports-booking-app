@@ -125,12 +125,21 @@ h2 {
 
 .member-status-dropdown {
   position: relative;
+  min-width: 0;
 }
 
 .member-status-button {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.member-status-button-text {
+  min-width: 0;
+  white-space: normal;
+  text-align: left;
 }
 
 .member-status-menu {
@@ -548,7 +557,8 @@ h2 {
   }
 
   .actions {
-    flex: 0 0 auto;
+    flex: 0 1 auto;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     align-items: flex-end;

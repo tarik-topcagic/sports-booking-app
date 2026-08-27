@@ -144,6 +144,7 @@ namespace SportsBookingAPI
             builder.Services.AddScoped<IGroupChatService, GroupChatService>();
             builder.Services.AddScoped<IPrivateChatService, PrivateChatService>();
             builder.Services.AddSingleton<IPresenceService, PresenceService>();
+            builder.Services.AddSingleton<ITypingTrackingService, TypingTrackingService>();
             builder.Services.AddScoped<IPresenceAccessService, PresenceAccessService>();
             builder.Services.AddScoped<IGroupChatNotificationService, GroupChatNotificationService>();
             builder.Services.AddScoped<IPrivateChatNotificationService, PrivateChatNotificationService>();

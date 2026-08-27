@@ -12,11 +12,21 @@ import { LanguageService } from './language.service';
   providedIn: 'root',
 })
 export class ChatInboxService {
+  private readonly reactionOverlaysByKey = new Map<string, ChatInboxItem>();
+
   constructor(
     private groupChatNotificationService: GroupChatNotificationService,
     private privateChatNotificationService: PrivateChatNotificationService,
     private languageService: LanguageService,
   ) {}
+
+  recordReactionOverlay(key: string, item: ChatInboxItem): void {
+    this.reactionOverlaysByKey.set(key, item);
+  }
+
+  getReactionOverlays(): Map<string, ChatInboxItem> {
+    return this.reactionOverlaysByKey;
+  }
 
   getInboxItems(currentUserId: string | null): Observable<ChatInboxItem[]> {
     return forkJoin({

@@ -57,7 +57,7 @@
         <div class="actions">
           <div *ngIf="group.isMember && !group.isAdmin" class="member-status-dropdown" #memberStatusDropdown>
             <button type="button" class="btn btn-outline-primary member-status-button" (click)="toggleMemberMenu()">
-              {{ 'memberOfGroup' | translate }}
+              <span class="member-status-button-text">{{ 'memberOfGroup' | translate }}</span>
               <i class="bi bi-caret-down-fill"></i>
             </button>
             <div *ngIf="isMemberMenuOpen" class="member-status-menu">

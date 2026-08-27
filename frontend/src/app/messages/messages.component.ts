@@ -42,7 +42,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
   private presenceSubscription?: Subscription;
   private privatePresenceByUserId = new Map<string, boolean>();
   private groupPresenceByGroupId = new Map<number, boolean>();
-  private reactionOverlaysByKey = new Map<string, ChatInboxItem>();
 
   constructor(
     private authService: AuthService,
@@ -170,7 +169,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
   }
 
   private applyLoadedMessages(messages: ChatInboxItem[], computeHighlights: boolean): void {
-    const mergedMessages = mergeInboxItemsWithReactionOverlays(messages, this.reactionOverlaysByKey);
+    const mergedMessages = mergeInboxItemsWithReactionOverlays(messages, this.chatInboxService.getReactionOverlays());
 
     if (computeHighlights) {
       this.highlightedMessageKeys = createHighlightedSet(
@@ -254,7 +253,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
       );
 
       if (notification.kind === 'reaction') {
-        this.reactionOverlaysByKey.set(this.getMessageKey(newMessage), newMessage);
+        this.chatInboxService.recordReactionOverlay(this.getMessageKey(newMessage), newMessage);
       }
 
       if (shouldIncrementUnread) {
@@ -275,7 +274,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
     };
 
     if (notification.kind === 'reaction') {
-      this.reactionOverlaysByKey.set(this.getMessageKey(updatedMessage), updatedMessage);
+      this.chatInboxService.recordReactionOverlay(this.getMessageKey(updatedMessage), updatedMessage);
     }
 
     this.messages = moveItemToTop(

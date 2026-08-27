@@ -3,6 +3,12 @@
   padding-bottom: 60px;
 }
 
+@media (max-width: 576px) {
+  .admin-page {
+    padding-top: 24px;
+  }
+}
+
 .modal-backdrop-custom {
   position: fixed;
   inset: 0;

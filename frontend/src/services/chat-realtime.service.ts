@@ -232,7 +232,9 @@ export class ChatRealtimeService {
 
       await this.hubConnection.invoke('LeaveGroup', groupId.toString());
     } catch (error) {
-      console.error('Error leaving SignalR group chat room:', error);
+      if (!this.isConnectionClosedCancellation(error)) {
+        console.error('Error leaving SignalR group chat room:', error);
+      }
     }
   }
 
@@ -278,7 +280,9 @@ export class ChatRealtimeService {
 
       await this.hubConnection.invoke('LeaveConversation', conversationId.toString());
     } catch (error) {
-      console.error('Error leaving SignalR private chat room:', error);
+      if (!this.isConnectionClosedCancellation(error)) {
+        console.error('Error leaving SignalR private chat room:', error);
+      }
     }
   }
 
@@ -452,6 +456,11 @@ export class ChatRealtimeService {
 
     clearTimeout(this.disconnectTimeoutId);
     this.disconnectTimeoutId = undefined;
+  }
+
+  private isConnectionClosedCancellation(error: unknown): boolean {
+    return error instanceof Error
+      && error.message.includes('Invocation canceled due to the underlying connection being closed');
   }
 
   private getBaseApiUrl(): string {

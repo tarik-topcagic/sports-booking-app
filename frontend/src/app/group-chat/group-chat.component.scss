@@ -100,12 +100,6 @@
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-  // Explicit, not redundant: leaving overflow-x unset here doesn't mean "visible" --
-  // per the CSS spec, setting only overflow-y to a non-visible value silently forces
-  // overflow-x to auto too. That's harmless normally, but a swiped message bubble's
-  // translateX() briefly pushes past the panel's width, and auto then shows a real
-  // horizontal scrollbar for it. This isn't a swipe-specific style; it's just the
-  // first time anything in this panel ever extended past its width.
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
@@ -166,11 +160,6 @@
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
   user-select: none;
   -webkit-user-select: none;
-  // Snap-back/complete animation for mobile swipe-to-reply. Off while actively
-  // dragging (.swiping, set by isSwiping()) so the bubble tracks the finger with no
-  // lag; re-enabled the instant the drag ends so the reset-to-0 (or held-briefly-then-
-  // reset, on a completed swipe) transform change animates smoothly instead of
-  // snapping instantly.
   transition: transform 0.2s ease;
 }
 

@@ -28,7 +28,13 @@ import {
   planChatListPresenceSync,
   shouldShowChatListPresenceDot as shouldShowChatListPresenceDotHelper,
 } from '../helpers/chat-list-presence.helper';
-import { clearTypingTimer, scheduleTypingTimer } from '../helpers/chat-typing.helper';
+import {
+  clearAllTypingEntryExpiries,
+  clearTypingEntryExpiry,
+  clearTypingTimer,
+  scheduleTypingEntryExpiry,
+  scheduleTypingTimer,
+} from '../helpers/chat-typing.helper';
 import { scrollToBottom, shouldShowScrollButton } from '../helpers/chat-ui.helper';
 import { getUserIdFromToken } from '../helpers/jwt.helper';
 import { ChatInboxItem } from '../interfaces/chat-inbox-item.model';
@@ -115,6 +121,7 @@ export class GroupChatComponent implements OnInit, AfterViewInit, OnDestroy {
   private connectedGroupId: number | null = null;
   private pendingStatusUpdates = new Map<number, ChatMessageStatusUpdate>();
   private readonly typingUsers = new Map<string, string>();
+  private readonly typingEntryExpiryTimers = new Map<string, ReturnType<typeof setTimeout>>();
   private typingStartTimeoutId?: ReturnType<typeof setTimeout>;
   private typingStopTimeoutId?: ReturnType<typeof setTimeout>;
   private isTypingActive = false;
@@ -231,6 +238,7 @@ export class GroupChatComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.stopTypingLocally();
+    clearAllTypingEntryExpiries(this.typingEntryExpiryTimers);
     if (this.connectedGroupId !== null) {
       void this.chatRealtimeService.leaveGroup(this.connectedGroupId);
     }
@@ -769,6 +777,7 @@ export class GroupChatComponent implements OnInit, AfterViewInit, OnDestroy {
     this.highlightedChatListKeys.clear();
     this.pendingStatusUpdates.clear();
     this.typingUsers.clear();
+    clearAllTypingEntryExpiries(this.typingEntryExpiryTimers);
     this.messageSelectionStart = null;
     this.messageSelectionEnd = null;
   }
@@ -924,6 +933,10 @@ export class GroupChatComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const shouldStickToBottom = !this.showScrollToBottomButton;
     this.typingUsers.set(event.userId, event.userName);
+    scheduleTypingEntryExpiry(this.typingEntryExpiryTimers, event.userId, () => {
+      this.typingUsers.delete(event.userId);
+      this.adjustScrollAfterTypingStateChange(!this.showScrollToBottomButton);
+    });
     this.adjustScrollAfterTypingStateChange(shouldStickToBottom);
   }
 
@@ -936,6 +949,7 @@ export class GroupChatComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const shouldStickToBottom = !this.showScrollToBottomButton;
     this.typingUsers.delete(event.userId);
+    clearTypingEntryExpiry(this.typingEntryExpiryTimers, event.userId);
     this.adjustScrollAfterTypingStateChange(shouldStickToBottom);
   }
 
