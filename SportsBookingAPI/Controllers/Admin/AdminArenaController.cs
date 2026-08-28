@@ -37,9 +37,6 @@ namespace SportsBookingAPI.Controllers.Admin
         [HttpPost]
         public async Task<IActionResult> CreateArena([FromBody] CreateArenaDto createArenaDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var result = await _arenaService.CreateArenaAsync(createArenaDto);
             return StatusCode(result.StatusCode, result.Payload);
         }
@@ -47,9 +44,6 @@ namespace SportsBookingAPI.Controllers.Admin
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateArena(int id, [FromBody] UpdateArenaDto updateArenaDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var result = await _arenaService.UpdateArenaAsync(id, updateArenaDto);
             return StatusCode(result.StatusCode, result.Payload);
         }

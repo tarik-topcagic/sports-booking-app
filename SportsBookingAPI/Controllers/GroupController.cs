@@ -27,9 +27,6 @@ namespace SportsBookingAPI.Controllers
             if (userId == null)
                 return Unauthorized();
 
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var result = await _groupService.CreateGroupAsync(userId, groupDto);
             return StatusCode(result.StatusCode, result.Payload);
         }
@@ -40,9 +37,6 @@ namespace SportsBookingAPI.Controllers
             var userId = User?.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null)
                 return Unauthorized();
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
 
             var result = await _groupService.UpdateGroupAsync(userId, groupId, updateGroupDto);
             return StatusCode(result.StatusCode, result.Payload);

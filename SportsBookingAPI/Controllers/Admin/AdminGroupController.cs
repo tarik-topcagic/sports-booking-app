@@ -29,9 +29,6 @@ namespace SportsBookingAPI.Controllers.Admin
         [HttpPut("{groupId}")]
         public async Task<IActionResult> UpdateGroup(int groupId, [FromBody] UpdateGroupDto updateGroupDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var result = await _groupService.AdminUpdateGroupAsync(groupId, updateGroupDto);
             return StatusCode(result.StatusCode, result.Payload);
         }

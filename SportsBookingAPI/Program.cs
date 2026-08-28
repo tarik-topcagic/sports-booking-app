@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
@@ -7,6 +8,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SportsBookingAPI.Data;
+using SportsBookingAPI.Filters;
 using SportsBookingAPI.Helpers;
 using SportsBookingAPI.Hubs;
 using SportsBookingAPI.Interfaces;
@@ -36,12 +38,17 @@ namespace SportsBookingAPI
                                     .AllowCredentials());
             });
 
-            builder.Services.AddControllers()
+            builder.Services.AddControllers(options =>
+                {
+                    options.Filters.Add<FluentValidationActionFilter>();
+                })
                 .AddJsonOptions(options =>
                 {
                     options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
                     options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
                 });
+
+            builder.Services.AddValidatorsFromAssemblyContaining<Program>();
             builder.Services.AddSignalR();
             builder.Services.AddSingleton<IUserIdProvider, SignalRUserIdProvider>();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

@@ -18,9 +18,6 @@ namespace SportsBookingAPI.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterModel model)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var result = await _authService.RegisterAsync(model);
             return StatusCode(result.StatusCode, result.Payload);
         }
@@ -28,9 +25,6 @@ namespace SportsBookingAPI.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var result = await _authService.LoginAsync(model);
             return StatusCode(result.StatusCode, result.Payload);
         }

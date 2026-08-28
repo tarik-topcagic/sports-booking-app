@@ -25,9 +25,6 @@ namespace SportsBookingAPI.Controllers
             if (userId == null)
                 return Unauthorized();
 
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var result = await _reservationService.CreateReservationAsync(userId, createReservationDto);
             return StatusCode(result.StatusCode, result.Payload);
         }
