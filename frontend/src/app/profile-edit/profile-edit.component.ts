@@ -106,7 +106,7 @@ export class ProfileEditComponent
           fullName: (profile.fullName ?? '').trim(),
           phoneNumber: (profile.phoneNumber ?? '').trim(),
           location: (profile.location || '').trim(),
-          profilePictureUrl: profile.profilePictureUrl ?? null,
+          profilePictureUrl: this.normalizePictureUrl(profile.profilePictureUrl),
         };
       },
       error: (error) => {
@@ -204,6 +204,13 @@ export class ProfileEditComponent
     this.editForm.get('profilePictureUrl')?.setValue(null);
   }
 
+  private normalizePictureUrl(url: string | null | undefined): string | null {
+    if (!url || url.trim().toLowerCase() === 'default-profile.png') {
+      return null;
+    }
+    return url;
+  }
+
   get hasUnsavedChanges(): boolean {
     if (!this.originalProfile) {
       return false;
@@ -212,7 +219,7 @@ export class ProfileEditComponent
     const value = this.editForm.value;
     const pictureChanged = this.selectedFile
       ? true
-      : (value.profilePictureUrl ?? null) !== this.originalProfile.profilePictureUrl;
+      : this.normalizePictureUrl(value.profilePictureUrl) !== this.originalProfile.profilePictureUrl;
 
     return (
       (value.fullName ?? '').trim() !== this.originalProfile.fullName ||
@@ -236,7 +243,7 @@ export class ProfileEditComponent
           fullName: (value.fullName ?? '').trim(),
           phoneNumber: (value.phoneNumber ?? '').trim(),
           location: (value.location ?? '').trim(),
-          profilePictureUrl: value.profilePictureUrl ?? null,
+          profilePictureUrl: this.normalizePictureUrl(value.profilePictureUrl),
         };
         setTimeout(() => {
           this.router.navigate(['/profile']);
