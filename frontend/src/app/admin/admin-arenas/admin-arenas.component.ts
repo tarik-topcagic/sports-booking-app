@@ -1,7 +1,8 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { catchError, tap, throwError } from 'rxjs';
+import { Observable } from 'rxjs';
 import { NgFor, NgIf } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AdminSelectComponent, AdminSelectOption } from '../../admin-select/admin-select.component';
 import { Arena, CreateArenaDto, UpdateArenaDto } from '../../interfaces/arena.model';
@@ -13,17 +14,18 @@ import { ConfirmDialogService } from '../../../services/confirm-dialog.service';
 import { SkeletonTableRowComponent } from '../../skeleton/skeleton-table-row/skeleton-table-row.component';
 import { LoadErrorStateComponent } from '../../load-error-state/load-error-state.component';
 import { PaginationComponent } from '../../pagination/pagination.component';
+import { CanComponentDeactivate } from '../../guards/can-component-deactivate';
 
 type AdminArenaMode = 'list' | 'create' | 'edit';
 
 @Component({
   selector: 'app-admin-arenas',
   standalone: true,
-  imports: [NgFor, NgIf, FormsModule, RouterModule, AdminSelectComponent, SkeletonTableRowComponent, LoadErrorStateComponent, PaginationComponent],
+  imports: [NgFor, NgIf, FormsModule, ReactiveFormsModule, RouterModule, AdminSelectComponent, SkeletonTableRowComponent, LoadErrorStateComponent, PaginationComponent],
   templateUrl: './admin-arenas.component.html',
   styleUrl: './admin-arenas.component.scss',
 })
-export class AdminArenasComponent implements OnInit {
+export class AdminArenasComponent implements OnInit, OnDestroy, CanComponentDeactivate {
   @ViewChild('arenasState') arenasState!: LoadErrorStateComponent;
 
   mode: AdminArenaMode = 'list';
@@ -34,9 +36,12 @@ export class AdminArenasComponent implements OnInit {
   pendingArenaIds = new Set<number>();
 
   editingArenaId: number | null = null;
-  form: CreateArenaDto | UpdateArenaDto = this.emptyForm();
+  arenaForm: FormGroup;
   isSaving = false;
   formError = '';
+
+  private beforeUnloadHandlerBound = this.beforeUnloadHandler.bind(this);
+  private originalArena: { name: string; description: string; city: string; sportType: string; address: string; pricePerHour: number } | null = null;
 
   selectedFile: File | null = null;
   isUploadingPicture = false;
@@ -46,6 +51,12 @@ export class AdminArenasComponent implements OnInit {
   filterCity = '';
   filterSportType = '';
   filterOptions: ArenaFilterOptions = { cities: [], sports: [] };
+
+  hasAppliedFilters = false;
+
+  get hasActiveFilterInputs(): boolean {
+    return !!(this.filterName || this.filterCity || this.filterSportType);
+  }
 
   get cityOptions(): AdminSelectOption[] {
     return [{ value: '', label: 'All' }, ...this.filterOptions.cities.map((city) => ({ value: city, label: city }))];
@@ -65,7 +76,10 @@ export class AdminArenasComponent implements OnInit {
     private confirmDialogService: ConfirmDialogService,
     private route: ActivatedRoute,
     private router: Router,
-  ) {}
+    private fb: FormBuilder,
+  ) {
+    this.arenaForm = this.buildForm();
+  }
 
   ngOnInit(): void {
     this.route.paramMap.subscribe((params) => {
@@ -75,20 +89,77 @@ export class AdminArenasComponent implements OnInit {
       if (idParam) {
         this.mode = 'edit';
         this.editingArenaId = Number(idParam);
+        this.arenaForm = this.buildForm();
+        this.originalArena = null; 
         this.loadArenaForEdit(this.editingArenaId);
       } else if (isNew) {
         this.mode = 'create';
         this.editingArenaId = null;
-        this.form = this.emptyForm();
+        this.arenaForm = this.buildForm();
+        this.originalArena = this.snapshotFormValue();
       } else {
         this.mode = 'list';
+        this.originalArena = null;
         this.loadFilterOptions();
       }
     });
+    window.addEventListener('beforeunload', this.beforeUnloadHandlerBound);
   }
 
-  private emptyForm(): CreateArenaDto {
-    return { name: '', description: '', city: '', sportType: '', address: '', pricePerHour: 0 };
+  ngOnDestroy(): void {
+    window.removeEventListener('beforeunload', this.beforeUnloadHandlerBound);
+  }
+
+  private snapshotFormValue(): { name: string; description: string; city: string; sportType: string; address: string; pricePerHour: number } {
+    const value = this.arenaForm.value;
+    return {
+      name: (value.name ?? '').trim(),
+      description: (value.description ?? '').trim(),
+      city: (value.city ?? '').trim(),
+      sportType: (value.sportType ?? '').trim(),
+      address: (value.address ?? '').trim(),
+      pricePerHour: value.pricePerHour ?? 0,
+    };
+  }
+
+  get hasUnsavedChanges(): boolean {
+    if (!this.originalArena) {
+      return false;
+    }
+
+    const value = this.arenaForm.value;
+    return (
+      (value.name ?? '').trim() !== this.originalArena.name ||
+      (value.description ?? '').trim() !== this.originalArena.description ||
+      (value.city ?? '').trim() !== this.originalArena.city ||
+      (value.sportType ?? '').trim() !== this.originalArena.sportType ||
+      (value.address ?? '').trim() !== this.originalArena.address ||
+      (value.pricePerHour ?? 0) !== this.originalArena.pricePerHour
+    );
+  }
+
+  beforeUnloadHandler(event: BeforeUnloadEvent) {
+    if (this.hasUnsavedChanges) {
+      event.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+    }
+  }
+
+  canDeactivate(): Observable<boolean> | Promise<boolean> | boolean {
+    if (this.hasUnsavedChanges) {
+      return this.confirmDialogService.confirm('unsavedChangesConfirm');
+    }
+    return true;
+  }
+
+  private buildForm(): FormGroup {
+    return this.fb.group({
+      name: ['', Validators.required],
+      description: ['', Validators.required],
+      city: ['', Validators.required],
+      sportType: ['', Validators.required],
+      address: ['', Validators.required],
+      pricePerHour: [0, [Validators.required, Validators.min(0)]],
+    });
   }
 
   private loadFilterOptions(): void {
@@ -104,6 +175,7 @@ export class AdminArenasComponent implements OnInit {
 
   loadArenas = () => {
     this.isLoading = true;
+    this.hasAppliedFilters = this.hasActiveFilterInputs;
 
     return this.adminArenaService.getAllArenas({
       name: this.filterName || undefined,
@@ -141,14 +213,15 @@ export class AdminArenasComponent implements OnInit {
   private loadArenaForEdit(id: number): void {
     this.arenaService.getArenaById(id).subscribe({
       next: (arena) => {
-        this.form = {
+        this.arenaForm.patchValue({
           name: arena.name,
           description: arena.description,
           city: arena.city,
           sportType: arena.sportType,
           address: arena.address,
           pricePerHour: arena.pricePerHour,
-        };
+        });
+        this.originalArena = this.snapshotFormValue();
         this.currentImageUrl = arena.imageUrl;
       },
       error: (error) => {
@@ -185,14 +258,28 @@ export class AdminArenasComponent implements OnInit {
   }
 
   submitForm(): void {
+    if (this.arenaForm.invalid) {
+      return;
+    }
+
     this.formError = '';
     this.isSaving = true;
+    const value = this.arenaForm.value;
 
     if (this.mode === 'create') {
-      this.adminArenaService.createArena(this.form as CreateArenaDto).subscribe({
+      const dto: CreateArenaDto = {
+        name: value.name,
+        description: value.description,
+        city: value.city,
+        sportType: value.sportType,
+        address: value.address,
+        pricePerHour: value.pricePerHour,
+      };
+      this.adminArenaService.createArena(dto).subscribe({
         next: (arena) => {
           this.isSaving = false;
           this.toastService.showSuccess('Arena created.');
+          this.originalArena = this.snapshotFormValue();
           this.router.navigate(['/admin/arenas', arena.id, 'edit']);
         },
         error: (error) => {
@@ -205,10 +292,19 @@ export class AdminArenasComponent implements OnInit {
     }
 
     if (this.mode === 'edit' && this.editingArenaId != null) {
-      this.adminArenaService.updateArena(this.editingArenaId, this.form as UpdateArenaDto).subscribe({
+      const dto: UpdateArenaDto = {
+        name: value.name,
+        description: value.description,
+        city: value.city,
+        sportType: value.sportType,
+        address: value.address,
+        pricePerHour: value.pricePerHour,
+      };
+      this.adminArenaService.updateArena(this.editingArenaId, dto).subscribe({
         next: () => {
           this.isSaving = false;
           this.toastService.showSuccess('Arena updated.');
+          this.originalArena = this.snapshotFormValue();
           this.router.navigate(['/admin/arenas']);
         },
         error: (error) => {

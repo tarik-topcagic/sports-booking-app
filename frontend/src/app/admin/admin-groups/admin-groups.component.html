@@ -11,10 +11,10 @@
       <input type="text" class="form-control" name="filterOwner" [(ngModel)]="filterOwner" />
     </div>
     <div class="col-auto">
-      <button type="submit" class="btn btn-primary">Filter</button>
+      <button type="submit" class="btn btn-primary" [disabled]="!hasActiveFilterInputs">Filter</button>
     </div>
     <div class="col-auto">
-      <button type="button" class="btn btn-outline-secondary" (click)="clearFilters()">Clear</button>
+      <button type="button" class="btn btn-outline-secondary" [disabled]="!hasAppliedFilters" (click)="clearFilters()">Clear</button>
     </div>
   </form>
 
@@ -85,36 +85,45 @@
 </div>
 
 <!-- Edit group modal -->
-<div class="modal-backdrop-custom" role="presentation" *ngIf="editingGroup" (click)="closeEdit()">
+<div class="modal-backdrop-custom" role="presentation" *ngIf="editingGroup" (click)="onCloseEdit()">
   <section class="admin-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
     <div class="admin-modal-header">
       <h2>Edit Group</h2>
-      <button type="button" class="icon-button" title="Cancel" (click)="closeEdit()">
+      <button type="button" class="icon-button" title="Cancel" (click)="onCloseEdit()">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
 
-    <form (ngSubmit)="saveEdit()">
+    <form [formGroup]="editGroupForm" (ngSubmit)="saveEdit()">
       <div class="mb-3 form-floating">
-        <input id="adminEditGroupName" type="text" class="form-control" name="name" [(ngModel)]="editForm.name" required placeholder="Name" />
+        <input id="adminEditGroupName" type="text" class="form-control" formControlName="name" placeholder="Name" />
         <label for="adminEditGroupName">Name</label>
+        <div *ngIf="editGroupForm.get('name')?.touched && editGroupForm.get('name')?.invalid" class="text-danger">
+          Name is required.
+        </div>
       </div>
       <div class="mb-3 form-floating">
-        <textarea id="adminEditGroupDescription" class="form-control" name="description" [(ngModel)]="editForm.description" placeholder="Description" style="height: 100px"></textarea>
+        <textarea id="adminEditGroupDescription" class="form-control" formControlName="description" placeholder="Description" style="height: 100px"></textarea>
         <label for="adminEditGroupDescription">Description</label>
       </div>
       <div class="mb-3 form-floating">
-        <input id="adminEditGroupCity" type="text" class="form-control" name="city" [(ngModel)]="editForm.city" required placeholder="City" />
+        <input id="adminEditGroupCity" type="text" class="form-control" formControlName="city" placeholder="City" />
         <label for="adminEditGroupCity">City</label>
+        <div *ngIf="editGroupForm.get('city')?.touched && editGroupForm.get('city')?.invalid" class="text-danger">
+          City is required.
+        </div>
       </div>
       <div class="mb-3 form-floating">
-        <input id="adminEditGroupSport" type="text" class="form-control" name="sportCategory" [(ngModel)]="editForm.sportCategory" required placeholder="Sport category" />
+        <input id="adminEditGroupSport" type="text" class="form-control" formControlName="sportCategory" placeholder="Sport category" />
         <label for="adminEditGroupSport">Sport category</label>
+        <div *ngIf="editGroupForm.get('sportCategory')?.touched && editGroupForm.get('sportCategory')?.invalid" class="text-danger">
+          Sport category is required.
+        </div>
       </div>
 
       <div class="d-flex justify-content-end gap-2">
-        <button type="button" class="btn btn-secondary cancel-button" (click)="closeEdit()">Cancel</button>
-        <button type="submit" class="btn btn-primary" [disabled]="isSavingEdit">Save</button>
+        <button type="button" class="btn btn-secondary cancel-button" (click)="onCloseEdit()">Cancel</button>
+        <button type="submit" class="btn btn-primary" [disabled]="isSavingEdit || editGroupForm.invalid || !hasUnsavedChanges">Save</button>
       </div>
     </form>
   </section>

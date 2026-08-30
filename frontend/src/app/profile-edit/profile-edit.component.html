@@ -43,14 +43,11 @@
                 />
                 <button
                   type="button"
-                  class="btn btn-sm position-absolute top-0 end-0 mt-1 me-1"
-                  style="background-color: #e4e4e4"
-                  [disabled]="isRemovingPicture"
+                  class="btn btn-sm position-absolute top-0 end-0 mt-1 me-1 profile-picture-remove-button"
                   (click)="removeProfilePicture()"
                   [title]="'removeProfilePicture' | translate"
                 >
-                  <span *ngIf="isRemovingPicture" class="spinner-border spinner-border-sm" role="status"></span>
-                  <i *ngIf="!isRemovingPicture" class="bi bi-trash" style="color: #585858"></i>
+                  <i class="bi bi-trash"></i>
                 </button>
               </div>
             </ng-template>

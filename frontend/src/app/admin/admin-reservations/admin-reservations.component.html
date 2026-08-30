@@ -15,10 +15,10 @@
       <app-admin-select name="filterStatus" [(ngModel)]="filterStatus" [options]="statusOptions"></app-admin-select>
     </div>
     <div class="col-auto">
-      <button type="submit" class="btn btn-primary">Filter</button>
+      <button type="submit" class="btn btn-primary" [disabled]="!hasActiveFilterInputs">Filter</button>
     </div>
     <div class="col-auto">
-      <button type="button" class="btn btn-outline-secondary" (click)="clearFilters()">Clear</button>
+      <button type="button" class="btn btn-outline-secondary" [disabled]="!hasAppliedFilters" (click)="clearFilters()">Clear</button>
     </div>
   </form>
 

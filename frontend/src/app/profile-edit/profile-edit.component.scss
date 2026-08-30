@@ -17,5 +17,21 @@
 .profile-edit-card {
   border-radius: 1rem;
 }
+
+.profile-picture-remove-button {
+  background-color: #e4e4e4;
+  color: #585858;
+}
+
+:host-context(body.dark-mode) .profile-picture-remove-button {
+  background-color: #2b3138;
+  color: #f1f3f5;
+  border-color: #4b5563;
+}
+
+:host-context(body.dark-mode) .profile-picture-remove-button:hover {
+  background-color: #3a424d;
+  color: #fff;
+}
   
   

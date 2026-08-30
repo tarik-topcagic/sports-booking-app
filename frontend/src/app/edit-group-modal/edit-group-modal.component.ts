@@ -77,11 +77,12 @@ export class EditGroupModalComponent implements OnInit, OnDestroy {
   }
 
   get hasUnsavedChanges(): boolean {
-    if (this.selectedImage) {
-      return true;
-    }
     if (!this.originalGroup) {
       return false;
+    }
+
+    if (this.selectedImage) {
+      return true;
     }
 
     const value = this.editGroupForm.value;

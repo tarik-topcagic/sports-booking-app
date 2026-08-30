@@ -21,10 +21,10 @@
         <app-admin-select name="filterSportType" [(ngModel)]="filterSportType" [options]="sportOptions"></app-admin-select>
       </div>
       <div class="col-auto">
-        <button type="submit" class="btn btn-primary">Filter</button>
+        <button type="submit" class="btn btn-primary" [disabled]="!hasActiveFilterInputs">Filter</button>
       </div>
       <div class="col-auto">
-        <button type="button" class="btn btn-outline-secondary" (click)="clearFilters()">Clear</button>
+        <button type="button" class="btn btn-outline-secondary" [disabled]="!hasAppliedFilters" (click)="clearFilters()">Clear</button>
       </div>
     </form>
 
@@ -97,34 +97,55 @@
 
     <div *ngIf="formError" class="alert alert-danger">{{ formError }}</div>
 
-    <form (ngSubmit)="submitForm()" class="admin-form">
+    <form [formGroup]="arenaForm" (ngSubmit)="submitForm()" class="admin-form">
       <div class="mb-3 form-floating">
-        <input id="adminArenaName" type="text" class="form-control" name="name" [(ngModel)]="form.name" required placeholder="Name" />
+        <input id="adminArenaName" type="text" class="form-control" formControlName="name" placeholder="Name" />
         <label for="adminArenaName">Name</label>
+        <div *ngIf="arenaForm.get('name')?.touched && arenaForm.get('name')?.invalid" class="text-danger">
+          Name is required.
+        </div>
       </div>
       <div class="mb-3 form-floating">
-        <textarea id="adminArenaDescription" class="form-control" name="description" [(ngModel)]="form.description" placeholder="Description" style="height: 100px"></textarea>
+        <textarea id="adminArenaDescription" class="form-control" formControlName="description" placeholder="Description" style="height: 100px"></textarea>
         <label for="adminArenaDescription">Description</label>
+        <div *ngIf="arenaForm.get('description')?.touched && arenaForm.get('description')?.invalid" class="text-danger">
+          Description is required.
+        </div>
       </div>
       <div class="mb-3 form-floating">
-        <input id="adminArenaCity" type="text" class="form-control" name="city" [(ngModel)]="form.city" required placeholder="City" />
+        <input id="adminArenaCity" type="text" class="form-control" formControlName="city" placeholder="City" />
         <label for="adminArenaCity">City</label>
+        <div *ngIf="arenaForm.get('city')?.touched && arenaForm.get('city')?.invalid" class="text-danger">
+          City is required.
+        </div>
       </div>
       <div class="mb-3 form-floating">
-        <input id="adminArenaSportType" type="text" class="form-control" name="sportType" [(ngModel)]="form.sportType" required placeholder="Sport type" />
+        <input id="adminArenaSportType" type="text" class="form-control" formControlName="sportType" placeholder="Sport type" />
         <label for="adminArenaSportType">Sport type</label>
+        <div *ngIf="arenaForm.get('sportType')?.touched && arenaForm.get('sportType')?.invalid" class="text-danger">
+          Sport type is required.
+        </div>
       </div>
       <div class="mb-3 form-floating">
-        <input id="adminArenaAddress" type="text" class="form-control" name="address" [(ngModel)]="form.address" required placeholder="Address" />
+        <input id="adminArenaAddress" type="text" class="form-control" formControlName="address" placeholder="Address" />
         <label for="adminArenaAddress">Address</label>
+        <div *ngIf="arenaForm.get('address')?.touched && arenaForm.get('address')?.invalid" class="text-danger">
+          Address is required.
+        </div>
       </div>
       <div class="mb-3 form-floating">
-        <input id="adminArenaPrice" type="number" class="form-control" name="pricePerHour" min="0" step="0.01" [(ngModel)]="form.pricePerHour" required placeholder="Price per hour" />
+        <input id="adminArenaPrice" type="number" class="form-control" formControlName="pricePerHour" min="0" step="0.01" placeholder="Price per hour" />
         <label for="adminArenaPrice">Price per hour</label>
+        <div *ngIf="arenaForm.get('pricePerHour')?.touched && arenaForm.get('pricePerHour')?.hasError('required')" class="text-danger">
+          Price per hour is required.
+        </div>
+        <div *ngIf="arenaForm.get('pricePerHour')?.touched && arenaForm.get('pricePerHour')?.hasError('min')" class="text-danger">
+          Price per hour must be 0 or greater.
+        </div>
       </div>
 
       <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary" [disabled]="isSaving">
+        <button type="submit" class="btn btn-primary" [disabled]="arenaForm.invalid || isSaving || !hasUnsavedChanges">
           <span *ngIf="isSaving" class="spinner-border spinner-border-sm" role="status"></span>
           <span *ngIf="!isSaving">Save</span>
         </button>

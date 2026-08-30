@@ -47,6 +47,12 @@ export class AdminUsersComponent implements OnInit {
   itemsPerPage = 10;
   resetPageSignal = 0;
 
+  hasAppliedFilters = false;
+
+  get hasActiveFilterInputs(): boolean {
+    return !!(this.filterUsername || this.filterRole || this.filterLocked);
+  }
+
   constructor(
     private adminUserService: AdminUserService,
     private toastService: ToastService,
@@ -64,6 +70,7 @@ export class AdminUsersComponent implements OnInit {
 
   loadUsers = () => {
     this.isLoading = true;
+    this.hasAppliedFilters = this.hasActiveFilterInputs;
 
     return this.adminUserService.getAllUsers({
       username: this.filterUsername || undefined,

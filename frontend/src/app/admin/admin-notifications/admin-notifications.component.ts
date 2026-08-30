@@ -52,6 +52,12 @@ export class AdminNotificationsComponent {
   filterIsRead: '' | 'true' | 'false' = '';
   filterUsername = '';
 
+  hasAppliedFilters = false;
+
+  get hasActiveFilterInputs(): boolean {
+    return !!(this.filterType || this.filterIsRead || this.filterUsername);
+  }
+
   itemsPerPage = 10;
   resetPageSignal = 0;
 
@@ -63,6 +69,7 @@ export class AdminNotificationsComponent {
 
   loadNotifications = () => {
     this.isLoading = true;
+    this.hasAppliedFilters = this.hasActiveFilterInputs;
 
     return this.adminNotificationService.getAllNotifications({
       type: this.filterType || undefined,

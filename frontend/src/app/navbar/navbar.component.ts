@@ -26,6 +26,7 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
   private currentUserSubscription?: Subscription;
   private coordinatorSubscription?: Subscription;
   private routerEventsSubscription?: Subscription;
+  private profileImageSubscription?: Subscription;
 
   constructor(
     private authService: AuthService,
@@ -82,6 +83,7 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
     this.currentUserSubscription?.unsubscribe();
     this.coordinatorSubscription?.unsubscribe();
     this.routerEventsSubscription?.unsubscribe();
+    this.profileImageSubscription?.unsubscribe();
     this.dropdownCoordinator.close(this);
   }
 
@@ -140,7 +142,8 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   getUserProfileImage() {
-    this.userService.getMyProfile().subscribe({
+    this.profileImageSubscription?.unsubscribe();
+    this.profileImageSubscription = this.userService.getMyProfile().subscribe({
       next: (user) => {
         if (user.profilePictureUrl && user.profilePictureUrl !== 'default-profile.png') {
           this.profileImageUrl = user.profilePictureUrl;

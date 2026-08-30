@@ -36,6 +36,12 @@ export class AdminReservationsComponent {
     { value: 'Cancelled', label: 'Cancelled' },
   ];
 
+  hasAppliedFilters = false;
+
+  get hasActiveFilterInputs(): boolean {
+    return this.filterArenaId != null || !!this.filterUsername || !!this.filterStatus;
+  }
+
   itemsPerPage = 10;
   resetPageSignal = 0;
 
@@ -47,6 +53,7 @@ export class AdminReservationsComponent {
 
   loadReservations = () => {
     this.isLoading = true;
+    this.hasAppliedFilters = this.hasActiveFilterInputs;
 
     return this.adminReservationService.getAllReservations({
       arenaId: this.filterArenaId ?? undefined,

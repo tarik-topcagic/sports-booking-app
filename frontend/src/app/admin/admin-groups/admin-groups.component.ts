@@ -1,8 +1,8 @@
 import { Component, ViewChild } from '@angular/core';
 import { catchError, tap, throwError } from 'rxjs';
 import { DatePipe, NgFor, NgIf } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Group, GroupDetails, GroupMember, UpdateGroupDto } from '../../interfaces/group.model';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Group, GroupDetails, GroupMember } from '../../interfaces/group.model';
 import { AdminGroupService } from '../../../services/admin/admin-group.service';
 import { GroupService } from '../../../services/group.service';
 import { ToastService } from '../../../services/toast.service';
@@ -15,7 +15,7 @@ import { PaginationComponent } from '../../pagination/pagination.component';
 @Component({
   selector: 'app-admin-groups',
   standalone: true,
-  imports: [NgFor, NgIf, FormsModule, DatePipe, SkeletonTableRowComponent, SkeletonListItemComponent, LoadErrorStateComponent, PaginationComponent],
+  imports: [NgFor, NgIf, FormsModule, ReactiveFormsModule, DatePipe, SkeletonTableRowComponent, SkeletonListItemComponent, LoadErrorStateComponent, PaginationComponent],
   templateUrl: './admin-groups.component.html',
   styleUrl: './admin-groups.component.scss',
 })
@@ -28,8 +28,11 @@ export class AdminGroupsComponent {
   pendingGroupIds = new Set<number>();
 
   editingGroup: Group | null = null;
-  editForm: UpdateGroupDto = { name: '', description: '', city: '', sportCategory: '', groupPictureUrl: '' };
+  editGroupForm: FormGroup;
   isSavingEdit = false;
+
+  private editingGroupPictureUrl: string | null = null;
+  private originalGroup: { name: string; city: string; sportCategory: string; description: string } | null = null;
 
   membersGroup: GroupDetails | null = null;
   isLoadingMembers = false;
@@ -37,6 +40,12 @@ export class AdminGroupsComponent {
 
   filterName = '';
   filterOwner = '';
+
+  hasAppliedFilters = false;
+
+  get hasActiveFilterInputs(): boolean {
+    return !!(this.filterName || this.filterOwner);
+  }
 
   itemsPerPage = 10;
   resetPageSignal = 0;
@@ -46,10 +55,19 @@ export class AdminGroupsComponent {
     private groupService: GroupService,
     private toastService: ToastService,
     private confirmDialogService: ConfirmDialogService,
-  ) {}
+    private fb: FormBuilder,
+  ) {
+    this.editGroupForm = this.fb.group({
+      name: ['', Validators.required],
+      city: ['', Validators.required],
+      sportCategory: ['', Validators.required],
+      description: [''],
+    });
+  }
 
   loadGroups = () => {
     this.isLoading = true;
+    this.hasAppliedFilters = this.hasActiveFilterInputs;
 
     return this.adminGroupService.getAllGroups({
       name: this.filterName || undefined,
@@ -108,30 +126,68 @@ export class AdminGroupsComponent {
 
   openEdit(group: Group): void {
     this.editingGroup = group;
-    this.editForm = {
+    this.editingGroupPictureUrl = group.imageUrl;
+    this.editGroupForm.reset({
       name: group.name,
-      description: group.description,
       city: group.city,
       sportCategory: group.sportCategory,
-      groupPictureUrl: group.imageUrl,
+      description: group.description,
+    });
+    this.originalGroup = {
+      name: (group.name ?? '').trim(),
+      city: (group.city ?? '').trim(),
+      sportCategory: (group.sportCategory ?? '').trim(),
+      description: (group.description ?? '').trim(),
     };
   }
 
-  closeEdit(): void {
+  get hasUnsavedChanges(): boolean {
+    if (!this.originalGroup) {
+      return false;
+    }
+
+    const value = this.editGroupForm.value;
+    return (
+      (value.name ?? '').trim() !== this.originalGroup.name ||
+      (value.city ?? '').trim() !== this.originalGroup.city ||
+      (value.sportCategory ?? '').trim() !== this.originalGroup.sportCategory ||
+      (value.description ?? '').trim() !== this.originalGroup.description
+    );
+  }
+
+  private closeEditImmediately(): void {
     this.editingGroup = null;
+    this.editingGroupPictureUrl = null;
+    this.originalGroup = null;
     this.isSavingEdit = false;
   }
 
+  async onCloseEdit(): Promise<void> {
+    if (this.hasUnsavedChanges) {
+      if (!(await this.confirmDialogService.confirm('unsavedChangesConfirm'))) {
+        return;
+      }
+    }
+    this.closeEditImmediately();
+  }
+
   saveEdit(): void {
-    if (!this.editingGroup) {
+    if (!this.editingGroup || this.editGroupForm.invalid) {
       return;
     }
 
     this.isSavingEdit = true;
-    this.adminGroupService.updateGroup(this.editingGroup.id, this.editForm).subscribe({
+    const value = this.editGroupForm.value;
+    this.adminGroupService.updateGroup(this.editingGroup.id, {
+      name: value.name,
+      description: value.description,
+      city: value.city,
+      sportCategory: value.sportCategory,
+      groupPictureUrl: this.editingGroupPictureUrl,
+    }).subscribe({
       next: () => {
         this.toastService.showSuccess('Group updated.');
-        this.closeEdit();
+        this.closeEditImmediately();
         this.groupsState.reload();
       },
       error: (error) => {

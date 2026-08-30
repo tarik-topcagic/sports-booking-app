@@ -128,11 +128,13 @@ export const routes: Routes = [
       path: 'admin/arenas/new',
       loadComponent: () => import('./admin/admin-arenas/admin-arenas.component').then((module) => module.AdminArenasComponent),
       canActivate: [AuthGuard, AdminGuard],
+      canDeactivate: [PendingChangesGuard],
     },
     {
       path: 'admin/arenas/:id/edit',
       loadComponent: () => import('./admin/admin-arenas/admin-arenas.component').then((module) => module.AdminArenasComponent),
       canActivate: [AuthGuard, AdminGuard],
+      canDeactivate: [PendingChangesGuard],
     },
     {
       path: 'admin/reservations',

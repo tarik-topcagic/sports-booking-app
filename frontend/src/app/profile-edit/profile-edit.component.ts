@@ -6,7 +6,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { City } from '../interfaces/city';
-import { map, Observable, startWith, Subscription } from 'rxjs';
+import { map, Observable, startWith, Subscription, take } from 'rxjs';
 import { UserService } from '../../services/user.service';
 import { CityService } from '../../services/city.service';
 import { CommonModule, NgFor, NgIf } from '@angular/common';
@@ -48,10 +48,10 @@ export class ProfileEditComponent
   successMessage = '';
   isLoading = true;
   isSaving = false;
-  isRemovingPicture = false;
 
   private beforeUnloadHandlerBound = this.beforeUnloadHandler.bind(this);
   private coordinatorSubscription?: Subscription;
+  private profileLoadSubscription?: Subscription;
   private originalProfile: { fullName: string; phoneNumber: string; location: string; profilePictureUrl: string | null } | null = null;
 
   constructor(
@@ -83,7 +83,7 @@ export class ProfileEditComponent
       profilePictureUrl: [''],
     });
 
-    this.userService.getMyProfile().subscribe({
+    this.profileLoadSubscription = this.userService.getMyProfile().pipe(take(1)).subscribe({
       next: (profile) => {
         this.isLoading = false;
         this.editForm.patchValue({
@@ -128,6 +128,7 @@ export class ProfileEditComponent
   ngOnDestroy(): void {
     window.removeEventListener('beforeunload', this.beforeUnloadHandlerBound);
     this.coordinatorSubscription?.unsubscribe();
+    this.profileLoadSubscription?.unsubscribe();
     this.dropdownCoordinator.close(this);
   }
 
@@ -204,19 +205,20 @@ export class ProfileEditComponent
   }
 
   get hasUnsavedChanges(): boolean {
-    if (this.selectedFile) {
-      return true;
-    }
     if (!this.originalProfile) {
       return false;
     }
 
     const value = this.editForm.value;
+    const pictureChanged = this.selectedFile
+      ? true
+      : (value.profilePictureUrl ?? null) !== this.originalProfile.profilePictureUrl;
+
     return (
       (value.fullName ?? '').trim() !== this.originalProfile.fullName ||
       (value.phoneNumber ?? '').trim() !== this.originalProfile.phoneNumber ||
       (value.location ?? '').trim() !== this.originalProfile.location ||
-      (value.profilePictureUrl ?? null) !== this.originalProfile.profilePictureUrl
+      pictureChanged
     );
   }
 
@@ -254,15 +256,9 @@ export class ProfileEditComponent
   }
 
   removeProfilePicture(): void {
-    if (this.isRemovingPicture) {
-      return;
-    }
-
-    const previousPreviewUrl = this.previewUrl;
-    const previousProfilePictureUrl = this.editForm.get('profilePictureUrl')?.value;
-
     this.selectedFile = null;
-    this.isRemovingPicture = true;
+    this.previewUrl = null;
+    this.editForm.get('profilePictureUrl')?.setValue(null);
 
     const fileInput = document.getElementById(
       'profilePicture',
@@ -270,23 +266,6 @@ export class ProfileEditComponent
     if (fileInput) {
       fileInput.value = '';
     }
-
-    this.userService.deleteProfilePicture().subscribe({
-      next: () => {
-        this.isRemovingPicture = false;
-        this.previewUrl = null;
-        this.editForm.get('profilePictureUrl')?.setValue(null);
-      },
-      error: (err) => {
-        this.isRemovingPicture = false;
-        this.previewUrl = previousPreviewUrl;
-        this.editForm.get('profilePictureUrl')?.setValue(previousProfilePictureUrl);
-        console.error('Error removing image', err);
-        this.toastService.showError(
-          this.languageService.translate('removeProfilePictureError'),
-        );
-      },
-    });
   }
 
   beforeUnloadHandler(event: BeforeUnloadEvent) {
