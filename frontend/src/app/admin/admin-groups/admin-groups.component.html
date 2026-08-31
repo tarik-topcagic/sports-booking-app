@@ -139,6 +139,10 @@
       </button>
     </div>
 
+    <div *ngIf="isLoadingMembers" class="status-message compact">
+      Loading...
+    </div>
+
     <ul class="list-group" *ngIf="membersGroup">
       <li class="list-group-item d-flex justify-content-between align-items-center" *ngFor="let member of membersGroup.members">
         <div>

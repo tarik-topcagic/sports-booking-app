@@ -80,3 +80,13 @@
   color: #c5c8cc;
   border-color: #3a3a3a;
 }
+
+.status-message.compact {
+  padding: 1rem 0;
+  color: #6c757d;
+  text-align: center;
+}
+
+:host-context(body.dark-mode) .status-message.compact {
+  color: #c5c8cc;
+}
