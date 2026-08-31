@@ -139,16 +139,6 @@
       </button>
     </div>
 
-    <div *ngIf="isLoadingMembers" class="admin-members-skeleton">
-      <app-skeleton-list-item
-        *ngFor="let placeholder of [1, 2, 3]"
-        [showAvatar]="false"
-        [lineWidths]="['60%']"
-        [actionCount]="1"
-        actionWidth="80px"
-      ></app-skeleton-list-item>
-    </div>
-
     <ul class="list-group" *ngIf="membersGroup">
       <li class="list-group-item d-flex justify-content-between align-items-center" *ngFor="let member of membersGroup.members">
         <div>

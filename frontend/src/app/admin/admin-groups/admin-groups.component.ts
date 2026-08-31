@@ -8,14 +8,13 @@ import { GroupService } from '../../../services/group.service';
 import { ToastService } from '../../../services/toast.service';
 import { ConfirmDialogService } from '../../../services/confirm-dialog.service';
 import { SkeletonTableRowComponent } from '../../skeleton/skeleton-table-row/skeleton-table-row.component';
-import { SkeletonListItemComponent } from '../../skeleton/skeleton-list-item/skeleton-list-item.component';
 import { LoadErrorStateComponent } from '../../load-error-state/load-error-state.component';
 import { PaginationComponent } from '../../pagination/pagination.component';
 
 @Component({
   selector: 'app-admin-groups',
   standalone: true,
-  imports: [NgFor, NgIf, FormsModule, ReactiveFormsModule, DatePipe, SkeletonTableRowComponent, SkeletonListItemComponent, LoadErrorStateComponent, PaginationComponent],
+  imports: [NgFor, NgIf, FormsModule, ReactiveFormsModule, DatePipe, SkeletonTableRowComponent, LoadErrorStateComponent, PaginationComponent],
   templateUrl: './admin-groups.component.html',
   styleUrl: './admin-groups.component.scss',
 })
