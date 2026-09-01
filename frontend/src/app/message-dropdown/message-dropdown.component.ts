@@ -203,6 +203,7 @@ export class MessageDropdownComponent implements OnInit, OnDestroy {
         next: () => {
           message.isRead = true;
           message.unreadCount = 0;
+          this.chatInboxService.clearReactionOverlay(getChatListItemKey(message));
           this.groupChatNotificationService.notifyUnreadCountChanged();
           this.router.navigate(['/groups', message.groupId, 'chat']);
           this.closeMessages();
@@ -220,6 +221,7 @@ export class MessageDropdownComponent implements OnInit, OnDestroy {
         next: () => {
           message.isRead = true;
           message.unreadCount = 0;
+          this.chatInboxService.clearReactionOverlay(getChatListItemKey(message));
           this.privateChatNotificationService.notifyUnreadCountChanged();
           this.router.navigate(['/messages/private', message.conversationId]);
           this.closeMessages();
@@ -393,7 +395,7 @@ export class MessageDropdownComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.chatInboxService.getUnreadCount().subscribe({
+    this.chatInboxService.getAdjustedUnreadCount(this.currentUserId).subscribe({
       next: (count) => {
         this.unreadCount = count;
       },

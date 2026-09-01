@@ -123,14 +123,14 @@ namespace SportsBookingAPI.Repositories
                 .Where(readState => readState.UserId == userId && groupIds.Contains(readState.GroupId))
                 .ToDictionaryAsync(readState => readState.GroupId, readState => readState.LastReadAt);
 
+            var membershipJoinDates = await GetMembershipJoinDatesAsync(userId, groupIds);
+
             var unreadCounts = allMessages
                 .Where(message => groupIds.Contains(message.GroupId) && message.SenderUserId != userId && !message.IsDeleted)
                 .GroupBy(message => message.GroupId)
                 .ToDictionary(
                     group => group.Key,
-                    group => group.Count(message =>
-                        !readStates.TryGetValue(group.Key, out var lastReadAt)
-                        || message.CreatedAt > lastReadAt));
+                    group => group.Count(message => IsMessageUnread(message, group.Key, readStates, membershipJoinDates)));
 
             return latestMessages.Select(message =>
             {
@@ -173,6 +173,8 @@ namespace SportsBookingAPI.Repositories
                 .Where(readState => readState.UserId == userId)
                 .ToDictionaryAsync(readState => readState.GroupId, readState => readState.LastReadAt);
 
+            var membershipJoinDates = await GetMembershipJoinDatesAsync(userId, accessibleGroupIds);
+
             var unreadMessages = await _context.GroupMessages
                 .Where(message =>
                     accessibleGroupIds.Contains(message.GroupId)
@@ -180,9 +182,29 @@ namespace SportsBookingAPI.Repositories
                     && !message.IsDeleted)
                 .ToListAsync();
 
-            return unreadMessages.Count(message =>
-                !readStates.TryGetValue(message.GroupId, out var lastReadAt)
-                || message.CreatedAt > lastReadAt);
+            return unreadMessages.Count(message => IsMessageUnread(message, message.GroupId, readStates, membershipJoinDates));
+        }
+
+        private async Task<Dictionary<int, DateTime>> GetMembershipJoinDatesAsync(string userId, IReadOnlyList<int> groupIds)
+        {
+            return await _context.GroupMemberships
+                .Where(membership =>
+                    membership.UserId == userId
+                    && membership.Status == MembershipStatus.Accepted
+                    && groupIds.Contains(membership.GroupId))
+                .ToDictionaryAsync(membership => membership.GroupId, membership => membership.JoinedAt);
+        }
+
+        private static bool IsMessageUnread(
+            GroupMessage message,
+            int groupId,
+            IReadOnlyDictionary<int, DateTime> readStates,
+            IReadOnlyDictionary<int, DateTime> membershipJoinDates)
+        {
+            var isAfterLastRead = !readStates.TryGetValue(groupId, out var lastReadAt) || message.CreatedAt > lastReadAt;
+            var isAfterJoin = !membershipJoinDates.TryGetValue(groupId, out var joinedAt) || message.CreatedAt >= joinedAt;
+
+            return isAfterLastRead && isAfterJoin;
         }
 
         public async Task MarkGroupAsReadAsync(string userId, int groupId, DateTime readAt)

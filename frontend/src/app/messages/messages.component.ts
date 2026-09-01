@@ -110,6 +110,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
         next: () => {
           message.isRead = true;
           message.unreadCount = 0;
+          this.chatInboxService.clearReactionOverlay(this.getMessageKey(message));
           this.groupChatNotificationService.notifyUnreadCountChanged();
           this.router.navigate(['/groups', message.groupId, 'chat']);
         },
@@ -125,6 +126,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
         next: () => {
           message.isRead = true;
           message.unreadCount = 0;
+          this.chatInboxService.clearReactionOverlay(this.getMessageKey(message));
           this.privateChatNotificationService.notifyUnreadCountChanged();
           this.router.navigate(['/messages/private', message.conversationId]);
         },

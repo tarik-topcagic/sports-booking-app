@@ -82,6 +82,7 @@ namespace SportsBookingAPI.Services
             {
                 Type = "group",
                 GroupId = groupId,
+                GroupName = group.Name,
                 ConversationId = null,
                 SenderUserId = messageDto.SenderUserId,
                 SenderName = messageDto.SenderFullName,
@@ -223,7 +224,7 @@ namespace SportsBookingAPI.Services
                     Reactions = reactionDtos
                 });
 
-            if (message.SenderUserId != userId)
+            if (message.SenderUserId != userId && CanAccessGroupChat(group, message.SenderUserId))
             {
                 var reactorReaction = reactions.FirstOrDefault(reaction => reaction.UserId == userId);
                 var reactorName = reactorReaction != null
@@ -238,6 +239,7 @@ namespace SportsBookingAPI.Services
                     {
                         Type = "group",
                         GroupId = groupId,
+                        GroupName = group.Name,
                         ConversationId = null,
                         SenderUserId = userId,
                         SenderName = reactorName,

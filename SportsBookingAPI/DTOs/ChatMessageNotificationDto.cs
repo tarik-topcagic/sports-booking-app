@@ -4,6 +4,7 @@ namespace SportsBookingAPI.DTOs
     {
         public string Type { get; set; } = string.Empty;
         public int? GroupId { get; set; }
+        public string? GroupName { get; set; }
         public int? ConversationId { get; set; }
         public string SenderUserId { get; set; } = string.Empty;
         public string SenderName { get; set; } = string.Empty;

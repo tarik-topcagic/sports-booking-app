@@ -3,7 +3,7 @@ import { forkJoin, map, Observable } from 'rxjs';
 import { ChatInboxItem } from '../app/interfaces/chat-inbox-item.model';
 import { GroupChatNotification } from '../app/interfaces/group-chat-notification.model';
 import { PrivateChatNotification } from '../app/interfaces/private-chat-notification.model';
-import { formatGroupPreviewText } from '../app/helpers/chat-list.helper';
+import { formatGroupPreviewText, getChatListItemKey } from '../app/helpers/chat-list.helper';
 import { GroupChatNotificationService } from './group-chat-notification.service';
 import { PrivateChatNotificationService } from './private-chat-notification.service';
 import { LanguageService } from './language.service';
@@ -22,6 +22,10 @@ export class ChatInboxService {
 
   recordReactionOverlay(key: string, item: ChatInboxItem): void {
     this.reactionOverlaysByKey.set(key, item);
+  }
+
+  clearReactionOverlay(key: string): void {
+    this.reactionOverlaysByKey.delete(key);
   }
 
   getReactionOverlays(): Map<string, ChatInboxItem> {
@@ -48,6 +52,26 @@ export class ChatInboxService {
       privateUnread: this.privateChatNotificationService.getUnreadCount(),
     }).pipe(
       map(({ groupUnread, privateUnread }) => groupUnread.count + privateUnread.count),
+    );
+  }
+
+  getAdjustedUnreadCount(currentUserId: string | null): Observable<number> {
+    return forkJoin({
+      restTotal: this.getUnreadCount(),
+      items: this.getInboxItems(currentUserId),
+    }).pipe(
+      map(({ restTotal, items }) => {
+        return items.reduce((total, item) => {
+          const overlay = this.reactionOverlaysByKey.get(getChatListItemKey(item));
+
+          if (!overlay) {
+            return total;
+          }
+
+          const reconciledCount = Math.max(item.unreadCount, overlay.unreadCount);
+          return total + (reconciledCount - item.unreadCount);
+        }, restTotal);
+      }),
     );
   }
 

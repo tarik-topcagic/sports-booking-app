@@ -45,7 +45,7 @@ export function mergeInboxItemsWithReactionOverlays(
   freshItems: ChatInboxItem[],
   overlaysByKey: Map<string, ChatInboxItem>,
 ): ChatInboxItem[] {
-  return freshItems.map((item) => {
+  const mergedItems = freshItems.map((item) => {
     const overlay = overlaysByKey.get(getChatListItemKey(item));
 
     if (!overlay || new Date(overlay.createdAt).getTime() <= new Date(item.createdAt).getTime()) {
@@ -61,6 +61,8 @@ export function mergeInboxItemsWithReactionOverlays(
       isRead: item.isRead && overlay.isRead,
     };
   });
+
+  return mergedItems.sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
 }
 
 export function createChatListHighlightedKeys(items: ChatInboxItem[]): Set<string> {
@@ -79,11 +81,12 @@ export function createGroupChatListItemFromNotification(
   translate: (key: string) => string,
 ): ChatInboxItem {
   const currentGroupMatches = currentGroup?.id === notification.groupId;
+  const fallbackTitle = notification.groupName ?? `Group #${notification.groupId}`;
 
   return {
     type: 'group',
     id: notification.groupId ?? 0,
-    title: currentGroupMatches ? (currentGroup?.name ?? `Group #${notification.groupId}`) : `Group #${notification.groupId}`,
+    title: currentGroupMatches ? (currentGroup?.name ?? fallbackTitle) : fallbackTitle,
     preview: buildNotificationPreviewText(notification, currentUserId, translate),
     createdAt: notification.createdAt,
     unreadCount: shouldHighlight ? 1 : 0,
