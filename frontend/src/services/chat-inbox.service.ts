@@ -87,6 +87,7 @@ export class ChatInboxService {
         currentUserId,
         (key) => this.languageService.translate(key),
       ),
+      previewSource: { kind: 'group-message', senderUserId: message.senderUserId, senderName: message.senderName, rawText: message.latestMessagePreview },
       createdAt: message.createdAt,
       unreadCount: message.unreadCount,
       isRead: message.isRead,

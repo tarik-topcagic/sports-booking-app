@@ -83,7 +83,7 @@
               </div>
               <p *ngIf="item.subtitle" class="conversation-item-subtitle">{{ item.subtitle }}</p>
               <p class="conversation-item-preview">
-                {{ item.preview || ('noPrivateMessages' | translate) }}
+                {{ getChatListItemPreview(item) || ('noPrivateMessages' | translate) }}
               </p>
             </div>
           </button>

@@ -27,5 +27,6 @@ namespace SportsBookingAPI.Interfaces
         Task SetMessagePinnedAsync(PrivateMessage message, bool isPinned, DateTime? pinnedAt);
         Task<IReadOnlyList<PrivateMessageReaction>> AddOrUpdateReactionAsync(int messageId, string userId, string emoji);
         Task<IReadOnlyList<PrivateMessageReaction>> RemoveReactionAsync(int messageId, string userId);
+        Task<bool> ShouldTreatReactionAsNewNotificationAsync(int messageId, string reactorUserId);
     }
 }

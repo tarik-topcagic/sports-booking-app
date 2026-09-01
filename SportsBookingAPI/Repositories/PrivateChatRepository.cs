@@ -9,6 +9,8 @@ namespace SportsBookingAPI.Repositories
 {
     public class PrivateChatRepository : IPrivateChatRepository
     {
+        private static readonly TimeSpan ReactionNotificationCooldown = TimeSpan.FromSeconds(30);
+
         private readonly ApplicationDBContext _context;
 
         public PrivateChatRepository(ApplicationDBContext context)
@@ -476,6 +478,39 @@ namespace SportsBookingAPI.Repositories
             await _context.SaveChangesAsync();
 
             return await GetReactionsForMessageAsync(messageId);
+        }
+
+        public async Task<bool> ShouldTreatReactionAsNewNotificationAsync(int messageId, string reactorUserId)
+        {
+            var existing = await _context.PrivateMessageReactionNotifications
+                .FirstOrDefaultAsync(record => record.PrivateMessageId == messageId && record.ReactorUserId == reactorUserId);
+
+            if (existing == null)
+            {
+                _context.PrivateMessageReactionNotifications.Add(new PrivateMessageReactionNotification
+                {
+                    PrivateMessageId = messageId,
+                    ReactorUserId = reactorUserId,
+                    CreatedAt = DateTime.UtcNow
+                });
+
+                try
+                {
+                    await _context.SaveChangesAsync();
+                    return true;
+                }
+                catch (DbUpdateException)
+                {
+                    return false;
+                }
+            }
+
+            if (DateTime.UtcNow - existing.CreatedAt <= ReactionNotificationCooldown)
+                return false;
+
+            existing.CreatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return true;
         }
 
         public async Task<IReadOnlyList<PrivateMessageReaction>> RemoveReactionAsync(int messageId, string userId)

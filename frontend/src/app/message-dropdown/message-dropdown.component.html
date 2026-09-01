@@ -54,7 +54,7 @@
               <span *ngIf="message.unreadCount" class="message-unread-count">{{ message.unreadCount }}</span>
             </div>
             <p *ngIf="message.subtitle" class="sender-name">{{ message.subtitle }}</p>
-            <p class="message-preview">{{ message.preview }}</p>
+            <p class="message-preview">{{ getMessagePreview(message) }}</p>
             <span class="message-time">{{ message.createdAt | relativeTime:true }}</span>
           </div>
         </div>

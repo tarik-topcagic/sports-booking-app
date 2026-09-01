@@ -12,5 +12,6 @@ namespace SportsBookingAPI.DTOs
         public DateTimeOffset CreatedAt { get; set; }
         public string Kind { get; set; } = "message";
         public string? ReactionEmoji { get; set; }
+        public bool IsNewNotification { get; set; } = true;
     }
 }

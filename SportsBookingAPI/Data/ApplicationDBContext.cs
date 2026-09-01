@@ -18,10 +18,12 @@ namespace SportsBookingAPI.Data
         public DbSet<GroupMessage> GroupMessages { get; set; }
         public DbSet<GroupMessageReceipt> GroupMessageReceipts { get; set; }
         public DbSet<GroupMessageReaction> GroupMessageReactions { get; set; }
+        public DbSet<GroupMessageReactionNotification> GroupMessageReactionNotifications { get; set; }
         public DbSet<GroupChatReadState> GroupChatReadStates { get; set; }
         public DbSet<PrivateConversation> PrivateConversations { get; set; }
         public DbSet<PrivateMessage> PrivateMessages { get; set; }
         public DbSet<PrivateMessageReaction> PrivateMessageReactions { get; set; }
+        public DbSet<PrivateMessageReactionNotification> PrivateMessageReactionNotifications { get; set; }
         public DbSet<PrivateChatReadState> PrivateChatReadStates { get; set; }
         public DbSet<AppNotification> Notifications { get; set; }
         public DbSet<Reservation> Reservations { get; set; }
@@ -123,6 +125,22 @@ namespace SportsBookingAPI.Data
                 .HasIndex(reaction => new { reaction.GroupMessageId, reaction.UserId })
                 .IsUnique();
 
+            modelBuilder.Entity<GroupMessageReactionNotification>()
+                .HasOne(record => record.GroupMessage)
+                .WithMany()
+                .HasForeignKey(record => record.GroupMessageId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<GroupMessageReactionNotification>()
+                .HasOne(record => record.ReactorUser)
+                .WithMany()
+                .HasForeignKey(record => record.ReactorUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<GroupMessageReactionNotification>()
+                .HasIndex(record => new { record.GroupMessageId, record.ReactorUserId })
+                .IsUnique();
+
             modelBuilder.Entity<GroupMessageReceipt>()
                 .HasOne(receipt => receipt.GroupMessage)
                 .WithMany(message => message.Receipts)
@@ -206,6 +224,22 @@ namespace SportsBookingAPI.Data
 
             modelBuilder.Entity<PrivateMessageReaction>()
                 .HasIndex(reaction => new { reaction.PrivateMessageId, reaction.UserId })
+                .IsUnique();
+
+            modelBuilder.Entity<PrivateMessageReactionNotification>()
+                .HasOne(record => record.PrivateMessage)
+                .WithMany()
+                .HasForeignKey(record => record.PrivateMessageId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<PrivateMessageReactionNotification>()
+                .HasOne(record => record.ReactorUser)
+                .WithMany()
+                .HasForeignKey(record => record.ReactorUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<PrivateMessageReactionNotification>()
+                .HasIndex(record => new { record.PrivateMessageId, record.ReactorUserId })
                 .IsUnique();
 
             modelBuilder.Entity<PrivateChatReadState>()

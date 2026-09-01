@@ -22,6 +22,8 @@ import {
   createGroupChatListItemFromNotification,
   createPrivateChatListItemFromNotification,
   getChatListItemKey,
+  mergeInboxItemsWithReactionOverlays,
+  resolveChatInboxItemPreview,
 } from '../helpers/chat-list.helper';
 import {
   applyChatListPresenceUpdate,
@@ -717,6 +719,10 @@ export class GroupChatComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.highlightedChatListKeys.has(getChatListItemKey(item));
   }
 
+  getChatListItemPreview(item: ChatInboxItem): string {
+    return resolveChatInboxItemPreview(item, this.currentUserId, (key) => this.languageService.translate(key));
+  }
+
   shouldShowChatListPresenceDot(item: ChatInboxItem): boolean {
     return shouldShowChatListPresenceDotHelper(
       item,
@@ -785,9 +791,10 @@ export class GroupChatComponent implements OnInit, AfterViewInit, OnDestroy {
   private loadChatListItems(): void {
     this.chatInboxService.getInboxItems(this.currentUserId).subscribe({
       next: (items) => {
-        this.chatListItems = items;
-        this.highlightedChatListKeys = createChatListHighlightedKeys(items);
-        this.syncChatListPresenceIndicators(items);
+        const mergedItems = mergeInboxItemsWithReactionOverlays(items, this.chatInboxService.getReactionOverlays());
+        this.chatListItems = mergedItems;
+        this.highlightedChatListKeys = createChatListHighlightedKeys(mergedItems);
+        this.syncChatListPresenceIndicators(mergedItems);
       },
       error: (error) => {
         console.error('Error loading desktop chat list items:', error);
@@ -821,6 +828,7 @@ export class GroupChatComponent implements OnInit, AfterViewInit, OnDestroy {
   private markCurrentGroupChatAsRead(groupId: number): void {
     this.groupChatNotificationService.markGroupAsRead(groupId).subscribe({
       next: () => {
+        this.chatInboxService.clearReactionOverlay(`group:${groupId}`);
         this.groupChatNotificationService.notifyUnreadCountChanged();
       },
       error: (error) => {
@@ -1082,6 +1090,7 @@ export class GroupChatComponent implements OnInit, AfterViewInit, OnDestroy {
       notification,
       currentUserId: this.currentUserId,
       isCurrentOpenChat: notification.type === 'group' && notification.groupId === this.group?.id,
+      translate: (key) => this.languageService.translate(key),
       createItem: (incomingNotification, shouldHighlight) =>
         incomingNotification.type === 'group'
           ? createGroupChatListItemFromNotification(
@@ -1091,7 +1100,13 @@ export class GroupChatComponent implements OnInit, AfterViewInit, OnDestroy {
               this.currentUserId,
               (key) => this.languageService.translate(key),
             )
-          : createPrivateChatListItemFromNotification(incomingNotification, shouldHighlight, null),
+          : createPrivateChatListItemFromNotification(
+              incomingNotification,
+              shouldHighlight,
+              null,
+              this.currentUserId,
+              (key) => this.languageService.translate(key),
+            ),
     });
 
     this.chatListItems = updateResult.items;

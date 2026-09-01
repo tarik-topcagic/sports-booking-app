@@ -1,5 +1,6 @@
 import { createHighlightedSet, moveItemToTop, prependIfNotExists } from './dropdown-ui.helper';
 import { ChatInboxItem } from '../interfaces/chat-inbox-item.model';
+import { ChatInboxPreviewSource } from '../interfaces/chat-inbox-preview-source.model';
 import { ChatMessageNotification } from '../interfaces/chat-message-notification.model';
 import { PrivateConversation } from '../interfaces/private-chat.model';
 import { GroupDetails } from '../interfaces/group.model';
@@ -8,22 +9,50 @@ export function getChatListItemKey(item: ChatInboxItem): string {
   return `${item.type}:${item.id}`;
 }
 
+export function buildPreviewSourceFromNotification(notification: ChatMessageNotification): ChatInboxPreviewSource | undefined {
+  if (notification.kind === 'reaction') {
+    return { kind: 'reaction', senderName: notification.senderName, reactionEmoji: notification.reactionEmoji };
+  }
+
+  if (notification.type === 'group') {
+    return { kind: 'group-message', senderUserId: notification.senderUserId, senderName: notification.senderName, rawText: notification.preview };
+  }
+
+  return undefined;
+}
+
+function resolvePreviewSource(
+  source: ChatInboxPreviewSource,
+  currentUserId: string | null,
+  translate: (key: string) => string,
+): string {
+  switch (source.kind) {
+    case 'reaction':
+      return translate('reactedToYourMessage')
+        .replace('{name}', source.senderName)
+        .replace('{emoji}', source.reactionEmoji ?? '');
+    case 'group-message':
+      return formatGroupPreviewText(source.senderUserId, source.senderName, source.rawText, currentUserId, translate);
+    case 'plain-key':
+      return translate(source.key);
+  }
+}
+
+export function resolveChatInboxItemPreview(
+  item: ChatInboxItem,
+  currentUserId: string | null,
+  translate: (key: string) => string,
+): string {
+  return item.previewSource ? resolvePreviewSource(item.previewSource, currentUserId, translate) : item.preview;
+}
+
 export function buildNotificationPreviewText(
   notification: ChatMessageNotification,
   currentUserId: string | null,
   translate: (key: string) => string,
 ): string {
-  if (notification.kind === 'reaction') {
-    return translate('reactedToYourMessage')
-      .replace('{name}', notification.senderName)
-      .replace('{emoji}', notification.reactionEmoji ?? '');
-  }
-
-  if (notification.type === 'group') {
-    return formatGroupPreviewText(notification.senderUserId, notification.senderName, notification.preview, currentUserId, translate);
-  }
-
-  return notification.preview;
+  const source = buildPreviewSourceFromNotification(notification);
+  return source ? resolvePreviewSource(source, currentUserId, translate) : notification.preview;
 }
 
 export function formatGroupPreviewText(
@@ -56,6 +85,7 @@ export function mergeInboxItemsWithReactionOverlays(
       ...item,
       subtitle: overlay.subtitle,
       preview: overlay.preview,
+      previewSource: overlay.previewSource,
       createdAt: overlay.createdAt,
       unreadCount: Math.max(item.unreadCount, overlay.unreadCount),
       isRead: item.isRead && overlay.isRead,
@@ -88,6 +118,7 @@ export function createGroupChatListItemFromNotification(
     id: notification.groupId ?? 0,
     title: currentGroupMatches ? (currentGroup?.name ?? fallbackTitle) : fallbackTitle,
     preview: buildNotificationPreviewText(notification, currentUserId, translate),
+    previewSource: buildPreviewSourceFromNotification(notification),
     createdAt: notification.createdAt,
     unreadCount: shouldHighlight ? 1 : 0,
     isRead: !shouldHighlight,
@@ -101,6 +132,8 @@ export function createPrivateChatListItemFromNotification(
   notification: ChatMessageNotification,
   shouldHighlight: boolean,
   currentConversation: PrivateConversation | null,
+  currentUserId: string | null,
+  translate: (key: string) => string,
 ): ChatInboxItem {
   const currentConversationMatches = currentConversation?.id === notification.conversationId;
 
@@ -111,7 +144,8 @@ export function createPrivateChatListItemFromNotification(
       ? (currentConversation?.otherFullName || currentConversation?.otherUsername || notification.senderName)
       : notification.senderName,
     otherUserId: notification.senderUserId,
-    preview: notification.preview,
+    preview: buildNotificationPreviewText(notification, currentUserId, translate),
+    previewSource: buildPreviewSourceFromNotification(notification),
     createdAt: notification.createdAt,
     unreadCount: shouldHighlight ? 1 : 0,
     isRead: !shouldHighlight,
@@ -127,6 +161,7 @@ export interface ApplyRealtimeChatListNotificationOptions {
   notification: ChatMessageNotification;
   currentUserId: string | null;
   isCurrentOpenChat: boolean;
+  translate: (key: string) => string;
   createItem: (notification: ChatMessageNotification, shouldHighlight: boolean) => ChatInboxItem;
 }
 
@@ -139,6 +174,7 @@ export function applyRealtimeChatListNotification(
     notification,
     currentUserId,
     isCurrentOpenChat,
+    translate,
     createItem,
   } = options;
 
@@ -148,10 +184,11 @@ export function applyRealtimeChatListNotification(
       : item.type === 'private' && item.conversationId === notification.conversationId;
   });
 
-  const shouldHighlight = notification.senderUserId !== currentUserId && !isCurrentOpenChat;
+  const isNewNotification = notification.isNewNotification !== false;
   const nextHighlightedKeys = new Set(highlightedKeys);
 
   if (!existingItem) {
+    const shouldHighlight = isNewNotification && notification.senderUserId !== currentUserId && !isCurrentOpenChat;
     const newItem = createItem(notification, shouldHighlight);
     const nextItems = prependIfNotExists(
       items,
@@ -169,12 +206,15 @@ export function applyRealtimeChatListNotification(
     };
   }
 
+  const shouldHighlight = isNewNotification && notification.senderUserId !== currentUserId && !isCurrentOpenChat;
+
   const updatedItem: ChatInboxItem = {
     ...existingItem,
-    preview: notification.preview,
+    preview: buildNotificationPreviewText(notification, currentUserId, translate),
+    previewSource: buildPreviewSourceFromNotification(notification),
     createdAt: notification.createdAt,
-    isRead: !shouldHighlight,
-    unreadCount: shouldHighlight ? existingItem.unreadCount + 1 : existingItem.unreadCount,
+    isRead: isNewNotification ? !shouldHighlight : existingItem.isRead,
+    unreadCount: isNewNotification && shouldHighlight ? existingItem.unreadCount + 1 : existingItem.unreadCount,
   };
 
   const nextItems = moveItemToTop(

@@ -1,3 +1,5 @@
+import { ChatInboxPreviewSource } from './chat-inbox-preview-source.model';
+
 export interface ChatInboxItem {
   type: 'group' | 'private';
   id: number;
@@ -5,6 +7,7 @@ export interface ChatInboxItem {
   subtitle?: string;
   otherUserId?: string;
   preview: string;
+  previewSource?: ChatInboxPreviewSource;
   createdAt: string;
   unreadCount: number;
   isRead: boolean;

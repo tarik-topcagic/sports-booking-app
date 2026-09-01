@@ -11,11 +11,13 @@ import { PresenceService } from '../../services/presence.service';
 import { PrivateChatNotificationService } from '../../services/private-chat-notification.service';
 import {
   buildNotificationPreviewText,
+  buildPreviewSourceFromNotification,
   createGroupChatListItemFromNotification,
   createPrivateChatListItemFromNotification,
   formatGroupPreviewText,
   getChatListItemKey,
   mergeInboxItemsWithReactionOverlays,
+  resolveChatInboxItemPreview,
 } from '../helpers/chat-list.helper';
 import { LanguageService } from '../../services/language.service';
 import {
@@ -36,6 +38,7 @@ import { getUserIdFromToken } from '../helpers/jwt.helper';
 import { ChatMessageNotification } from '../interfaces/chat-message-notification.model';
 import { ChatMessageDeletedEvent } from '../interfaces/chat-message-mutation-event.model';
 import { ChatInboxItem } from '../interfaces/chat-inbox-item.model';
+import { ChatInboxPreviewSource } from '../interfaces/chat-inbox-preview-source.model';
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { RelativeTimePipe } from '../pipes/relative-time.pipe';
 import { SkeletonListItemComponent } from '../skeleton/skeleton-list-item/skeleton-list-item.component';
@@ -251,25 +254,32 @@ export class MessageDropdownComponent implements OnInit, OnDestroy {
     const nextUnreadCount = wasUnread ? targetItem.unreadCount - 1 : targetItem.unreadCount;
     const targetKey = getChatListItemKey(targetItem);
 
+    const emptyChatPlaceholderKey = type === 'group' ? 'noGroupMessages' : 'noPrivateMessages';
+    const groupPreviewSource: ChatInboxPreviewSource | undefined =
+      type === 'group' && event.updatedPreviewSenderUserId && event.updatedPreviewSenderName && event.updatedPreviewText
+        ? { kind: 'group-message', senderUserId: event.updatedPreviewSenderUserId, senderName: event.updatedPreviewSenderName, rawText: event.updatedPreviewText }
+        : undefined;
+
     const updatedItem: ChatInboxItem = event.isChatNowEmpty
       ? {
           ...targetItem,
-          preview: this.languageService.translate(type === 'group' ? 'noGroupMessages' : 'noPrivateMessages'),
+          preview: this.languageService.translate(emptyChatPlaceholderKey),
+          previewSource: { kind: 'plain-key', key: emptyChatPlaceholderKey },
           unreadCount: nextUnreadCount,
           isRead: nextUnreadCount === 0,
         }
       : {
           ...targetItem,
-          preview:
-            type === 'group' && event.updatedPreviewText && event.updatedPreviewSenderUserId && event.updatedPreviewSenderName
-              ? formatGroupPreviewText(
-                  event.updatedPreviewSenderUserId,
-                  event.updatedPreviewSenderName,
-                  event.updatedPreviewText,
-                  this.currentUserId,
-                  (key) => this.languageService.translate(key),
-                )
-              : (event.updatedPreviewText ?? targetItem.preview),
+          preview: groupPreviewSource
+            ? formatGroupPreviewText(
+                groupPreviewSource.senderUserId,
+                groupPreviewSource.senderName,
+                groupPreviewSource.rawText,
+                this.currentUserId,
+                (key) => this.languageService.translate(key),
+              )
+            : (event.updatedPreviewText ?? targetItem.preview),
+          previewSource: event.updatedPreviewText ? groupPreviewSource : targetItem.previewSource,
           createdAt: event.updatedPreviewCreatedAt ?? targetItem.createdAt,
           unreadCount: nextUnreadCount,
           isRead: nextUnreadCount === 0,
@@ -292,6 +302,10 @@ export class MessageDropdownComponent implements OnInit, OnDestroy {
 
   isHighlightedMessage(message: ChatInboxItem): boolean {
     return this.highlightedMessageKeys.has(getChatListItemKey(message));
+  }
+
+  getMessagePreview(message: ChatInboxItem): string {
+    return resolveChatInboxItemPreview(message, this.currentUserId, (key) => this.languageService.translate(key));
   }
 
   shouldShowPresenceDot(message: ChatInboxItem): boolean {
@@ -501,11 +515,13 @@ export class MessageDropdownComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const isContentOnlyUpdate = notification.isNewNotification === false;
     const updatedMessage: ChatInboxItem = {
       ...existingMessage,
       preview: buildNotificationPreviewText(notification, this.currentUserId, (key) => this.languageService.translate(key)),
+      previewSource: buildPreviewSourceFromNotification(notification),
       createdAt: notification.createdAt,
-      isRead: !shouldIncrementUnread,
+      isRead: isContentOnlyUpdate ? existingMessage.isRead : !shouldIncrementUnread,
       unreadCount: shouldIncrementUnread ? existingMessage.unreadCount + 1 : existingMessage.unreadCount,
     };
 
@@ -526,6 +542,10 @@ export class MessageDropdownComponent implements OnInit, OnDestroy {
   }
 
   private shouldIncrementUnread(notification: ChatMessageNotification): boolean {
+    if (notification.isNewNotification === false) {
+      return false;
+    }
+
     if (notification.senderUserId === this.currentUserId) {
       return false;
     }
@@ -553,7 +573,13 @@ export class MessageDropdownComponent implements OnInit, OnDestroy {
           this.currentUserId,
           (key) => this.languageService.translate(key),
         )
-      : createPrivateChatListItemFromNotification(notification, shouldIncrementUnread, null);
+      : createPrivateChatListItemFromNotification(
+          notification,
+          shouldIncrementUnread,
+          null,
+          this.currentUserId,
+          (key) => this.languageService.translate(key),
+        );
   }
 
   private syncPresenceIndicators(messages: ChatInboxItem[]): void {

@@ -23,6 +23,8 @@ import {
   createGroupChatListItemFromNotification,
   createPrivateChatListItemFromNotification,
   getChatListItemKey,
+  mergeInboxItemsWithReactionOverlays,
+  resolveChatInboxItemPreview,
 } from '../helpers/chat-list.helper';
 import {
   applyChatListPresenceUpdate,
@@ -633,6 +635,10 @@ export class PrivateChatComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.highlightedChatListKeys.has(getChatListItemKey(item));
   }
 
+  getChatListItemPreview(item: ChatInboxItem): string {
+    return resolveChatInboxItemPreview(item, this.currentUserId, (key) => this.languageService.translate(key));
+  }
+
   shouldShowChatListPresenceDot(item: ChatInboxItem): boolean {
     return shouldShowChatListPresenceDotHelper(
       item,
@@ -720,9 +726,10 @@ export class PrivateChatComponent implements OnInit, AfterViewInit, OnDestroy {
   private loadChatListItems(): void {
     this.chatInboxService.getInboxItems(this.currentUserId).subscribe({
       next: (items) => {
-        this.chatListItems = items;
-        this.highlightedChatListKeys = createChatListHighlightedKeys(items);
-        this.syncChatListPresenceIndicators(items);
+        const mergedItems = mergeInboxItemsWithReactionOverlays(items, this.chatInboxService.getReactionOverlays());
+        this.chatListItems = mergedItems;
+        this.highlightedChatListKeys = createChatListHighlightedKeys(mergedItems);
+        this.syncChatListPresenceIndicators(mergedItems);
       },
       error: (error) => {
         console.error('Error loading desktop chat list items:', error);
@@ -733,6 +740,7 @@ export class PrivateChatComponent implements OnInit, AfterViewInit, OnDestroy {
   private markConversationAsRead(conversationId: number): void {
     this.privateChatNotificationService.markConversationAsRead(conversationId).subscribe({
       next: () => {
+        this.chatInboxService.clearReactionOverlay(`private:${conversationId}`);
         this.privateChatNotificationService.notifyUnreadCountChanged();
       },
       error: (error) => {
@@ -1075,9 +1083,16 @@ export class PrivateChatComponent implements OnInit, AfterViewInit, OnDestroy {
       notification,
       currentUserId: this.currentUserId,
       isCurrentOpenChat: notification.type === 'private' && notification.conversationId === this.conversation?.id,
+      translate: (key) => this.languageService.translate(key),
       createItem: (incomingNotification, shouldHighlight) =>
         incomingNotification.type === 'private'
-          ? createPrivateChatListItemFromNotification(incomingNotification, shouldHighlight, this.conversation)
+          ? createPrivateChatListItemFromNotification(
+              incomingNotification,
+              shouldHighlight,
+              this.conversation,
+              this.currentUserId,
+              (key) => this.languageService.translate(key),
+            )
           : createGroupChatListItemFromNotification(
               incomingNotification,
               shouldHighlight,

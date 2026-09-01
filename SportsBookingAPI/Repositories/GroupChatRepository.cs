@@ -9,6 +9,8 @@ namespace SportsBookingAPI.Repositories
 {
     public class GroupChatRepository : IGroupChatRepository
     {
+        private static readonly TimeSpan ReactionNotificationCooldown = TimeSpan.FromSeconds(30);
+
         private readonly ApplicationDBContext _context;
 
         public GroupChatRepository(ApplicationDBContext context)
@@ -470,6 +472,39 @@ namespace SportsBookingAPI.Repositories
             await _context.SaveChangesAsync();
 
             return await GetReactionsForMessageAsync(messageId);
+        }
+
+        public async Task<bool> ShouldTreatReactionAsNewNotificationAsync(int messageId, string reactorUserId)
+        {
+            var existing = await _context.GroupMessageReactionNotifications
+                .FirstOrDefaultAsync(record => record.GroupMessageId == messageId && record.ReactorUserId == reactorUserId);
+
+            if (existing == null)
+            {
+                _context.GroupMessageReactionNotifications.Add(new GroupMessageReactionNotification
+                {
+                    GroupMessageId = messageId,
+                    ReactorUserId = reactorUserId,
+                    CreatedAt = DateTime.UtcNow
+                });
+
+                try
+                {
+                    await _context.SaveChangesAsync();
+                    return true;
+                }
+                catch (DbUpdateException)
+                {
+                    return false;
+                }
+            }
+
+            if (DateTime.UtcNow - existing.CreatedAt <= ReactionNotificationCooldown)
+                return false;
+
+            existing.CreatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return true;
         }
 
         public async Task<IReadOnlyList<GroupMessageReaction>> RemoveReactionAsync(int messageId, string userId)

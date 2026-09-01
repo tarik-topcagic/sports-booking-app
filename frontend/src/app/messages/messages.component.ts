@@ -9,10 +9,11 @@ import { GroupChatNotificationService } from '../../services/group-chat-notifica
 import { PresenceService } from '../../services/presence.service';
 import { PrivateChatNotificationService } from '../../services/private-chat-notification.service';
 import { createHighlightedSet, moveItemToTop, prependIfNotExists } from '../helpers/dropdown-ui.helper';
-import { buildNotificationPreviewText, formatGroupPreviewText, mergeInboxItemsWithReactionOverlays } from '../helpers/chat-list.helper';
+import { buildNotificationPreviewText, buildPreviewSourceFromNotification, formatGroupPreviewText, mergeInboxItemsWithReactionOverlays, resolveChatInboxItemPreview } from '../helpers/chat-list.helper';
 import { ChatMessageNotification } from '../interfaces/chat-message-notification.model';
 import { ChatMessageDeletedEvent } from '../interfaces/chat-message-mutation-event.model';
 import { ChatInboxItem } from '../interfaces/chat-inbox-item.model';
+import { ChatInboxPreviewSource } from '../interfaces/chat-inbox-preview-source.model';
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { LiveRelativeTimePipe } from '../pipes/live-relative-time.pipe';
 import { LanguageService } from '../../services/language.service';
@@ -145,6 +146,10 @@ export class MessagesComponent implements OnInit, OnDestroy {
     return this.highlightedMessageKeys.has(this.getMessageKey(message));
   }
 
+  getMessagePreview(message: ChatInboxItem): string {
+    return resolveChatInboxItemPreview(message, this.currentUserId, (key) => this.languageService.translate(key));
+  }
+
   shouldShowPresenceDot(message: ChatInboxItem): boolean {
     if (message.type === 'private') {
       return !!message.otherUserId
@@ -206,25 +211,32 @@ export class MessagesComponent implements OnInit, OnDestroy {
     const nextUnreadCount = wasUnread ? targetItem.unreadCount - 1 : targetItem.unreadCount;
     const targetKey = this.getMessageKey(targetItem);
 
+    const emptyChatPlaceholderKey = type === 'group' ? 'noGroupMessages' : 'noPrivateMessages';
+    const groupPreviewSource: ChatInboxPreviewSource | undefined =
+      type === 'group' && event.updatedPreviewSenderUserId && event.updatedPreviewSenderName && event.updatedPreviewText
+        ? { kind: 'group-message', senderUserId: event.updatedPreviewSenderUserId, senderName: event.updatedPreviewSenderName, rawText: event.updatedPreviewText }
+        : undefined;
+
     const updatedItem: ChatInboxItem = event.isChatNowEmpty
       ? {
           ...targetItem,
-          preview: this.languageService.translate(type === 'group' ? 'noGroupMessages' : 'noPrivateMessages'),
+          preview: this.languageService.translate(emptyChatPlaceholderKey),
+          previewSource: { kind: 'plain-key', key: emptyChatPlaceholderKey },
           unreadCount: nextUnreadCount,
           isRead: nextUnreadCount === 0,
         }
       : {
           ...targetItem,
-          preview:
-            type === 'group' && event.updatedPreviewText && event.updatedPreviewSenderUserId && event.updatedPreviewSenderName
-              ? formatGroupPreviewText(
-                  event.updatedPreviewSenderUserId,
-                  event.updatedPreviewSenderName,
-                  event.updatedPreviewText,
-                  this.currentUserId,
-                  (key) => this.languageService.translate(key),
-                )
-              : (event.updatedPreviewText ?? targetItem.preview),
+          preview: groupPreviewSource
+            ? formatGroupPreviewText(
+                groupPreviewSource.senderUserId,
+                groupPreviewSource.senderName,
+                groupPreviewSource.rawText,
+                this.currentUserId,
+                (key) => this.languageService.translate(key),
+              )
+            : (event.updatedPreviewText ?? targetItem.preview),
+          previewSource: event.updatedPreviewText ? groupPreviewSource : targetItem.previewSource,
           createdAt: event.updatedPreviewCreatedAt ?? targetItem.createdAt,
           unreadCount: nextUnreadCount,
           isRead: nextUnreadCount === 0,
@@ -244,7 +256,8 @@ export class MessagesComponent implements OnInit, OnDestroy {
         : message.type === 'private' && message.conversationId === notification.conversationId;
     });
 
-    const shouldIncrementUnread = notification.senderUserId !== this.currentUserId;
+    const isNewNotification = notification.isNewNotification !== false;
+    const shouldIncrementUnread = isNewNotification && notification.senderUserId !== this.currentUserId;
 
     if (!existingMessage) {
       const newMessage = this.createInboxItemFromNotification(notification, shouldIncrementUnread);
@@ -270,8 +283,9 @@ export class MessagesComponent implements OnInit, OnDestroy {
     const updatedMessage: ChatInboxItem = {
       ...existingMessage,
       preview: buildNotificationPreviewText(notification, this.currentUserId, (key) => this.languageService.translate(key)),
+      previewSource: buildPreviewSourceFromNotification(notification),
       createdAt: notification.createdAt,
-      isRead: !shouldIncrementUnread,
+      isRead: isNewNotification ? !shouldIncrementUnread : existingMessage.isRead,
       unreadCount: shouldIncrementUnread ? existingMessage.unreadCount + 1 : existingMessage.unreadCount,
     };
 
@@ -295,6 +309,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
     shouldIncrementUnread: boolean,
   ): ChatInboxItem {
     const preview = buildNotificationPreviewText(notification, this.currentUserId, (key) => this.languageService.translate(key));
+    const previewSource = buildPreviewSourceFromNotification(notification);
 
     if (notification.type === 'group') {
       return {
@@ -302,6 +317,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
         id: notification.groupId ?? 0,
         title: notification.groupId ? `Group #${notification.groupId}` : notification.senderName,
         preview,
+        previewSource,
         createdAt: notification.createdAt,
         unreadCount: shouldIncrementUnread ? 1 : 0,
         isRead: !shouldIncrementUnread,
@@ -317,6 +333,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
       title: notification.senderName,
       otherUserId: notification.senderUserId,
       preview,
+      previewSource,
       createdAt: notification.createdAt,
       unreadCount: shouldIncrementUnread ? 1 : 0,
       isRead: !shouldIncrementUnread,

@@ -9,4 +9,5 @@ export interface ChatMessageNotification {
   createdAt: string;
   kind?: 'message' | 'reaction';
   reactionEmoji?: string;
+  isNewNotification?: boolean;
 }

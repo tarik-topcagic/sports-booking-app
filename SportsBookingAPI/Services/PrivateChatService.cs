@@ -289,6 +289,7 @@ namespace SportsBookingAPI.Services
 
             if (message.SenderUserId != userId)
             {
+                var isNewNotification = await _privateChatRepository.ShouldTreatReactionAsNewNotificationAsync(messageId, userId);
                 var reactorReaction = reactions.FirstOrDefault(reaction => reaction.UserId == userId);
                 var reactorName = reactorReaction != null
                     ? (!string.IsNullOrWhiteSpace(reactorReaction.User?.FullName)
@@ -308,7 +309,8 @@ namespace SportsBookingAPI.Services
                         Preview = $"{trimmedEmoji} Reacted to your message",
                         CreatedAt = BosniaTimeHelper.ToSarajevoOffset(DateTime.UtcNow),
                         Kind = "reaction",
-                        ReactionEmoji = trimmedEmoji
+                        ReactionEmoji = trimmedEmoji,
+                        IsNewNotification = isNewNotification
                     });
             }
 
