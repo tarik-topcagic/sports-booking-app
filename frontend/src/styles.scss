@@ -36,6 +36,12 @@ body:not(.home-page):not(.register-page):not(.login-page) {
     padding-top: 56px;
 }
 
+@media (max-width: 576px) {
+    body.onboarding-profile-edit-page {
+        padding-top: 24px !important;
+    }
+}
+
 body.bottom-groups-visible {
     padding-bottom: 64px;
 }

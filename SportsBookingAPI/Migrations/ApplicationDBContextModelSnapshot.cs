@@ -213,6 +213,9 @@ namespace SportsBookingAPI.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("CityId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("text");
@@ -239,11 +242,7 @@ namespace SportsBookingAPI.Migrations
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(8)
                         .HasColumnType("character varying(8)")
-                        .HasDefaultValue("bs");
-
-                    b.Property<string>("Location")
-                        .IsRequired()
-                        .HasColumnType("text");
+                        .HasDefaultValue("en");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("boolean");
@@ -284,6 +283,8 @@ namespace SportsBookingAPI.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CityId");
+
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
 
@@ -307,10 +308,8 @@ namespace SportsBookingAPI.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasMaxLength(80)
-                        .HasColumnType("character varying(80)");
+                    b.Property<int>("CityId")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -340,7 +339,7 @@ namespace SportsBookingAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("City", "SportType");
+                    b.HasIndex("CityId", "SportType");
 
                     b.ToTable("Arenas");
                 });
@@ -406,9 +405,8 @@ namespace SportsBookingAPI.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("CityId")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -435,6 +433,8 @@ namespace SportsBookingAPI.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AdminId");
+
+                    b.HasIndex("CityId");
 
                     b.ToTable("Groups");
                 });
@@ -981,6 +981,27 @@ namespace SportsBookingAPI.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("SportsBookingAPI.Models.AppUser", b =>
+                {
+                    b.HasOne("SportsBookingAPI.Models.City", "CityRef")
+                        .WithMany()
+                        .HasForeignKey("CityId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CityRef");
+                });
+
+            modelBuilder.Entity("SportsBookingAPI.Models.Arena", b =>
+                {
+                    b.HasOne("SportsBookingAPI.Models.City", "CityRef")
+                        .WithMany()
+                        .HasForeignKey("CityId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CityRef");
+                });
+
             modelBuilder.Entity("SportsBookingAPI.Models.FavoriteArena", b =>
                 {
                     b.HasOne("SportsBookingAPI.Models.Arena", "Arena")
@@ -1008,7 +1029,15 @@ namespace SportsBookingAPI.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("SportsBookingAPI.Models.City", "CityRef")
+                        .WithMany()
+                        .HasForeignKey("CityId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Admin");
+
+                    b.Navigation("CityRef");
                 });
 
             modelBuilder.Entity("SportsBookingAPI.Models.GroupChatReadState", b =>

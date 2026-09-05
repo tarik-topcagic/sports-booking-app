@@ -5,6 +5,7 @@ export interface Group {
   name: string;
   description: string;
   city: string;
+  cityId: number;
   sportCategory: string;
   adminId: string;
   adminDisplayName?: string;
@@ -21,6 +22,7 @@ export interface GroupDetails {
   name: string;
   description: string;
   city: string;
+  cityId: number;
   sportCategory: string;
   imageUrl: string;
   adminDisplayName: string;
@@ -84,7 +86,7 @@ export interface GroupMembership {
 export interface UpdateGroupDto {
   name: string;
   description: string;
-  city: string;
+  cityId: number;
   sportCategory: string;
   groupPictureUrl?: string | null;
 }

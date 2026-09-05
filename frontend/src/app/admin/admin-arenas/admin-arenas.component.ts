@@ -15,13 +15,14 @@ import { SkeletonTableRowComponent } from '../../skeleton/skeleton-table-row/ske
 import { LoadErrorStateComponent } from '../../load-error-state/load-error-state.component';
 import { PaginationComponent } from '../../pagination/pagination.component';
 import { CanComponentDeactivate } from '../../guards/can-component-deactivate';
+import { CityAutocompleteComponent } from '../../city-autocomplete/city-autocomplete.component';
 
 type AdminArenaMode = 'list' | 'create' | 'edit';
 
 @Component({
   selector: 'app-admin-arenas',
   standalone: true,
-  imports: [NgFor, NgIf, FormsModule, ReactiveFormsModule, RouterModule, AdminSelectComponent, SkeletonTableRowComponent, LoadErrorStateComponent, PaginationComponent],
+  imports: [NgFor, NgIf, FormsModule, ReactiveFormsModule, RouterModule, AdminSelectComponent, SkeletonTableRowComponent, LoadErrorStateComponent, PaginationComponent, CityAutocompleteComponent],
   templateUrl: './admin-arenas.component.html',
   styleUrl: './admin-arenas.component.scss',
 })
@@ -41,11 +42,12 @@ export class AdminArenasComponent implements OnInit, OnDestroy, CanComponentDeac
   formError = '';
 
   private beforeUnloadHandlerBound = this.beforeUnloadHandler.bind(this);
-  private originalArena: { name: string; description: string; city: string; sportType: string; address: string; pricePerHour: number } | null = null;
+  private originalArena: { name: string; description: string; cityId: number | null; sportType: string; address: string; pricePerHour: number } | null = null;
 
   selectedFile: File | null = null;
   isUploadingPicture = false;
   currentImageUrl: string | null = null;
+  currentCityName: string | null = null;
 
   filterName = '';
   filterCity = '';
@@ -90,7 +92,7 @@ export class AdminArenasComponent implements OnInit, OnDestroy, CanComponentDeac
         this.mode = 'edit';
         this.editingArenaId = Number(idParam);
         this.arenaForm = this.buildForm();
-        this.originalArena = null; 
+        this.originalArena = null;
         this.loadArenaForEdit(this.editingArenaId);
       } else if (isNew) {
         this.mode = 'create';
@@ -110,12 +112,12 @@ export class AdminArenasComponent implements OnInit, OnDestroy, CanComponentDeac
     window.removeEventListener('beforeunload', this.beforeUnloadHandlerBound);
   }
 
-  private snapshotFormValue(): { name: string; description: string; city: string; sportType: string; address: string; pricePerHour: number } {
+  private snapshotFormValue(): { name: string; description: string; cityId: number | null; sportType: string; address: string; pricePerHour: number } {
     const value = this.arenaForm.value;
     return {
       name: (value.name ?? '').trim(),
       description: (value.description ?? '').trim(),
-      city: (value.city ?? '').trim(),
+      cityId: value.cityId ?? null,
       sportType: (value.sportType ?? '').trim(),
       address: (value.address ?? '').trim(),
       pricePerHour: value.pricePerHour ?? 0,
@@ -131,7 +133,7 @@ export class AdminArenasComponent implements OnInit, OnDestroy, CanComponentDeac
     return (
       (value.name ?? '').trim() !== this.originalArena.name ||
       (value.description ?? '').trim() !== this.originalArena.description ||
-      (value.city ?? '').trim() !== this.originalArena.city ||
+      (value.cityId ?? null) !== this.originalArena.cityId ||
       (value.sportType ?? '').trim() !== this.originalArena.sportType ||
       (value.address ?? '').trim() !== this.originalArena.address ||
       (value.pricePerHour ?? 0) !== this.originalArena.pricePerHour
@@ -155,7 +157,7 @@ export class AdminArenasComponent implements OnInit, OnDestroy, CanComponentDeac
     return this.fb.group({
       name: ['', Validators.required],
       description: ['', Validators.required],
-      city: ['', Validators.required],
+      cityId: [null, Validators.required],
       sportType: ['', Validators.required],
       address: ['', Validators.required],
       pricePerHour: [0, [Validators.required, Validators.min(0)]],
@@ -216,13 +218,14 @@ export class AdminArenasComponent implements OnInit, OnDestroy, CanComponentDeac
         this.arenaForm.patchValue({
           name: arena.name,
           description: arena.description,
-          city: arena.city,
+          cityId: arena.cityId,
           sportType: arena.sportType,
           address: arena.address,
           pricePerHour: arena.pricePerHour,
         });
         this.originalArena = this.snapshotFormValue();
         this.currentImageUrl = arena.imageUrl;
+        this.currentCityName = arena.city;
       },
       error: (error) => {
         console.error('Error loading arena:', error);
@@ -270,7 +273,7 @@ export class AdminArenasComponent implements OnInit, OnDestroy, CanComponentDeac
       const dto: CreateArenaDto = {
         name: value.name,
         description: value.description,
-        city: value.city,
+        cityId: value.cityId,
         sportType: value.sportType,
         address: value.address,
         pricePerHour: value.pricePerHour,
@@ -295,7 +298,7 @@ export class AdminArenasComponent implements OnInit, OnDestroy, CanComponentDeac
       const dto: UpdateArenaDto = {
         name: value.name,
         description: value.description,
-        city: value.city,
+        cityId: value.cityId,
         sportType: value.sportType,
         address: value.address,
         pricePerHour: value.pricePerHour,

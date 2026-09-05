@@ -3,6 +3,7 @@ export interface Arena {
   name: string;
   description: string;
   city: string;
+  cityId: number;
   sportType: string;
   address: string;
   imageUrl: string;
@@ -13,7 +14,7 @@ export interface Arena {
 export interface CreateArenaDto {
   name: string;
   description: string;
-  city: string;
+  cityId: number;
   sportType: string;
   address: string;
   pricePerHour: number;
@@ -22,7 +23,7 @@ export interface CreateArenaDto {
 export interface UpdateArenaDto {
   name: string;
   description: string;
-  city: string;
+  cityId: number;
   sportType: string;
   address: string;
   pricePerHour: number;

@@ -41,5 +41,11 @@ export class AdminDashboardComponent {
       icon: 'bi-bell',
       link: '/admin/notifications',
     },
+    {
+      title: 'Cities',
+      description: 'View, add or delete cities.',
+      icon: 'bi-map',
+      link: '/admin/cities',
+    },
   ];
 }

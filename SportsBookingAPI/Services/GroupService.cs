@@ -8,21 +8,28 @@ namespace SportsBookingAPI.Services
     public class GroupService : IGroupService
     {
         private readonly IGroupRepository _groupRepository;
+        private readonly ICityRepository _cityRepository;
         private readonly ILogger<GroupService> _logger;
 
-        public GroupService(IGroupRepository groupRepository, ILogger<GroupService> logger)
+        public GroupService(IGroupRepository groupRepository, ICityRepository cityRepository, ILogger<GroupService> logger)
         {
             _groupRepository = groupRepository;
+            _cityRepository = cityRepository;
             _logger = logger;
         }
 
         public async Task<ServiceResult> CreateGroupAsync(string userId, CreateGroupDto groupDto)
         {
+            var city = await _cityRepository.GetCityByIdAsync(groupDto.CityId);
+            if (city == null)
+                return ServiceResult.BadRequest("Selected city was not found.");
+
             var group = new Group
             {
                 Name = groupDto.Name,
                 Description = groupDto.Description,
-                City = groupDto.City,
+                CityId = city.Id,
+                CityRef = city,
                 SportCategory = groupDto.SportCategory,
                 AdminId = userId,
                 DateCreated = DateTime.UtcNow,
@@ -55,9 +62,14 @@ namespace SportsBookingAPI.Services
             if (group.AdminId != userId)
                 return ServiceResult.Forbid("Only admin can update the group");
 
+            var city = await _cityRepository.GetCityByIdAsync(updateGroupDto.CityId);
+            if (city == null)
+                return ServiceResult.BadRequest("Selected city was not found.");
+
             group.Name = updateGroupDto.Name;
             group.Description = updateGroupDto.Description;
-            group.City = updateGroupDto.City;
+            group.CityId = city.Id;
+            group.CityRef = city;
             group.SportCategory = updateGroupDto.SportCategory;
             group.ImageUrl = updateGroupDto.GroupPictureUrl ?? "default-group.png";
 
@@ -146,9 +158,14 @@ namespace SportsBookingAPI.Services
             if (group == null)
                 return ServiceResult.NotFound("Group not found");
 
+            var city = await _cityRepository.GetCityByIdAsync(updateGroupDto.CityId);
+            if (city == null)
+                return ServiceResult.BadRequest("Selected city was not found.");
+
             group.Name = updateGroupDto.Name;
             group.Description = updateGroupDto.Description;
-            group.City = updateGroupDto.City;
+            group.CityId = city.Id;
+            group.CityRef = city;
             group.SportCategory = updateGroupDto.SportCategory;
             group.ImageUrl = updateGroupDto.GroupPictureUrl ?? "default-group.png";
 

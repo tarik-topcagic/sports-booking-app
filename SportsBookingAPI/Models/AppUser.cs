@@ -6,9 +6,10 @@ namespace SportsBookingAPI.Models
     {
         public string FullName { get; set; } = string.Empty;
         public string ProfilePictureUrl { get; set; } = "default-profile.png";
-        public string Location { get; set; } = string.Empty;
+        public int? CityId { get; set; }
+        public virtual City? CityRef { get; set; }
         public bool EmailNotificationsEnabled { get; set; }
-        public string LanguagePreference { get; set; } = "bs";
+        public string LanguagePreference { get; set; } = "en";
         public DateTime? CreatedAt { get; set; }
         public virtual ICollection<GroupMembership> GroupMemberships { get; set; } = new List<GroupMembership>();
         public virtual ICollection<Group> Groups { get; set; } = new List<Group>();

@@ -27,14 +27,7 @@ import { DropdownCoordinatorService } from '../../services/dropdown-coordinator.
   styleUrl: './sports-arenas.component.scss',
 })
 export class SportsArenasComponent implements OnInit, OnDestroy {
-  readonly cityOptions = [
-    'Sarajevo',
-    'Mostar',
-    'Tuzla',
-    'Banja Luka',
-    'Bihać',
-    'Zenica',
-  ];
+  cityOptions: string[] = [];
 
   readonly sportOptions = ['Football', 'Basketball', 'Padel'];
 
@@ -83,6 +76,14 @@ export class SportsArenasComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadFavoriteArenas();
+    this.loadCityOptions();
+  }
+
+  private loadCityOptions(): void {
+    this.arenaService.getFilterOptions().subscribe({
+      next: (options) => { this.cityOptions = options.cities; },
+      error: (error) => console.error('Error loading city filter options:', error),
+    });
   }
 
   ngOnDestroy(): void {

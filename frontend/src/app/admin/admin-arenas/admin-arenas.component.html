@@ -112,12 +112,18 @@
           Description is required.
         </div>
       </div>
-      <div class="mb-3 form-floating">
-        <input id="adminArenaCity" type="text" class="form-control" formControlName="city" placeholder="City" />
-        <label for="adminArenaCity">City</label>
-        <div *ngIf="arenaForm.get('city')?.touched && arenaForm.get('city')?.invalid" class="text-danger">
+      <div class="mb-3" *ngIf="mode === 'create'">
+        <app-city-autocomplete id="adminArenaCity" formControlName="cityId" [menuBehindBottomNavbar]="true"></app-city-autocomplete>
+        <div *ngIf="arenaForm.get('cityId')?.touched && arenaForm.get('cityId')?.errors?.['required'] && !arenaForm.get('cityId')?.errors?.['cityNotFound']" class="text-danger">
           City is required.
         </div>
+        <div *ngIf="arenaForm.get('cityId')?.touched && arenaForm.get('cityId')?.errors?.['cityNotFound']" class="text-danger">
+          City not found — please select a city from the list.
+        </div>
+      </div>
+      <div class="mb-3 form-floating" *ngIf="mode === 'edit'">
+        <input id="adminArenaCity" type="text" class="form-control" [value]="currentCityName" readonly disabled />
+        <label for="adminArenaCity">City</label>
       </div>
       <div class="mb-3 form-floating">
         <input id="adminArenaSportType" type="text" class="form-control" formControlName="sportType" placeholder="Sport type" />

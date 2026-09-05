@@ -25,5 +25,6 @@ namespace SportsBookingAPI.Interfaces
         Task<IEnumerable<Group>> GetPendingInvitationGroupsAsync(string userId);
         Task<IEnumerable<Group>> SearchGroupsAsync(string query);
         Task<IEnumerable<Group>> GetPublicGroupsAsync(string userId);
+        Task<bool> CityHasGroupsAsync(int cityId);
     }
 }

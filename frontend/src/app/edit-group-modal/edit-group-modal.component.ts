@@ -9,10 +9,11 @@ import { LanguageService } from '../../services/language.service';
 import { ToastService } from '../../services/toast.service';
 import { Subscription } from 'rxjs';
 import { DropdownCoordinatorService } from '../../services/dropdown-coordinator.service';
+import { CityAutocompleteComponent } from '../city-autocomplete/city-autocomplete.component';
 
 @Component({
   selector: 'app-edit-group-modal',
-  imports: [NgIf, ReactiveFormsModule, TranslatePipe],
+  imports: [NgIf, ReactiveFormsModule, TranslatePipe, CityAutocompleteComponent],
   templateUrl: './edit-group-modal.component.html',
   styleUrl: './edit-group-modal.component.scss'
 })
@@ -31,7 +32,7 @@ export class EditGroupModalComponent implements OnInit, OnDestroy {
   showActionsMenu = false;
 
   private coordinatorSubscription: Subscription;
-  private originalGroup: { name: string; city: string; sportCategory: string; description: string; imageUrl: string | null } | null = null;
+  private originalGroup: { name: string; cityId: number | null; sportCategory: string; description: string; imageUrl: string | null } | null = null;
 
   constructor(
     private groupService: GroupService,
@@ -43,7 +44,7 @@ export class EditGroupModalComponent implements OnInit, OnDestroy {
   ) {
     this.editGroupForm = this.fb.group({
       name: ['', Validators.required],
-      city: ['', Validators.required],
+      cityId: [null, Validators.required],
       sportCategory: ['', Validators.required],
       description: ['']
     });
@@ -58,7 +59,7 @@ export class EditGroupModalComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.editGroupForm.patchValue({
       name: this.group.name,
-      city: this.group.city,
+      cityId: this.group.cityId,
       sportCategory: this.group.sportCategory,
       description: this.group.description
     });
@@ -69,7 +70,7 @@ export class EditGroupModalComponent implements OnInit, OnDestroy {
 
     this.originalGroup = {
       name: (this.group.name ?? '').trim(),
-      city: (this.group.city ?? '').trim(),
+      cityId: this.group.cityId ?? null,
       sportCategory: (this.group.sportCategory ?? '').trim(),
       description: (this.group.description ?? '').trim(),
       imageUrl: this.previewUrl,
@@ -88,7 +89,7 @@ export class EditGroupModalComponent implements OnInit, OnDestroy {
     const value = this.editGroupForm.value;
     return (
       (value.name ?? '').trim() !== this.originalGroup.name ||
-      (value.city ?? '').trim() !== this.originalGroup.city ||
+      (value.cityId ?? null) !== this.originalGroup.cityId ||
       (value.sportCategory ?? '').trim() !== this.originalGroup.sportCategory ||
       (value.description ?? '').trim() !== this.originalGroup.description ||
       this.previewUrl !== this.originalGroup.imageUrl
@@ -190,7 +191,7 @@ export class EditGroupModalComponent implements OnInit, OnDestroy {
     const data = {
       Name: this.editGroupForm.value.name,
       Description: this.editGroupForm.value.description,
-      City: this.editGroupForm.value.city,
+      CityId: this.editGroupForm.value.cityId,
       SportCategory: this.editGroupForm.value.sportCategory,
       GroupPictureUrl: this.previewUrl ? this.previewUrl : ""
     };
@@ -207,7 +208,7 @@ export class EditGroupModalComponent implements OnInit, OnDestroy {
         const value = this.editGroupForm.value;
         this.originalGroup = {
           name: (value.name ?? '').trim(),
-          city: (value.city ?? '').trim(),
+          cityId: value.cityId ?? null,
           sportCategory: (value.sportCategory ?? '').trim(),
           description: (value.description ?? '').trim(),
           imageUrl: this.previewUrl,

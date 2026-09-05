@@ -100,6 +100,7 @@ namespace SportsBookingAPI.Repositories
                 .Include(g => g.Admin)
                 .Include(g => g.Memberships)
                 .ThenInclude(m => m.User)
+                .Include(g => g.CityRef)
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(name))
@@ -126,6 +127,7 @@ namespace SportsBookingAPI.Repositories
                 .Include(g => g.Admin)
                 .Include(g => g.Memberships)
                 .ThenInclude(m => m.User)
+                .Include(g => g.CityRef)
                 .FirstOrDefaultAsync(g => g.Id == groupId);
         }
 
@@ -133,6 +135,7 @@ namespace SportsBookingAPI.Repositories
         {
             return await _context.Groups
                 .Include(g => g.Memberships)
+                .Include(g => g.CityRef)
                 .Where(g => g.AdminId == adminId).ToListAsync();
         }
 
@@ -140,6 +143,7 @@ namespace SportsBookingAPI.Repositories
         {
             return await _context.Groups
                 .Include(g => g.Memberships)
+                .Include(g => g.CityRef)
                 .Where(g => g.Memberships.Any(m => m.UserId == userId && m.Status == MembershipStatus.Accepted) && g.AdminId != userId)
                 .ToListAsync();
         }
@@ -148,6 +152,7 @@ namespace SportsBookingAPI.Repositories
         {
             return await _context.Groups
                 .Include(g => g.Memberships)
+                .Include(g => g.CityRef)
                 .Where(g => g.AdminId != userId
                     && g.Memberships.Any(m => m.UserId == userId && m.Status == MembershipStatus.PendingJoinRequest))
                 .ToListAsync();
@@ -157,6 +162,7 @@ namespace SportsBookingAPI.Repositories
         {
             return await _context.Groups
                 .Include(g => g.Memberships)
+                .Include(g => g.CityRef)
                 .Where(g => g.AdminId != userId
                     && g.Memberships.Any(m => m.UserId == userId && m.Status == MembershipStatus.PendingInvitation))
                 .ToListAsync();
@@ -247,6 +253,7 @@ namespace SportsBookingAPI.Repositories
         {
             return await _context.Groups
                 .Include(g => g.Memberships)
+                .Include(g => g.CityRef)
                 .Where(g => g.AdminId != userId
                     && !g.Memberships.Any(m => m.UserId == userId
                         && (m.Status == MembershipStatus.Accepted || m.Status == MembershipStatus.PendingInvitation)))
@@ -268,8 +275,14 @@ namespace SportsBookingAPI.Repositories
             return await _context.Groups
                 .Include(g => g.Memberships)
                 .ThenInclude(m => m.User)
-                .Where(g => g.Name.Contains(query) || g.Description.Contains(query) || g.City.Contains(query) || g.SportCategory.Contains(query))
+                .Include(g => g.CityRef)
+                .Where(g => g.Name.Contains(query) || g.Description.Contains(query) || g.CityRef.Name.Contains(query) || g.SportCategory.Contains(query))
                 .ToListAsync();
+        }
+
+        public async Task<bool> CityHasGroupsAsync(int cityId)
+        {
+            return await _context.Groups.AnyAsync(g => g.CityId == cityId);
         }
 
         public async Task<Group> UpdateGroupAsync(Group group)

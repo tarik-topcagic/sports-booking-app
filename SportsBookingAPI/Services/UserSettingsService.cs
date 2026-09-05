@@ -7,7 +7,7 @@ namespace SportsBookingAPI.Services
 {
     public class UserSettingsService : IUserSettingsService
     {
-        private static readonly HashSet<string> SupportedLanguagePreferences = new(StringComparer.OrdinalIgnoreCase)
+        internal static readonly HashSet<string> SupportedLanguagePreferences = new(StringComparer.OrdinalIgnoreCase)
         {
             "bs", "en", "de", "hr", "sr", "es", "fr", "it"
         };
@@ -145,7 +145,7 @@ namespace SportsBookingAPI.Services
         private static string NormalizeLanguagePreference(string? languagePreference)
         {
             if (string.IsNullOrWhiteSpace(languagePreference))
-                return "bs";
+                return "en";
 
             return languagePreference.Trim().ToLowerInvariant();
         }

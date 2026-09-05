@@ -27,7 +27,7 @@ export class SettingsComponent implements OnInit, OnDestroy, CanComponentDeactiv
   settings: UserSettings | null = null;
   emailNotificationsEnabled = false;
   darkModeEnabled = false;
-  selectedLanguage = 'bs';
+  selectedLanguage = 'en';
   showLanguageMenu = false;
   newUsername = '';
   isChangingUsername = false;
@@ -201,7 +201,7 @@ export class SettingsComponent implements OnInit, OnDestroy, CanComponentDeactiv
   get selectedLanguageName(): string {
     return (
       this.languages.find((language) => language.code === this.selectedLanguage)
-        ?.name || this.languageService.getLanguageName('bs')
+        ?.name || this.languageService.getLanguageName(this.languageService.defaultLanguage)
     );
   }
 

@@ -17,5 +17,28 @@ namespace SportsBookingAPI.Repositories
         {
             return await _context.Cities.ToListAsync();
         }
+
+        public async Task<City?> GetCityByIdAsync(int id)
+        {
+            return await _context.Cities.FirstOrDefaultAsync(c => c.Id == id);
+        }
+
+        public async Task<City> CreateCityAsync(City city)
+        {
+            _context.Cities.Add(city);
+            await _context.SaveChangesAsync();
+            return city;
+        }
+
+        public async Task<bool> DeleteCityAsync(int id)
+        {
+            var city = await _context.Cities.FirstOrDefaultAsync(c => c.Id == id);
+            if (city == null)
+                return false;
+
+            _context.Cities.Remove(city);
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

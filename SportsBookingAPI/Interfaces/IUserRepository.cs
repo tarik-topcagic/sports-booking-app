@@ -17,5 +17,6 @@ namespace SportsBookingAPI.Interfaces
         Task<List<AppUser>> SearchUsersAsync(string? searchTerm);
         Task<IDbContextTransaction> BeginTransactionAsync();
         Task AddUsernameHistoryAsync(UsernameHistory entry);
+        Task<bool> CityHasUsersAsync(int cityId);
     }
 }

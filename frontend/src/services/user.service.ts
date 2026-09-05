@@ -20,6 +20,12 @@ export class UserService {
 
   private profileRefresh = new BehaviorSubject<void>(undefined);
 
+  cityConfirmedThisSession = false;
+
+  resetCityCheck(): void {
+    this.cityConfirmedThisSession = false;
+  }
+
   constructor(private http: HttpClient) {}
 
   getMyProfile(): Observable<User> {

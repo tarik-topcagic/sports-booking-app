@@ -6,10 +6,11 @@ import { ConfirmDialogService } from '../../services/confirm-dialog.service';
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { LanguageService } from '../../services/language.service';
 import { ToastService } from '../../services/toast.service';
+import { CityAutocompleteComponent } from '../city-autocomplete/city-autocomplete.component';
 
 @Component({
   selector: 'app-create-group-modal',
-  imports: [NgIf, ReactiveFormsModule, TranslatePipe],
+  imports: [NgIf, ReactiveFormsModule, TranslatePipe, CityAutocompleteComponent],
   templateUrl: './create-group-modal.component.html',
   styleUrl: './create-group-modal.component.scss'
 })
@@ -31,7 +32,7 @@ export class CreateGroupModalComponent {
   ) {
     this.createGroupForm = this.fb.group({
       name: ['', Validators.required],
-      city: ['', Validators.required],
+      cityId: [null, Validators.required],
       sportCategory: ['', Validators.required],
       description: ['']
     });
@@ -58,7 +59,7 @@ export class CreateGroupModalComponent {
     const value = this.createGroupForm.value;
     return !!(
       (value.name ?? '').trim() ||
-      (value.city ?? '').trim() ||
+      value.cityId ||
       (value.sportCategory ?? '').trim() ||
       (value.description ?? '').trim() ||
       this.selectedImage
@@ -74,7 +75,7 @@ export class CreateGroupModalComponent {
     const data = {
       Name: this.createGroupForm.value.name,
       Description: this.createGroupForm.value.description,
-      City: this.createGroupForm.value.city,
+      CityId: this.createGroupForm.value.cityId,
       SportCategory: this.createGroupForm.value.sportCategory,
       ImageUrl: this.previewUrl || ""
     };

@@ -115,7 +115,8 @@
   color: #f1f3f5;
 }
 
-:host-context(body.dark-mode) .form-control {
+:host-context(body.dark-mode) .form-control,
+:host-context(body.dark-mode) ::ng-deep .city-autocomplete .form-control {
   background-color: #15191e;
   color: #f1f3f5;
   border-color: #4b5563;
@@ -131,11 +132,14 @@
 
 :host-context(body.dark-mode) .form-floating > .form-control:focus ~ label::after,
 :host-context(body.dark-mode) .form-floating > .form-control:not(:placeholder-shown) ~ label::after,
-:host-context(body.dark-mode) .form-floating > .form-control:-webkit-autofill ~ label::after {
+:host-context(body.dark-mode) .form-floating > .form-control:-webkit-autofill ~ label::after,
+:host-context(body.dark-mode) ::ng-deep .city-autocomplete.form-floating > .form-control:focus ~ label::after,
+:host-context(body.dark-mode) ::ng-deep .city-autocomplete.form-floating > .form-control:not(:placeholder-shown) ~ label::after {
   background-color: #15191e;
 }
 
-:host-context(body.dark-mode) .form-control:focus {
+:host-context(body.dark-mode) .form-control:focus,
+:host-context(body.dark-mode) ::ng-deep .city-autocomplete .form-control:focus {
   background-color: #15191e;
   color: #fff;
   border-color: #86b7fe;

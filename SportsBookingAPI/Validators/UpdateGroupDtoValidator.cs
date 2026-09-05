@@ -8,7 +8,7 @@ namespace SportsBookingAPI.Validators
         public UpdateGroupDtoValidator()
         {
             RuleFor(x => x.Name).NotEmpty().WithMessage("Name is required.");
-            RuleFor(x => x.City).NotEmpty().WithMessage("City is required.");
+            RuleFor(x => x.CityId).GreaterThan(0).WithMessage("City is required.");
             RuleFor(x => x.SportCategory).NotEmpty().WithMessage("Sport category is required.");
         }
     }

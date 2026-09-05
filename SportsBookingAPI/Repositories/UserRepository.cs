@@ -20,7 +20,7 @@ namespace SportsBookingAPI.Repositories
 
         public async Task<List<AppUser>> GetAllUsersAsync()
         {
-            return await _userManager.Users.ToListAsync();
+            return await _userManager.Users.Include(u => u.CityRef).ToListAsync();
         }
 
         public async Task<List<AppUser>> GetAllUsersForAdminAsync(string? username)
@@ -38,12 +38,15 @@ namespace SportsBookingAPI.Repositories
 
         public async Task<AppUser?> GetUserByIdAsync(string id)
         {
-            return await _userManager.FindByIdAsync(id);
+            return await _context.Users
+                .Include(u => u.CityRef)
+                .FirstOrDefaultAsync(u => u.Id == id);
         }
 
         public async Task<AppUser?> GetUserByNormalizedUsernameAsync(string normalizedUsername)
         {
             return await _userManager.Users
+                .Include(user => user.CityRef)
                 .SingleOrDefaultAsync(user => user.NormalizedUserName == normalizedUsername);
         }
 
@@ -84,6 +87,7 @@ namespace SportsBookingAPI.Repositories
             searchTerm = searchTerm.ToLower();
 
             return await _userManager.Users
+                .Include(u => u.CityRef)
                 .Where(u => u.UserName.ToLower().Contains(searchTerm) ||
                             u.FullName.ToLower().Contains(searchTerm))
                 .ToListAsync();
@@ -97,6 +101,11 @@ namespace SportsBookingAPI.Repositories
         public async Task<IdentityResult> UpdateSecurityStampAsync(AppUser user)
         {
             return await _userManager.UpdateSecurityStampAsync(user);
+        }
+
+        public async Task<bool> CityHasUsersAsync(int cityId)
+        {
+            return await _context.Users.AnyAsync(u => u.CityId == cityId);
         }
     }
 }

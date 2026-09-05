@@ -8,6 +8,7 @@ import { BottomGroupNavbarComponent } from './bottom-group-navbar/bottom-group-n
 import { NavbarComponent } from './navbar/navbar.component';
 
 const HIDDEN_NAVBAR_PATHS = ['/', '/login', '/register'];
+const ONBOARDING_PROFILE_EDIT_PATH = '/profile/edit';
 
 @Component({
   selector: 'app-root',
@@ -16,15 +17,28 @@ const HIDDEN_NAVBAR_PATHS = ['/', '/login', '/register'];
   styleUrl: './app.component.scss'
 })
 export class AppComponent implements OnInit {
-  showNavbar = !HIDDEN_NAVBAR_PATHS.includes(window.location.pathname);
+  showNavbar: boolean;
+  isOnboardingProfileEdit: boolean;
 
   constructor(private router: Router, private languageService: LanguageService) {
     this.applySavedDarkMode();
     this.redirectIfOnAuthPage();
 
+    this.isOnboardingProfileEdit = this.computeIsOnboardingProfileEdit(window.location.pathname, window.location.search);
+    this.showNavbar = !HIDDEN_NAVBAR_PATHS.includes(window.location.pathname) && !this.isOnboardingProfileEdit;
+
     this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe(() => {
-      this.showNavbar = !HIDDEN_NAVBAR_PATHS.includes(this.router.url.split('?')[0]);
+      const [path, query] = this.router.url.split('?');
+      this.isOnboardingProfileEdit = this.computeIsOnboardingProfileEdit(path, query ?? '');
+      this.showNavbar = !HIDDEN_NAVBAR_PATHS.includes(path) && !this.isOnboardingProfileEdit;
     });
+  }
+
+  private computeIsOnboardingProfileEdit(path: string, queryString: string): boolean {
+    if (path !== ONBOARDING_PROFILE_EDIT_PATH) {
+      return false;
+    }
+    return new URLSearchParams(queryString).get('onboarding') === 'true';
   }
 
   ngOnInit(): void {

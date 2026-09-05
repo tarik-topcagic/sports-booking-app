@@ -9,7 +9,7 @@ namespace SportsBookingAPI.Validators
         {
             RuleFor(x => x.Name).NotEmpty().WithMessage("Name is required.");
             RuleFor(x => x.Description).NotEmpty().WithMessage("Description is required.");
-            RuleFor(x => x.City).NotEmpty().WithMessage("City is required.");
+            RuleFor(x => x.CityId).GreaterThan(0).WithMessage("City is required.");
             RuleFor(x => x.SportType).NotEmpty().WithMessage("Sport type is required.");
             RuleFor(x => x.Address).NotEmpty().WithMessage("Address is required.");
             RuleFor(x => x.PricePerHour)

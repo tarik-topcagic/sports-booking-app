@@ -11,5 +11,6 @@ namespace SportsBookingAPI.Interfaces
         Task<Arena> CreateArenaAsync(Arena arena);
         Task<Arena> UpdateArenaAsync(Arena arena);
         Task DeleteArenaAsync(Arena arena);
+        Task<bool> CityHasArenasAsync(int cityId);
     }
 }

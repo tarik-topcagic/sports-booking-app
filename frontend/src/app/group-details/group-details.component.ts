@@ -351,6 +351,7 @@ export class GroupDetailsComponent implements OnInit, OnDestroy {
       name: group.name,
       description: group.description,
       city: group.city,
+      cityId: group.cityId,
       sportCategory: group.sportCategory,
       adminId: group.currentUserId,
       imageUrl: group.imageUrl,

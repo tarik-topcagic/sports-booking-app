@@ -1,4 +1,4 @@
-<div class="container mt-4">
+<div class="container" [class.mt-4]="!isCompletionFlow" [class.onboarding-completion-view]="isCompletionFlow">
   <div class="card mx-auto shadow-sm profile-edit-card" style="max-width: 600px">
     <div class="card-body" *ngIf="isLoading">
       <h3 class="card-title text-center mb-4">{{ 'editProfile' | translate }}</h3>
@@ -10,6 +10,14 @@
     </div>
 
     <div class="card-body" *ngIf="!isLoading">
+      <button
+        *ngIf="isCompletionFlow"
+        type="button"
+        class="btn btn-primary onboarding-logout-button"
+        (click)="logout()"
+      >
+        {{ 'logout' | translate }}
+      </button>
       <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
       <h3 class="card-title text-center mb-4">{{ 'editProfile' | translate }}</h3>
 
@@ -82,30 +90,18 @@
           </div>
         </div>
 
-        <div class="mb-3 position-relative form-floating" #locationFieldWrapper>
-          <input
-            type="text"
-            id="location"
-            formControlName="location"
-            class="form-control"
-            [placeholder]="'location' | translate"
-            (focus)="openLocationDropdown()"
-          />
-          <label for="location">{{ 'location' | translate }}</label>
-
-          <ul
-            *ngIf="showDropdown && (filteredCities$ | async)?.length"
-            class="list-group position-absolute w-100"
-            style="z-index: 1000"
-          >
-            <li
-              class="list-group-item list-group-item-action"
-              *ngFor="let city of filteredCities$ | async"
-              (click)="selectCity(city)"
-            >
-              {{ city.name }}, {{ city.canton }}
-            </li>
-          </ul>
+        <div class="mb-3 city-field" [class.city-field-onboarding]="isCompletionFlow">
+          <div *ngIf="isCompletionFlow" class="city-onboarding-hint">
+            {{ 'cityOnboardingHint' | translate }}
+          </div>
+          <app-city-autocomplete id="location" formControlName="cityId" [menuBehindBottomNavbar]="true"></app-city-autocomplete>
+          <div *ngIf="!isCompletionFlow && editForm.get('cityId')?.touched && editForm.get('cityId')?.errors?.['required'] && !editForm.get('cityId')?.errors?.['cityNotFound']" class="text-danger">
+            {{ 'requiredField' | translate }}
+          </div>
+          <div *ngIf="editForm.get('cityId')?.touched && editForm.get('cityId')?.errors?.['cityNotFound']" class="text-danger">
+            {{ 'cityNotFound' | translate }}
+          </div>
+          <div *ngIf="isCompletionFlow && !(editForm.get('cityId')?.touched && editForm.get('cityId')?.errors?.['cityNotFound'])" class="text-danger city-onboarding-spacer">&nbsp;</div>
         </div>
 
         <div class="mb-3 form-floating">

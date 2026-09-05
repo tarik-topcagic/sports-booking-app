@@ -16,12 +16,12 @@ namespace SportsBookingAPI.Repositories
 
         public async Task<IEnumerable<Arena>> GetArenasAsync(string? city, string? sportType, string? searchTerm)
         {
-            var query = _context.Arenas.AsNoTracking().AsQueryable();
+            var query = _context.Arenas.AsNoTracking().Include(arena => arena.CityRef).AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(city))
             {
                 var normalizedCity = city.Trim().ToLower();
-                query = query.Where(arena => arena.City.ToLower() == normalizedCity);
+                query = query.Where(arena => arena.CityRef.Name.ToLower() == normalizedCity);
             }
 
             if (!string.IsNullOrWhiteSpace(sportType))
@@ -37,19 +37,19 @@ namespace SportsBookingAPI.Repositories
                     arena.Name.ToLower().Contains(normalizedSearchTerm) ||
                     arena.Description.ToLower().Contains(normalizedSearchTerm) ||
                     arena.Address.ToLower().Contains(normalizedSearchTerm) ||
-                    arena.City.ToLower().Contains(normalizedSearchTerm) ||
+                    arena.CityRef.Name.ToLower().Contains(normalizedSearchTerm) ||
                     arena.SportType.ToLower().Contains(normalizedSearchTerm));
             }
 
             return await query
-                .OrderBy(arena => arena.City)
+                .OrderBy(arena => arena.CityRef.Name)
                 .ThenBy(arena => arena.Name)
                 .ToListAsync();
         }
 
         public async Task<IEnumerable<(Arena Arena, int ReservationCount, int FavoriteCount)>> GetAllArenasWithCountsAsync(string? name, string? city, string? sportType)
         {
-            var query = _context.Arenas.AsNoTracking().AsQueryable();
+            var query = _context.Arenas.AsNoTracking().Include(arena => arena.CityRef).AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(name))
             {
@@ -58,13 +58,13 @@ namespace SportsBookingAPI.Repositories
             }
 
             if (!string.IsNullOrWhiteSpace(city))
-                query = query.Where(arena => arena.City == city);
+                query = query.Where(arena => arena.CityRef.Name == city);
 
             if (!string.IsNullOrWhiteSpace(sportType))
                 query = query.Where(arena => arena.SportType == sportType);
 
             var arenas = await query
-                .OrderBy(arena => arena.City)
+                .OrderBy(arena => arena.CityRef.Name)
                 .ThenBy(arena => arena.Name)
                 .ToListAsync();
 
@@ -88,8 +88,7 @@ namespace SportsBookingAPI.Repositories
         public async Task<(IEnumerable<string> Cities, IEnumerable<string> Sports)> GetDistinctCitiesAndSportsAsync()
         {
             var cities = await _context.Arenas
-                .Where(a => a.City != null && a.City != string.Empty)
-                .Select(a => a.City)
+                .Select(a => a.CityRef.Name)
                 .Distinct()
                 .OrderBy(c => c)
                 .ToListAsync();
@@ -108,6 +107,7 @@ namespace SportsBookingAPI.Repositories
         {
             return await _context.Arenas
                 .AsNoTracking()
+                .Include(arena => arena.CityRef)
                 .FirstOrDefaultAsync(arena => arena.Id == id);
         }
 
@@ -129,6 +129,11 @@ namespace SportsBookingAPI.Repositories
         {
             _context.Arenas.Remove(arena);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> CityHasArenasAsync(int cityId)
+        {
+            return await _context.Arenas.AnyAsync(a => a.CityId == cityId);
         }
     }
 }

@@ -1,23 +1,22 @@
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { City } from '../interfaces/city';
-import { map, Observable, startWith, Subscription, take } from 'rxjs';
+import { Observable, Subscription, take } from 'rxjs';
 import { UserService } from '../../services/user.service';
-import { CityService } from '../../services/city.service';
-import { CommonModule, NgFor, NgIf } from '@angular/common';
-import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+import { CommonModule, NgIf } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CanComponentDeactivate } from '../guards/can-component-deactivate';
 import { ConfirmDialogService } from '../../services/confirm-dialog.service';
 import { LanguageService } from '../../services/language.service';
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { ToastService } from '../../services/toast.service';
 import { SkeletonComponent } from '../skeleton/skeleton/skeleton.component';
-import { DropdownCoordinatorService } from '../../services/dropdown-coordinator.service';
+import { CityAutocompleteComponent } from '../city-autocomplete/city-autocomplete.component';
 
 @Component({
   selector: 'app-profile-edit',
@@ -25,9 +24,9 @@ import { DropdownCoordinatorService } from '../../services/dropdown-coordinator.
     ReactiveFormsModule,
     CommonModule,
     NgIf,
-    NgFor,
     TranslatePipe,
     SkeletonComponent,
+    CityAutocompleteComponent,
   ],
   templateUrl: './profile-edit.component.html',
   styleUrl: './profile-edit.component.scss',
@@ -35,51 +34,46 @@ import { DropdownCoordinatorService } from '../../services/dropdown-coordinator.
 export class ProfileEditComponent
   implements OnInit, OnDestroy, CanComponentDeactivate
 {
-  @ViewChild('locationFieldWrapper') locationFieldWrapperRef!: ElementRef<HTMLElement>;
-
   editForm!: FormGroup;
-  cities: City[] = [];
-  filteredCities$!: Observable<City[]>;
   selectedFile: File | null = null;
   previewUrl: string | ArrayBuffer | null = null;
   fileError: string | null = null;
-  showDropdown = false;
   timestamp = Date.now();
   successMessage = '';
   isLoading = true;
   isSaving = false;
 
   private beforeUnloadHandlerBound = this.beforeUnloadHandler.bind(this);
-  private coordinatorSubscription?: Subscription;
   private profileLoadSubscription?: Subscription;
-  private originalProfile: { fullName: string; phoneNumber: string; location: string; profilePictureUrl: string | null } | null = null;
+  private originalProfile: { fullName: string; phoneNumber: string; cityId: number | null; profilePictureUrl: string | null } | null = null;
+
+  isCompletionFlow = false;
 
   constructor(
     private fb: FormBuilder,
     private userService: UserService,
-    private cityService: CityService,
+    private authService: AuthService,
     private router: Router,
+    private route: ActivatedRoute,
     private confirmDialogService: ConfirmDialogService,
     private languageService: LanguageService,
     private toastService: ToastService,
-    private dropdownCoordinator: DropdownCoordinatorService,
-  ) {
-    this.coordinatorSubscription = this.dropdownCoordinator.activeChanged$.subscribe((activeId) => {
-      if (activeId !== this && this.showDropdown) {
-        this.showDropdown = false;
-      }
-    });
-  }
+  ) {}
 
   ngOnInit(): void {
     this.timestamp = Date.now();
+    this.isCompletionFlow = this.route.snapshot.queryParamMap.get('onboarding') === 'true';
+    
+    if (this.isCompletionFlow) {
+      document.body.classList.add('onboarding-profile-edit-page');
+    }
     this.editForm = this.fb.group({
       fullName: ['', [Validators.required]],
       phoneNumber: [
         '',
         [Validators.required, Validators.pattern(/^\+387[0-9]{8,9}$/)],
       ],
-      location: [''],
+      cityId: [null, Validators.required],
       profilePictureUrl: [''],
     });
 
@@ -89,7 +83,7 @@ export class ProfileEditComponent
         this.editForm.patchValue({
           fullName: profile.fullName,
           phoneNumber: profile.phoneNumber,
-          location: profile.location || '',
+          cityId: profile.cityId,
           profilePictureUrl: profile.profilePictureUrl,
         });
 
@@ -105,7 +99,7 @@ export class ProfileEditComponent
         this.originalProfile = {
           fullName: (profile.fullName ?? '').trim(),
           phoneNumber: (profile.phoneNumber ?? '').trim(),
-          location: (profile.location || '').trim(),
+          cityId: profile.cityId ?? null,
           profilePictureUrl: this.normalizePictureUrl(profile.profilePictureUrl),
         };
       },
@@ -115,40 +109,13 @@ export class ProfileEditComponent
       },
     });
 
-    this.cityService.getCities().subscribe((cities) => {
-      this.cities = cities;
-      this.filteredCities$ = this.editForm.get('location')!.valueChanges.pipe(
-        startWith(''),
-        map((value) => this._filterCities(value)),
-      );
-    });
     window.addEventListener('beforeunload', this.beforeUnloadHandlerBound);
   }
 
   ngOnDestroy(): void {
     window.removeEventListener('beforeunload', this.beforeUnloadHandlerBound);
-    this.coordinatorSubscription?.unsubscribe();
     this.profileLoadSubscription?.unsubscribe();
-    this.dropdownCoordinator.close(this);
-  }
-
-  openLocationDropdown(): void {
-    this.dropdownCoordinator.open(this, this.locationFieldWrapperRef.nativeElement);
-    this.showDropdown = true;
-  }
-
-  private _filterCities(value: string): City[] {
-    const filterValue = value.toLowerCase();
-    return this.cities.filter((city) =>
-      city.name.toLowerCase().includes(filterValue),
-    );
-  }
-
-  selectCity(city: City): void {
-    this.editForm.get('location')?.setValue(city.name);
-
-    this.showDropdown = false;
-    this.dropdownCoordinator.close(this);
+    document.body.classList.remove('onboarding-profile-edit-page');
   }
 
   onFileSelected(event: Event): void {
@@ -224,13 +191,20 @@ export class ProfileEditComponent
     return (
       (value.fullName ?? '').trim() !== this.originalProfile.fullName ||
       (value.phoneNumber ?? '').trim() !== this.originalProfile.phoneNumber ||
-      (value.location ?? '').trim() !== this.originalProfile.location ||
+      (value.cityId ?? null) !== this.originalProfile.cityId ||
       pictureChanged
     );
   }
 
   private updateProfile(): void {
-    this.userService.updateProfile(this.editForm.value).subscribe({
+    const payload = {
+      fullName: this.editForm.value.fullName,
+      phoneNumber: this.editForm.value.phoneNumber,
+      profilePictureUrl: this.editForm.value.profilePictureUrl,
+      cityId: this.editForm.value.cityId,
+    };
+
+    this.userService.updateProfile(payload).subscribe({
       next: () => {
         this.isSaving = false;
         this.userService.refreshProfile();
@@ -242,11 +216,11 @@ export class ProfileEditComponent
         this.originalProfile = {
           fullName: (value.fullName ?? '').trim(),
           phoneNumber: (value.phoneNumber ?? '').trim(),
-          location: (value.location ?? '').trim(),
+          cityId: value.cityId ?? null,
           profilePictureUrl: this.normalizePictureUrl(value.profilePictureUrl),
         };
         setTimeout(() => {
-          this.router.navigate(['/profile']);
+          this.router.navigate([this.isCompletionFlow ? '/home' : '/profile']);
         }, 0);
       },
       error: (err) => {
@@ -286,5 +260,13 @@ export class ProfileEditComponent
       return this.confirmDialogService.confirm('unsavedChangesConfirm');
     }
     return true;
+  }
+
+  logout(): void {
+    this.router.navigate(['']).then((navigated) => {
+      if (navigated) {
+        this.authService.logout();
+      }
+    });
   }
 }

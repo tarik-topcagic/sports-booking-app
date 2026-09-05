@@ -1,0 +1,14 @@
+.admin-page {
+  padding-top: 100px;
+  padding-bottom: 60px;
+}
+
+@media (max-width: 576px) {
+  .admin-page {
+    padding-top: 24px;
+  }
+}
+
+.admin-form {
+  max-width: 560px;
+}

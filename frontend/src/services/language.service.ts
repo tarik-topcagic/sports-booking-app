@@ -21,7 +21,7 @@ export class LanguageService {
     { code: 'it', name: 'Italiano' },
   ];
 
-  private readonly defaultLanguage: LanguageCode = 'bs';
+  readonly defaultLanguage: LanguageCode = 'en';
   private readonly authService = inject(AuthService);
   private readonly userService = inject(UserService);
   private readonly languageSubject = new BehaviorSubject<LanguageCode>(
@@ -960,6 +960,16 @@ export class LanguageService {
       es: 'Estas seguro de que deseas eliminar esta arena?',
       fr: 'Voulez-vous vraiment supprimer cette arene ?',
       it: 'Sei sicuro di voler eliminare questa arena?',
+    },
+    confirmDeleteCity: {
+      en: 'Are you sure you want to delete this city?',
+      de: 'Moechten Sie diese Stadt wirklich loeschen?',
+      bs: 'Da li ste sigurni da želite obrisati ovaj grad?',
+      hr: 'Jeste li sigurni da želite obrisati ovaj grad?',
+      sr: 'Da li ste sigurni da želite obrisati ovaj grad?',
+      es: 'Estas seguro de que deseas eliminar esta ciudad?',
+      fr: 'Voulez-vous vraiment supprimer cette ville ?',
+      it: 'Sei sicuro di voler eliminare questa citta?',
     },
     confirmDeleteNotification: {
       en: 'Are you sure you want to delete this notification?',
@@ -2600,6 +2610,26 @@ export class LanguageService {
       es: 'Ciudad',
       fr: 'Ville',
       it: 'Citta',
+    },
+    cityNotFound: {
+      en: 'City not found — please select a city from the list',
+      de: 'Stadt nicht gefunden — bitte waehlen Sie eine Stadt aus der Liste',
+      bs: 'Grad nije pronađen — molimo odaberite grad sa liste',
+      hr: 'Grad nije pronađen — molimo odaberite grad s popisa',
+      sr: 'Grad nije pronađen — molimo odaberite grad sa liste',
+      es: 'Ciudad no encontrada — selecciona una ciudad de la lista',
+      fr: 'Ville introuvable — veuillez selectionner une ville dans la liste',
+      it: 'Citta non trovata — seleziona una citta dalla lista',
+    },
+    cityOnboardingHint: {
+      en: 'Select your city to finish setting up your profile.',
+      de: 'Waehle deine Stadt, um dein Profil fertigzustellen.',
+      bs: 'Odaberite svoj grad da završite podešavanje profila.',
+      hr: 'Odaberite svoj grad kako biste dovršili postavljanje profila.',
+      sr: 'Odaberite svoj grad da završite podešavanje profila.',
+      es: 'Selecciona tu ciudad para terminar de configurar tu perfil.',
+      fr: 'Selectionnez votre ville pour terminer la configuration de votre profil.',
+      it: 'Seleziona la tua citta per completare la configurazione del profilo.',
     },
     sportCategory: {
       en: 'Sport category',

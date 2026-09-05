@@ -14,7 +14,8 @@ namespace SportsBookingAPI.Helpers
                 FullName = user.FullName,
                 PhoneNumber = user.PhoneNumber,
                 ProfilePictureUrl = user.ProfilePictureUrl,
-                Location = user.Location
+                Location = user.CityRef?.Name ?? string.Empty,
+                CityId = user.CityId
             };
         }
     }

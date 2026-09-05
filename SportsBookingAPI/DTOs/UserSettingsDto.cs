@@ -6,6 +6,6 @@ namespace SportsBookingAPI.DTOs
         public string Email { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
         public bool EmailNotificationsEnabled { get; set; }
-        public string LanguagePreference { get; set; } = "bs";
+        public string LanguagePreference { get; set; } = "en";
     }
 }

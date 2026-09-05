@@ -4,6 +4,11 @@ import { Observable } from 'rxjs';
 import { environment } from '../environments/environment';
 import { Arena } from '../app/interfaces/arena.model';
 
+export interface ArenaFilterOptions {
+  cities: string[];
+  sports: string[];
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -36,5 +41,9 @@ export class ArenaService {
 
   getArenaById(id: number): Observable<Arena> {
     return this.http.get<Arena>(`${this.apiUrl}/${id}`);
+  }
+
+  getFilterOptions(): Observable<ArenaFilterOptions> {
+    return this.http.get<ArenaFilterOptions>(`${this.apiUrl}/filter-options`);
   }
 }

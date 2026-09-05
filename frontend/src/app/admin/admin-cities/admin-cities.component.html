@@ -1,0 +1,91 @@
+<div class="container admin-page">
+
+  <!-- List mode -->
+  <ng-container *ngIf="mode === 'list'">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h1 class="mb-0">Cities</h1>
+      <a class="btn btn-primary" routerLink="/admin/cities/new">New city</a>
+    </div>
+
+    <app-load-error-state #citiesState [load]="loadCities" errorText="Failed to load cities." [retryLabel]="'Retry'" errorWrapperClass="my-4"></app-load-error-state>
+
+    <div class="table-responsive" *ngIf="!citiesState.hasError">
+      <table class="table table-striped align-middle">
+        <thead>
+          <tr>
+            <th>City ID</th>
+            <th>Name</th>
+            <th>Canton</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngIf="isLoading">
+            <tr app-skeleton-row *ngFor="let placeholder of [1, 2, 3, 4, 5]" [columnCount]="4"></tr>
+          </ng-container>
+          <ng-container *ngIf="!isLoading">
+            <tr *ngFor="let city of pagedCities">
+              <td>{{ city.id }}</td>
+              <td>{{ city.name }}</td>
+              <td>{{ city.canton }}</td>
+              <td class="text-end">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-danger"
+                  [disabled]="isPending(city)"
+                  (click)="deleteCity(city)"
+                >
+                  <span *ngIf="isPending(city)" class="spinner-border spinner-border-sm" role="status"></span>
+                  <span *ngIf="!isPending(city)">Delete</span>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!cities.length">
+              <td colspan="4" class="text-center text-muted">No cities found.</td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+
+      <app-pagination
+        [items]="cities"
+        [pageSize]="itemsPerPage"
+        [resetKey]="resetPageSignal"
+        ariaLabel="Cities pagination"
+        (pagedItemsChange)="onPagedCitiesChange($event)"
+      ></app-pagination>
+    </div>
+  </ng-container>
+
+  <!-- Create mode -->
+  <ng-container *ngIf="mode === 'create'">
+    <h1 class="mb-4">New City</h1>
+
+    <div *ngIf="formError" class="alert alert-danger">{{ formError }}</div>
+
+    <form [formGroup]="cityForm" (ngSubmit)="submitForm()" class="admin-form">
+      <div class="mb-3 form-floating">
+        <input id="adminCityName" type="text" class="form-control" formControlName="name" placeholder="Name" />
+        <label for="adminCityName">Name</label>
+        <div *ngIf="cityForm.get('name')?.touched && cityForm.get('name')?.invalid" class="text-danger">
+          Name is required.
+        </div>
+      </div>
+      <div class="mb-3 form-floating">
+        <input id="adminCityCanton" type="text" class="form-control" formControlName="canton" placeholder="Canton" />
+        <label for="adminCityCanton">Canton</label>
+        <div *ngIf="cityForm.get('canton')?.touched && cityForm.get('canton')?.invalid" class="text-danger">
+          Canton is required.
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary" [disabled]="cityForm.invalid || isSaving || !hasUnsavedChanges">
+          <span *ngIf="isSaving" class="spinner-border spinner-border-sm" role="status"></span>
+          <span *ngIf="!isSaving">Save</span>
+        </button>
+        <button type="button" class="btn btn-secondary cancel-button" (click)="cancelForm()">Cancel</button>
+      </div>
+    </form>
+  </ng-container>
+</div>

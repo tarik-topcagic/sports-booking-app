@@ -2,6 +2,7 @@ import { Injectable } from "@angular/core";
 import { environment } from "../environments/environment";
 import { HttpClient } from "@angular/common/http";
 import { BehaviorSubject, map, Observable } from "rxjs";
+import { UserService } from "./user.service";
 
 @Injectable({
     providedIn: 'root'
@@ -11,9 +12,9 @@ export class AuthService {
     private currentUserSubject: BehaviorSubject<any>;
     public currentUser: Observable<any>;
 
-    constructor(private http: HttpClient) {
+    constructor(private http: HttpClient, private userService: UserService) {
         this.currentUserSubject = new BehaviorSubject<any>(JSON.parse(localStorage.getItem('user')!));
-        this.currentUser = this.currentUserSubject.asObservable();  
+        this.currentUser = this.currentUserSubject.asObservable();
     }
 
     register(model: any) {
@@ -36,6 +37,7 @@ export class AuthService {
     logout() {
         localStorage.removeItem('user');
         this.currentUserSubject.next(null);
+        this.userService.resetCityCheck();
     }
 
     updateCurrentUser(data: any) {

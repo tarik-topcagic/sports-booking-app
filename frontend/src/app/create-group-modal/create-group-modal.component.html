@@ -49,11 +49,13 @@
         {{ 'requiredField' | translate }}
       </div>
     </div>
-    <div class="mb-3 form-floating">
-      <input id="groupCity" type="text" formControlName="city" class="form-control" required placeholder="{{ 'groupCity' | translate }}">
-      <label for="groupCity">{{ 'groupCity' | translate }}</label>
-      <div *ngIf="createGroupForm.get('city')?.touched && createGroupForm.get('city')?.invalid" class="text-danger">
+    <div class="mb-3">
+      <app-city-autocomplete id="groupCity" formControlName="cityId"></app-city-autocomplete>
+      <div *ngIf="createGroupForm.get('cityId')?.touched && createGroupForm.get('cityId')?.errors?.['required'] && !createGroupForm.get('cityId')?.errors?.['cityNotFound']" class="text-danger">
         {{ 'requiredField' | translate }}
+      </div>
+      <div *ngIf="createGroupForm.get('cityId')?.touched && createGroupForm.get('cityId')?.errors?.['cityNotFound']" class="text-danger">
+        {{ 'cityNotFound' | translate }}
       </div>
     </div>
     <div class="mb-3 form-floating">

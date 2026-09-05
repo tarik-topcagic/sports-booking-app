@@ -18,6 +18,44 @@
   border-radius: 1rem;
 }
 
+.onboarding-logout-button {
+  display: block;
+  margin-left: auto;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 576px) {
+  .onboarding-completion-view .profile-edit-card {
+    margin-bottom: 2rem;
+  }
+}
+
+.city-field-onboarding {
+  padding: 0.6rem 0.6rem 0.15rem;
+  border: 1.5px solid var(--bs-primary);
+  border-radius: var(--app-control-radius);
+  background: rgba(13, 110, 253, 0.06);
+}
+
+.city-onboarding-hint {
+  margin-bottom: 0.5rem;
+  color: var(--bs-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.city-onboarding-spacer {
+  visibility: hidden;
+}
+
+:host-context(body.dark-mode) .city-field-onboarding {
+  background: rgba(13, 110, 253, 0.12);
+}
+
+:host-context(body.dark-mode) .city-onboarding-hint {
+  color: #6ea8fe;
+}
+
 .profile-picture-remove-button {
   background-color: #e4e4e4;
   color: #585858;

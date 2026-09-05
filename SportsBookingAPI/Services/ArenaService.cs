@@ -13,17 +13,20 @@ namespace SportsBookingAPI.Services
         private readonly IArenaRepository _arenaRepository;
         private readonly IReservationRepository _reservationRepository;
         private readonly IFavoriteArenaRepository _favoriteArenaRepository;
+        private readonly ICityRepository _cityRepository;
         private readonly IConfiguration _configuration;
 
         public ArenaService(
             IArenaRepository arenaRepository,
             IReservationRepository reservationRepository,
             IFavoriteArenaRepository favoriteArenaRepository,
+            ICityRepository cityRepository,
             IConfiguration configuration)
         {
             _arenaRepository = arenaRepository;
             _reservationRepository = reservationRepository;
             _favoriteArenaRepository = favoriteArenaRepository;
+            _cityRepository = cityRepository;
             _configuration = configuration;
         }
 
@@ -47,7 +50,7 @@ namespace SportsBookingAPI.Services
                 Id = x.Arena.Id,
                 Name = x.Arena.Name,
                 Description = x.Arena.Description,
-                City = x.Arena.City,
+                City = x.Arena.CityRef.Name,
                 SportType = x.Arena.SportType,
                 Address = x.Arena.Address,
                 ImageUrl = x.Arena.ImageUrl,
@@ -74,11 +77,16 @@ namespace SportsBookingAPI.Services
 
         public async Task<ServiceResult> CreateArenaAsync(CreateArenaDto createArenaDto)
         {
+            var city = await _cityRepository.GetCityByIdAsync(createArenaDto.CityId);
+            if (city == null)
+                return ServiceResult.BadRequest("Selected city was not found.");
+
             var arena = new Arena
             {
                 Name = createArenaDto.Name,
                 Description = createArenaDto.Description,
-                City = createArenaDto.City,
+                CityId = city.Id,
+                CityRef = city,
                 SportType = createArenaDto.SportType,
                 Address = createArenaDto.Address,
                 PricePerHour = createArenaDto.PricePerHour,
@@ -96,9 +104,14 @@ namespace SportsBookingAPI.Services
             if (arena == null)
                 return ServiceResult.NotFound("Arena not found");
 
+            var city = await _cityRepository.GetCityByIdAsync(updateArenaDto.CityId);
+            if (city == null)
+                return ServiceResult.BadRequest("Selected city was not found.");
+
             arena.Name = updateArenaDto.Name;
             arena.Description = updateArenaDto.Description;
-            arena.City = updateArenaDto.City;
+            arena.CityId = city.Id;
+            arena.CityRef = city;
             arena.SportType = updateArenaDto.SportType;
             arena.Address = updateArenaDto.Address;
             arena.PricePerHour = updateArenaDto.PricePerHour;
@@ -168,7 +181,8 @@ namespace SportsBookingAPI.Services
                 Id = arena.Id,
                 Name = arena.Name,
                 Description = arena.Description,
-                City = arena.City,
+                City = arena.CityRef.Name,
+                CityId = arena.CityId,
                 SportType = arena.SportType,
                 Address = arena.Address,
                 ImageUrl = arena.ImageUrl,

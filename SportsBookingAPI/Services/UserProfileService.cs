@@ -8,11 +8,13 @@ namespace SportsBookingAPI.Services
     public class UserProfileService : IUserProfileService
     {
         private readonly IUserRepository _userRepository;
+        private readonly ICityRepository _cityRepository;
         private readonly IConfiguration _configuration;
 
-        public UserProfileService(IUserRepository userRepository, IConfiguration configuration)
+        public UserProfileService(IUserRepository userRepository, ICityRepository cityRepository, IConfiguration configuration)
         {
             _userRepository = userRepository;
+            _cityRepository = cityRepository;
             _configuration = configuration;
         }
 
@@ -25,13 +27,27 @@ namespace SportsBookingAPI.Services
             user.FullName = updateProfileDto.FullName;
             user.ProfilePictureUrl = updateProfileDto.ProfilePictureUrl ?? "default-profile.png";
             user.PhoneNumber = updateProfileDto.PhoneNumber;
-            user.Location = updateProfileDto.Location;
+
+            if (updateProfileDto.CityId.HasValue)
+            {
+                var city = await _cityRepository.GetCityByIdAsync(updateProfileDto.CityId.Value);
+                if (city == null)
+                    return ServiceResult.BadRequest("Selected city was not found.");
+
+                user.CityId = city.Id;
+                user.CityRef = city;
+            }
+            else
+            {
+                user.CityId = null;
+                user.CityRef = null;
+            }
 
             var result = await _userRepository.UpdateUserAsync(user);
             if (!result.Succeeded)
                 return ServiceResult.BadRequest(result.Errors);
 
-            return ServiceResult.Ok(result);
+            return ServiceResult.Ok(UserMappingHelper.ToUserProfileDto(user));
         }
 
         public async Task<ServiceResult> UploadProfilePictureAsync(UpdateProfilePictureDto updateProfilePictureDto, string scheme, HostString host)

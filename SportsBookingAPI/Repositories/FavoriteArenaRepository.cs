@@ -31,6 +31,7 @@ namespace SportsBookingAPI.Repositories
         {
             return await _context.FavoriteArenas
                 .Include(f => f.Arena)
+                .ThenInclude(a => a.CityRef)
                 .Where(f => f.UserId == userId)
                 .OrderByDescending(f => f.CreatedAt)
                 .ToListAsync();

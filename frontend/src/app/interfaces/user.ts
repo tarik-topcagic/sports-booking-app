@@ -5,4 +5,5 @@ export interface User {
     profilePictureUrl: string | null;
     phoneNumber: string;
     location: string;
+    cityId: number | null;
 }

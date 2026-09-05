@@ -12,7 +12,8 @@ namespace SportsBookingAPI.Helpers
                 Id = group.Id,
                 Name = group.Name,
                 Description = group.Description,
-                City = group.City,
+                City = group.CityRef.Name,
+                CityId = group.CityId,
                 SportCategory = group.SportCategory,
                 AdminId = group.AdminId,
                 AdminDisplayName = !string.IsNullOrWhiteSpace(group.Admin?.FullName)
@@ -71,7 +72,8 @@ namespace SportsBookingAPI.Helpers
                 Id = group.Id,
                 Name = group.Name,
                 Description = group.Description,
-                City = group.City,
+                City = group.CityRef.Name,
+                CityId = group.CityId,
                 SportCategory = group.SportCategory,
                 ImageUrl = group.ImageUrl,
                 AdminDisplayName = !string.IsNullOrWhiteSpace(group.Admin?.FullName)

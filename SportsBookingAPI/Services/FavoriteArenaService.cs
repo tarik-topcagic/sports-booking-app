@@ -61,7 +61,7 @@ namespace SportsBookingAPI.Services
                 Id = favoriteArena.Id,
                 ArenaId = arena.Id,
                 ArenaName = arena.Name,
-                City = arena.City,
+                City = arena.CityRef.Name,
                 SportType = arena.SportType,
                 ImageUrl = arena.ImageUrl,
                 PricePerHour = arena.PricePerHour,

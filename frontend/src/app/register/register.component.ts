@@ -90,7 +90,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
             next: () => {
               this.languageService.syncLanguageFromBackend().subscribe(() => {
                 this.isLoading = false;
-                this.router.navigate(['/home']);
+                this.router.navigate(['/profile/edit'], { queryParams: { onboarding: 'true' } });
               });
             },
             error: (error) => {

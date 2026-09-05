@@ -36,16 +36,12 @@ namespace SportsBookingAPI.Data
 
             modelBuilder.Entity<AppUser>()
                 .Property(user => user.LanguagePreference)
-                .HasDefaultValue("bs")
+                .HasDefaultValue("en")
                 .HasMaxLength(8);
 
             modelBuilder.Entity<Arena>()
                 .Property(arena => arena.Name)
                 .HasMaxLength(160);
-
-            modelBuilder.Entity<Arena>()
-                .Property(arena => arena.City)
-                .HasMaxLength(80);
 
             modelBuilder.Entity<Arena>()
                 .Property(arena => arena.SportType)
@@ -64,12 +60,30 @@ namespace SportsBookingAPI.Data
                 .HasPrecision(10, 2);
 
             modelBuilder.Entity<Arena>()
-                .HasIndex(arena => new { arena.City, arena.SportType });
+                .HasIndex(arena => new { arena.CityId, arena.SportType });
+
+            modelBuilder.Entity<Arena>()
+                .HasOne(arena => arena.CityRef)
+                .WithMany()
+                .HasForeignKey(arena => arena.CityId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Group>()
                 .HasOne(g => g.Admin)
                 .WithMany(u => u.Groups)
                 .HasForeignKey(g => g.AdminId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Group>()
+                .HasOne(g => g.CityRef)
+                .WithMany()
+                .HasForeignKey(g => g.CityId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<AppUser>()
+                .HasOne(u => u.CityRef)
+                .WithMany()
+                .HasForeignKey(u => u.CityId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<GroupMembership>()

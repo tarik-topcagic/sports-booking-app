@@ -40,5 +40,12 @@ namespace SportsBookingAPI.Controllers
 
             return Ok(availability);
         }
+
+        [HttpGet("filter-options")]
+        public async Task<IActionResult> GetFilterOptions()
+        {
+            var (cities, sports) = await _arenaService.GetArenaFilterOptionsAsync();
+            return Ok(new { cities, sports });
+        }
     }
 }

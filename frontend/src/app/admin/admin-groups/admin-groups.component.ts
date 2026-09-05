@@ -10,11 +10,12 @@ import { ConfirmDialogService } from '../../../services/confirm-dialog.service';
 import { SkeletonTableRowComponent } from '../../skeleton/skeleton-table-row/skeleton-table-row.component';
 import { LoadErrorStateComponent } from '../../load-error-state/load-error-state.component';
 import { PaginationComponent } from '../../pagination/pagination.component';
+import { CityAutocompleteComponent } from '../../city-autocomplete/city-autocomplete.component';
 
 @Component({
   selector: 'app-admin-groups',
   standalone: true,
-  imports: [NgFor, NgIf, FormsModule, ReactiveFormsModule, DatePipe, SkeletonTableRowComponent, LoadErrorStateComponent, PaginationComponent],
+  imports: [NgFor, NgIf, FormsModule, ReactiveFormsModule, DatePipe, SkeletonTableRowComponent, LoadErrorStateComponent, PaginationComponent, CityAutocompleteComponent],
   templateUrl: './admin-groups.component.html',
   styleUrl: './admin-groups.component.scss',
 })
@@ -31,7 +32,7 @@ export class AdminGroupsComponent {
   isSavingEdit = false;
 
   private editingGroupPictureUrl: string | null = null;
-  private originalGroup: { name: string; city: string; sportCategory: string; description: string } | null = null;
+  private originalGroup: { name: string; cityId: number | null; sportCategory: string; description: string } | null = null;
 
   membersGroup: GroupDetails | null = null;
   isLoadingMembers = false;
@@ -58,7 +59,7 @@ export class AdminGroupsComponent {
   ) {
     this.editGroupForm = this.fb.group({
       name: ['', Validators.required],
-      city: ['', Validators.required],
+      cityId: [null, Validators.required],
       sportCategory: ['', Validators.required],
       description: [''],
     });
@@ -128,13 +129,13 @@ export class AdminGroupsComponent {
     this.editingGroupPictureUrl = group.imageUrl;
     this.editGroupForm.reset({
       name: group.name,
-      city: group.city,
+      cityId: group.cityId,
       sportCategory: group.sportCategory,
       description: group.description,
     });
     this.originalGroup = {
       name: (group.name ?? '').trim(),
-      city: (group.city ?? '').trim(),
+      cityId: group.cityId ?? null,
       sportCategory: (group.sportCategory ?? '').trim(),
       description: (group.description ?? '').trim(),
     };
@@ -148,7 +149,7 @@ export class AdminGroupsComponent {
     const value = this.editGroupForm.value;
     return (
       (value.name ?? '').trim() !== this.originalGroup.name ||
-      (value.city ?? '').trim() !== this.originalGroup.city ||
+      (value.cityId ?? null) !== this.originalGroup.cityId ||
       (value.sportCategory ?? '').trim() !== this.originalGroup.sportCategory ||
       (value.description ?? '').trim() !== this.originalGroup.description
     );
@@ -180,7 +181,7 @@ export class AdminGroupsComponent {
     this.adminGroupService.updateGroup(this.editingGroup.id, {
       name: value.name,
       description: value.description,
-      city: value.city,
+      cityId: value.cityId,
       sportCategory: value.sportCategory,
       groupPictureUrl: this.editingGroupPictureUrl,
     }).subscribe({

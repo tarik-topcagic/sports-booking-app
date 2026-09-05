@@ -106,11 +106,13 @@
         <textarea id="adminEditGroupDescription" class="form-control" formControlName="description" placeholder="Description" style="height: 100px"></textarea>
         <label for="adminEditGroupDescription">Description</label>
       </div>
-      <div class="mb-3 form-floating">
-        <input id="adminEditGroupCity" type="text" class="form-control" formControlName="city" placeholder="City" />
-        <label for="adminEditGroupCity">City</label>
-        <div *ngIf="editGroupForm.get('city')?.touched && editGroupForm.get('city')?.invalid" class="text-danger">
+      <div class="mb-3">
+        <app-city-autocomplete id="adminEditGroupCity" formControlName="cityId"></app-city-autocomplete>
+        <div *ngIf="editGroupForm.get('cityId')?.touched && editGroupForm.get('cityId')?.errors?.['required'] && !editGroupForm.get('cityId')?.errors?.['cityNotFound']" class="text-danger">
           City is required.
+        </div>
+        <div *ngIf="editGroupForm.get('cityId')?.touched && editGroupForm.get('cityId')?.errors?.['cityNotFound']" class="text-danger">
+          City not found — please select a city from the list.
         </div>
       </div>
       <div class="mb-3 form-floating">

@@ -1,0 +1,36 @@
+<div class="city-autocomplete form-floating">
+  <input
+    #inputEl
+    [id]="id"
+    type="text"
+    class="form-control"
+    autocomplete="one-time-code"
+    [value]="value"
+    [disabled]="disabled"
+    [placeholder]="'groupCity' | translate"
+    (input)="onInput($any($event.target).value)"
+    (focus)="onFocus()"
+    (blur)="onBlur()"
+  />
+  <label [attr.for]="id">{{ 'groupCity' | translate }}</label>
+</div>
+
+<div
+  #menuEl
+  class="city-autocomplete-menu"
+  [class.city-autocomplete-menu-behind-navbar]="menuBehindBottomNavbar"
+  [style.display]="(showSuggestions && filteredCities.length) ? 'block' : 'none'"
+  [style.top.px]="menuPlacement === 'below' ? menuTop : null"
+  [style.bottom.px]="menuPlacement === 'above' ? menuBottom : null"
+  [style.left.px]="menuLeft"
+  [style.width.px]="menuWidth"
+>
+  <button
+    type="button"
+    class="city-autocomplete-option"
+    *ngFor="let city of filteredCities"
+    (click)="selectCity(city)"
+  >
+    {{ city.name }}, {{ city.canton }}
+  </button>
+</div>

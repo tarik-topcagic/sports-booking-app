@@ -146,5 +146,16 @@ export const routes: Routes = [
       loadComponent: () => import('./admin/admin-notifications/admin-notifications.component').then((module) => module.AdminNotificationsComponent),
       canActivate: [AuthGuard, AdminGuard],
     },
+    {
+      path: 'admin/cities',
+      loadComponent: () => import('./admin/admin-cities/admin-cities.component').then((module) => module.AdminCitiesComponent),
+      canActivate: [AuthGuard, AdminGuard],
+    },
+    {
+      path: 'admin/cities/new',
+      loadComponent: () => import('./admin/admin-cities/admin-cities.component').then((module) => module.AdminCitiesComponent),
+      canActivate: [AuthGuard, AdminGuard],
+      canDeactivate: [PendingChangesGuard],
+    },
     { path: '**', redirectTo: '' }
 ];
