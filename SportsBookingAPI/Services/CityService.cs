@@ -30,9 +30,15 @@ namespace SportsBookingAPI.Services
 
         public async Task<ServiceResult> CreateCityAsync(CreateCityDto createCityDto)
         {
+            var trimmedName = createCityDto.Name.Trim();
+
+            var nameExists = await _cityRepository.ExistsByNameAsync(trimmedName);
+            if (nameExists)
+                return ServiceResult.BadRequest(new { field = "name", message = "A city with this name already exists." });
+
             var city = new City
             {
-                Name = createCityDto.Name,
+                Name = trimmedName,
                 Canton = createCityDto.Canton
             };
 

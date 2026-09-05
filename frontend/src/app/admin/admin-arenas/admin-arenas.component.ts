@@ -288,7 +288,9 @@ export class AdminArenasComponent implements OnInit, OnDestroy, CanComponentDeac
         error: (error) => {
           console.error('Error creating arena:', error);
           this.isSaving = false;
-          this.toastService.showError('Failed to create arena.');
+          const fallback = 'Failed to create arena.';
+          const message = error?.error?.message || error?.error;
+          this.toastService.showError(this.isDisplayableErrorMessage(message) ? message : fallback);
         },
       });
       return;

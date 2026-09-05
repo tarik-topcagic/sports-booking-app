@@ -180,7 +180,9 @@ export class AdminCitiesComponent implements OnInit, OnDestroy, CanComponentDeac
       error: (error) => {
         console.error('Error creating city:', error);
         this.isSaving = false;
-        this.toastService.showError('Failed to create city.');
+        const fallback = 'Failed to create city.';
+        const message = error?.error?.message || error?.error;
+        this.toastService.showError(typeof message === 'string' && message.trim() ? message : fallback);
       },
     });
   }

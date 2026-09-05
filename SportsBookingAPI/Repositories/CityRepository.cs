@@ -23,6 +23,12 @@ namespace SportsBookingAPI.Repositories
             return await _context.Cities.FirstOrDefaultAsync(c => c.Id == id);
         }
 
+        public async Task<bool> ExistsByNameAsync(string name)
+        {
+            var normalizedName = name.Trim().ToUpperInvariant();
+            return await _context.Cities.AnyAsync(c => c.Name.Trim().ToUpper() == normalizedName);
+        }
+
         public async Task<City> CreateCityAsync(City city)
         {
             _context.Cities.Add(city);
