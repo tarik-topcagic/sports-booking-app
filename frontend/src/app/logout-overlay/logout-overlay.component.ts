@@ -1,4 +1,3 @@
-import { AsyncPipe, NgIf } from '@angular/common';
 import { Component, ElementRef, OnDestroy, Renderer2, ViewChild } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { LogoutOverlayService } from '../../services/logout-overlay.service';
@@ -6,14 +5,14 @@ import { TranslatePipe } from '../pipes/translate.pipe';
 
 @Component({
   selector: 'app-logout-overlay',
-  imports: [AsyncPipe, NgIf, TranslatePipe],
+  imports: [TranslatePipe],
   templateUrl: './logout-overlay.component.html',
   styleUrl: './logout-overlay.component.scss',
 })
 export class LogoutOverlayComponent implements OnDestroy {
   @ViewChild('overlayEl') overlayElRef?: ElementRef<HTMLElement>;
 
-  visible$;
+  isVisible = false;
 
   private visibleSubscription: Subscription;
   private readonly viewportResizeHandler = () => this.syncOverlaySizeToVisualViewport();
@@ -22,9 +21,9 @@ export class LogoutOverlayComponent implements OnDestroy {
     private logoutOverlayService: LogoutOverlayService,
     private renderer: Renderer2,
   ) {
-    this.visible$ = this.logoutOverlayService.visible$;
+    this.visibleSubscription = this.logoutOverlayService.visible$.subscribe((isVisible) => {
+      this.isVisible = isVisible;
 
-    this.visibleSubscription = this.visible$.subscribe((isVisible) => {
       if (isVisible) {
         this.attachViewportListener();
       } else {

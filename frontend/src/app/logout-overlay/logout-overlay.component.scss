@@ -10,6 +10,15 @@
   height: 100dvh;
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.logout-overlay.visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .logout-overlay-content {

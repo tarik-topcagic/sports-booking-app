@@ -1,4 +1,4 @@
-<div *ngIf="visible$ | async" class="logout-overlay" #overlayEl>
+<div class="logout-overlay" [class.visible]="isVisible" #overlayEl>
   <div class="logout-overlay-content">
     <span class="spinner-border spinner-border-sm me-2" role="status"></span>
     {{ 'loggingOut' | translate }}
