@@ -6,6 +6,10 @@
   align-items: center;
   justify-content: center;
   padding: 1rem;
+  height: 100vh;
+  height: 100dvh;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 .confirm-dialog {
