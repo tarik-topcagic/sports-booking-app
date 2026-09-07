@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Router } from '@angular/router';
-import { BehaviorSubject } from 'rxjs';
+import { GuardsCheckEnd, Router } from '@angular/router';
+import { BehaviorSubject, filter, firstValueFrom } from 'rxjs';
 import { AuthService } from './auth.service';
 
 @Injectable({
@@ -25,10 +25,33 @@ export class LogoutOverlayService {
   }
 
   async performLogout(): Promise<void> {
+    const navigatePromise = this.router.navigate(['']);
+    const navId = this.router.getCurrentNavigation()?.id;
+
+    if (navId == null) {
+      console.warn('LogoutOverlayService: no current navigation id available; showing overlay immediately.');
+      return this.showAndFinishLogout(navigatePromise);
+    }
+
+    const guardsEnd = await firstValueFrom(
+      this.router.events.pipe(
+        filter((event): event is GuardsCheckEnd => event instanceof GuardsCheckEnd && event.id === navId),
+      ),
+    );
+
+    if (!guardsEnd.shouldActivate) {
+      await navigatePromise;
+      return;
+    }
+
+    return this.showAndFinishLogout(navigatePromise);
+  }
+
+  private async showAndFinishLogout(navigatePromise: Promise<boolean>): Promise<void> {
     this.show();
 
     try {
-      const [navigated] = await Promise.all([this.router.navigate(['']), this.delay(600)]);
+      const [navigated] = await Promise.all([navigatePromise, this.delay(600)]);
       if (navigated) {
         this.authService.logout();
       }
