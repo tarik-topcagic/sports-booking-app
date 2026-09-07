@@ -1,13 +1,6 @@
 import { AfterViewInit, Component, ElementRef, forwardRef, Input, OnDestroy, OnInit, Renderer2, ViewChild, ViewEncapsulation } from '@angular/core';
-import { NgFor } from '@angular/common';
-import {
-  AbstractControl,
-  ControlValueAccessor,
-  NG_VALIDATORS,
-  NG_VALUE_ACCESSOR,
-  ValidationErrors,
-  Validator,
-} from '@angular/forms';
+import { NgFor, NgIf } from '@angular/common';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { City } from '../interfaces/city';
 import { CityService } from '../../services/city.service';
 import { TranslatePipe } from '../pipes/translate.pipe';
@@ -15,7 +8,7 @@ import { TranslatePipe } from '../pipes/translate.pipe';
 @Component({
   selector: 'app-city-autocomplete',
   standalone: true,
-  imports: [NgFor, TranslatePipe],
+  imports: [NgFor, NgIf, TranslatePipe],
   templateUrl: './city-autocomplete.component.html',
   styleUrl: './city-autocomplete.component.scss',
   host: { '[attr.id]': 'null' },
@@ -26,14 +19,9 @@ import { TranslatePipe } from '../pipes/translate.pipe';
       useExisting: forwardRef(() => CityAutocompleteComponent),
       multi: true,
     },
-    {
-      provide: NG_VALIDATORS,
-      useExisting: forwardRef(() => CityAutocompleteComponent),
-      multi: true,
-    },
   ],
 })
-export class CityAutocompleteComponent implements ControlValueAccessor, Validator, OnInit, AfterViewInit, OnDestroy {
+export class CityAutocompleteComponent implements ControlValueAccessor, OnInit, AfterViewInit, OnDestroy {
   @Input() id = '';
   @Input() menuBehindBottomNavbar = false;
   @ViewChild('inputEl') inputRef!: ElementRef<HTMLInputElement>;
@@ -53,10 +41,9 @@ export class CityAutocompleteComponent implements ControlValueAccessor, Validato
   private static readonly MENU_MAX_HEIGHT = 240; 
   private static readonly MENU_GAP = 0.65 * 16; 
 
-  private citiesLoaded = false;
+  citiesLoaded = false;
   private onChange: (value: number | null) => void = () => {};
   private onTouched: () => void = () => {};
-  private onValidatorChange: () => void = () => {};
   private handleClickOutsideBound = this.handleClickOutside.bind(this);
   private handleReflowBound = this.handleReflow.bind(this);
   private handleScrollBound = this.handleScroll.bind(this);
@@ -72,10 +59,10 @@ export class CityAutocompleteComponent implements ControlValueAccessor, Validato
       this.cities = cities;
       this.citiesLoaded = true;
       this.resolveDisplayText();
-      this.onValidatorChange();
     });
     document.addEventListener('click', this.handleClickOutsideBound, true);
     window.addEventListener('resize', this.handleReflowBound);
+    window.visualViewport?.addEventListener('resize', this.handleReflowBound);
     document.addEventListener('scroll', this.handleScrollBound, true);
   }
 
@@ -86,6 +73,7 @@ export class CityAutocompleteComponent implements ControlValueAccessor, Validato
   ngOnDestroy(): void {
     document.removeEventListener('click', this.handleClickOutsideBound, true);
     window.removeEventListener('resize', this.handleReflowBound);
+    window.visualViewport?.removeEventListener('resize', this.handleReflowBound);
     document.removeEventListener('scroll', this.handleScrollBound, true);
     this.menuRef?.nativeElement?.remove();
   }
@@ -167,7 +155,6 @@ export class CityAutocompleteComponent implements ControlValueAccessor, Validato
     this.selectedCityId = match ? match.id : null;
 
     this.onChange(this.selectedCityId);
-    this.onValidatorChange();
   }
 
   onFocus(): void {
@@ -186,7 +173,6 @@ export class CityAutocompleteComponent implements ControlValueAccessor, Validato
     this.showSuggestions = false;
     this.onChange(this.selectedCityId);
     this.onTouched();
-    this.onValidatorChange();
   }
 
   writeValue(cityId: number | null): void {
@@ -208,19 +194,5 @@ export class CityAutocompleteComponent implements ControlValueAccessor, Validato
 
   setDisabledState(isDisabled: boolean): void {
     this.disabled = isDisabled;
-  }
-
-  registerOnValidatorChange(fn: () => void): void {
-    this.onValidatorChange = fn;
-  }
-
-  validate(control: AbstractControl): ValidationErrors | null {
-    if (!this.value.trim()) {
-      return null;
-    }
-    if (!this.citiesLoaded) {
-      return null;
-    }
-    return this.selectedCityId != null ? null : { cityNotFound: true };
   }
 }

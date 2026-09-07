@@ -6,6 +6,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { City, CreateCityDto } from '../../interfaces/city';
 import { AdminCityService } from '../../../services/admin/admin-city.service';
+import { CityService } from '../../../services/city.service';
 import { ToastService } from '../../../services/toast.service';
 import { ConfirmDialogService } from '../../../services/confirm-dialog.service';
 import { SkeletonTableRowComponent } from '../../skeleton/skeleton-table-row/skeleton-table-row.component';
@@ -44,6 +45,7 @@ export class AdminCitiesComponent implements OnInit, OnDestroy, CanComponentDeac
 
   constructor(
     private adminCityService: AdminCityService,
+    private cityService: CityService,
     private toastService: ToastService,
     private confirmDialogService: ConfirmDialogService,
     private route: ActivatedRoute,
@@ -144,6 +146,7 @@ export class AdminCitiesComponent implements OnInit, OnDestroy, CanComponentDeac
     this.adminCityService.deleteCity(city.id).subscribe({
       next: () => {
         this.pendingCityIds.delete(city.id);
+        this.cityService.invalidateCache();
         this.toastService.showSuccess('City deleted.');
         this.citiesState.reload();
       },
@@ -173,6 +176,7 @@ export class AdminCitiesComponent implements OnInit, OnDestroy, CanComponentDeac
     this.adminCityService.createCity(dto).subscribe({
       next: () => {
         this.isSaving = false;
+        this.cityService.invalidateCache();
         this.toastService.showSuccess('City created.');
         this.originalCity = this.snapshotFormValue();
         this.router.navigate(['/admin/cities']);

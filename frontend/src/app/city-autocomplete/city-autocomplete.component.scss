@@ -14,6 +14,12 @@
   z-index: 1020;
 }
 
+.city-autocomplete-status {
+  padding: 0.6rem 0.75rem;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
 .city-autocomplete-option {
   display: block;
   width: 100%;
@@ -39,6 +45,10 @@ body.dark-mode .city-autocomplete-menu {
   background: #1f1f1f;
   border-color: rgba(58, 58, 58, 0.95);
   box-shadow: 0 16px 30px rgba(0, 0, 0, 0.28);
+}
+
+body.dark-mode .city-autocomplete-status {
+  color: #c5c8cc;
 }
 
 body.dark-mode .city-autocomplete-option {

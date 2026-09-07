@@ -51,11 +51,8 @@
     </div>
     <div class="mb-3">
       <app-city-autocomplete id="groupCity" formControlName="cityId"></app-city-autocomplete>
-      <div *ngIf="createGroupForm.get('cityId')?.touched && createGroupForm.get('cityId')?.errors?.['required'] && !createGroupForm.get('cityId')?.errors?.['cityNotFound']" class="text-danger">
+      <div *ngIf="createGroupForm.get('cityId')?.touched && createGroupForm.get('cityId')?.errors?.['required']" class="text-danger">
         {{ 'requiredField' | translate }}
-      </div>
-      <div *ngIf="createGroupForm.get('cityId')?.touched && createGroupForm.get('cityId')?.errors?.['cityNotFound']" class="text-danger">
-        {{ 'cityNotFound' | translate }}
       </div>
     </div>
     <div class="mb-3 form-floating">
