@@ -235,6 +235,10 @@ export class GroupDetailsComponent implements OnInit, OnDestroy {
     this.showMembersModal = false;
   }
 
+  onMembersModalGroupDetailsRefresh(groupDetails: GroupDetails): void {
+    this.group = groupDetails;
+  }
+
   toggleMemberMenu(): void {
     if (this.isMemberMenuOpen) {
       this.isMemberMenuOpen = false;

@@ -200,9 +200,11 @@
 <app-group-members-modal
   *ngIf="showMembersModal && group"
   [group]="group"
+  [groupId]="group.id"
   (close)="closeMembersModal()"
   (memberRemoved)="onMemberRemoved($event)"
   (error)="onMembersModalError($event)"
+  (groupDetailsRefresh)="onMembersModalGroupDetailsRefresh($event)"
 ></app-group-members-modal>
 
 <app-edit-group-modal

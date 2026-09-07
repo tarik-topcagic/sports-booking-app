@@ -139,6 +139,12 @@ h2 {
   gap: 0.5rem;
 }
 
+.status-message.compact {
+  padding: 1rem 0;
+  color: #6c757d;
+  text-align: center;
+}
+
 :host-context(body.dark-mode) .invite-modal {
   background: #1f1f1f;
   border-color: #3a3a3a;
@@ -148,7 +154,8 @@ h2 {
 
 :host-context(body.dark-mode) .section-label,
 :host-context(body.dark-mode) .members-admin-summary span,
-:host-context(body.dark-mode) .invite-user-info span {
+:host-context(body.dark-mode) .invite-user-info span,
+:host-context(body.dark-mode) .status-message.compact {
   color: #c5c8cc;
 }
 

@@ -1,5 +1,5 @@
 import { NgFor, NgIf } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { Router } from '@angular/router';
 import { GroupDetails, GroupMember } from '../interfaces/group.model';
 import { TranslatePipe } from '../pipes/translate.pipe';
@@ -13,12 +13,16 @@ import { LanguageService } from '../../services/language.service';
   templateUrl: './group-members-modal.component.html',
   styleUrl: './group-members-modal.component.scss'
 })
-export class GroupMembersModalComponent {
+export class GroupMembersModalComponent implements OnChanges {
   @Input() group!: GroupDetails;
+  @Input() groupId!: number;
   @Output() close = new EventEmitter<void>();
   @Output() memberRemoved = new EventEmitter<string>();
   @Output() error = new EventEmitter<string>();
+  @Output() groupDetailsRefresh = new EventEmitter<GroupDetails>();
 
+  members: GroupMember[] = [];
+  isLoadingMembers = false;
   removingMemberIds = new Set<string>();
 
   constructor(
@@ -27,6 +31,12 @@ export class GroupMembersModalComponent {
     private confirmDialogService: ConfirmDialogService,
     private languageService: LanguageService,
   ) {}
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['groupId'] && this.groupId) {
+      this.loadMembers();
+    }
+  }
 
   closeModal(): void {
     this.removingMemberIds.clear();
@@ -92,6 +102,24 @@ export class GroupMembersModalComponent {
         this.removingMemberIds.delete(member.userId);
         this.error.emit(this.languageService.translate('removeMemberError'));
         console.error('Error removing group member:', error);
+      },
+    );
+  }
+
+  private loadMembers(): void {
+    this.isLoadingMembers = true;
+    this.members = [];
+
+    this.groupService.getGroupDetails(this.groupId).subscribe(
+      (group) => {
+        this.members = group.members;
+        this.isLoadingMembers = false;
+        this.groupDetailsRefresh.emit(group);
+      },
+      (error) => {
+        this.isLoadingMembers = false;
+        this.error.emit(this.languageService.translate('groupDetailsLoadError'));
+        console.error('Error loading group members:', error);
       },
     );
   }

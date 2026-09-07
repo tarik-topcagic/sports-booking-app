@@ -6,13 +6,14 @@ import { ConfirmDialogComponent } from './confirm-dialog/confirm-dialog.componen
 import { LanguageService } from '../services/language.service';
 import { BottomGroupNavbarComponent } from './bottom-group-navbar/bottom-group-navbar.component';
 import { NavbarComponent } from './navbar/navbar.component';
+import { LogoutOverlayComponent } from './logout-overlay/logout-overlay.component';
 
 const HIDDEN_NAVBAR_PATHS = ['/', '/login', '/register'];
 const ONBOARDING_PROFILE_EDIT_PATH = '/profile/edit';
 
 @Component({
   selector: 'app-root',
-  imports: [NgIf, RouterModule, RouterOutlet, ConfirmDialogComponent, BottomGroupNavbarComponent, NavbarComponent],
+  imports: [NgIf, RouterModule, RouterOutlet, ConfirmDialogComponent, BottomGroupNavbarComponent, NavbarComponent, LogoutOverlayComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })

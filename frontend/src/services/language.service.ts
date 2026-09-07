@@ -1121,6 +1121,16 @@ export class LanguageService {
       fr: 'Deconnexion',
       it: 'Esci',
     },
+    loggingOut: {
+      en: 'Logging out...',
+      de: 'Abmeldung laeuft...',
+      bs: 'Odjava u toku...',
+      hr: 'Odjava u tijeku...',
+      sr: 'Odjava u toku...',
+      es: 'Cerrando sesion...',
+      fr: 'Deconnexion en cours...',
+      it: 'Disconnessione in corso...',
+    },
     login: {
       en: 'Login',
       de: 'Anmelden',

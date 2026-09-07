@@ -7,7 +7,6 @@ import {
 } from '@angular/forms';
 import { Observable, Subscription, take } from 'rxjs';
 import { UserService } from '../../services/user.service';
-import { AuthService } from '../../services/auth.service';
 import { CommonModule, NgIf } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CanComponentDeactivate } from '../guards/can-component-deactivate';
@@ -15,6 +14,7 @@ import { ConfirmDialogService } from '../../services/confirm-dialog.service';
 import { LanguageService } from '../../services/language.service';
 import { TranslatePipe } from '../pipes/translate.pipe';
 import { ToastService } from '../../services/toast.service';
+import { LogoutOverlayService } from '../../services/logout-overlay.service';
 import { SkeletonComponent } from '../skeleton/skeleton/skeleton.component';
 import { CityAutocompleteComponent } from '../city-autocomplete/city-autocomplete.component';
 
@@ -52,12 +52,12 @@ export class ProfileEditComponent
   constructor(
     private fb: FormBuilder,
     private userService: UserService,
-    private authService: AuthService,
     private router: Router,
     private route: ActivatedRoute,
     private confirmDialogService: ConfirmDialogService,
     private languageService: LanguageService,
     private toastService: ToastService,
+    private logoutOverlayService: LogoutOverlayService,
   ) {}
 
   ngOnInit(): void {
@@ -262,11 +262,7 @@ export class ProfileEditComponent
     return true;
   }
 
-  logout(): void {
-    this.router.navigate(['']).then((navigated) => {
-      if (navigated) {
-        this.authService.logout();
-      }
-    });
+  logout(): Promise<void> {
+    return this.logoutOverlayService.performLogout();
   }
 }

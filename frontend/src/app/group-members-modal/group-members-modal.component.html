@@ -30,8 +30,12 @@
       <strong>{{ group.adminDisplayName }}</strong>
     </div>
 
-    <div class="invite-user-list members-list">
-      <div class="invite-user-row member-row" *ngFor="let member of group.members">
+    <div *ngIf="isLoadingMembers" class="status-message compact">
+      {{ 'loading' | translate }}
+    </div>
+
+    <div *ngIf="!isLoadingMembers" class="invite-user-list members-list">
+      <div class="invite-user-row member-row" *ngFor="let member of members">
         <div class="invite-user-info">
           <ng-container *ngIf="member.profilePictureUrl && member.profilePictureUrl !== 'default-profile.png'; else memberDefaultAvatar">
             <img [src]="member.profilePictureUrl" [alt]="member.displayName" class="invite-avatar" />

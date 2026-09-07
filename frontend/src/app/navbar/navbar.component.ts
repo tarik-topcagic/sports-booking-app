@@ -9,6 +9,7 @@ import { NotificationDropdownComponent } from '../notification-dropdown/notifica
 import { MessageDropdownComponent } from '../message-dropdown/message-dropdown.component';
 import { DropdownCoordinatorService } from '../../services/dropdown-coordinator.service';
 import { getRolesFromToken } from '../../services/jwt.util';
+import { LogoutOverlayService } from '../../services/logout-overlay.service';
 
 @Component({
   selector: 'app-navbar',
@@ -34,6 +35,7 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
     private router: Router,
     private elementRef: ElementRef<HTMLElement>,
     private dropdownCoordinator: DropdownCoordinatorService,
+    private logoutOverlayService: LogoutOverlayService,
   ) {
     this.coordinatorSubscription = this.dropdownCoordinator.activeChanged$.subscribe((activeId) => {
       if (activeId !== this && this.isDropdownOpen) {
@@ -71,12 +73,8 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  logout() {
-    this.router.navigate(['']).then((navigated) => {
-      if (navigated) {
-        this.authService.logout();
-      }
-    });
+  logout(): Promise<void> {
+    return this.logoutOverlayService.performLogout();
   }
 
   ngOnDestroy(): void {
