@@ -3,3 +3,8 @@ export interface City {
     name: string,
     canton: string,
 }
+
+export interface CreateCityDto {
+  name: string;
+  canton: string;
+}

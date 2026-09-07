@@ -2,13 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { Arena, CreateArenaDto, UpdateArenaDto } from '../../app/interfaces/arena.model';
+import { Arena, ArenaFilterOptions, CreateArenaDto, UpdateArenaDto } from '../../app/interfaces/arena.model';
 import { AdminArenaDto } from '../../app/interfaces/admin/admin-arena.model';
-
-export interface ArenaFilterOptions {
-  cities: string[];
-  sports: string[];
-}
 
 @Injectable({
   providedIn: 'root',

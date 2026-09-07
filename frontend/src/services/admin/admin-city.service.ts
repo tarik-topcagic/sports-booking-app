@@ -2,12 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { City } from '../../app/interfaces/city';
-
-export interface CreateCityDto {
-  name: string;
-  canton: string;
-}
+import { City, CreateCityDto } from '../../app/interfaces/city';
 
 @Injectable({
   providedIn: 'root',

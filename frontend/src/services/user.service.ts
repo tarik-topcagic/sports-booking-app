@@ -2,15 +2,7 @@ import { Injectable } from '@angular/core';
 import { environment } from '../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, switchMap } from 'rxjs';
-import { User } from '../app/interfaces/user';
-
-export interface UserSettings {
-  username: string;
-  email: string;
-  phoneNumber: string;
-  emailNotificationsEnabled: boolean;
-  languagePreference: string;
-}
+import { User, UserSettings } from '../app/interfaces/user';
 
 @Injectable({
   providedIn: 'root',

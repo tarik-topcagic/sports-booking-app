@@ -7,3 +7,11 @@ export interface User {
     location: string;
     cityId: number | null;
 }
+
+export interface UserSettings {
+  username: string;
+  email: string;
+  phoneNumber: string;
+  emailNotificationsEnabled: boolean;
+  languagePreference: string;
+}

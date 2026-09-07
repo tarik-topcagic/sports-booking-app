@@ -1,18 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-
-export interface ConfirmDialogState {
-  visible: boolean;
-  messageKey: string;
-  previewName?: string;
-  previewImageUrl?: string | null;
-  resolve?: (confirmed: boolean) => void;
-}
-
-export interface ConfirmDialogOptions {
-  previewName?: string;
-  previewImageUrl?: string | null;
-}
+import { ConfirmDialogState, ConfirmDialogOptions } from '../app/interfaces/confirm-dialog.model';
 
 @Injectable({
   providedIn: 'root',

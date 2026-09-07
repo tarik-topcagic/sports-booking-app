@@ -28,3 +28,8 @@ export interface UpdateArenaDto {
   address: string;
   pricePerHour: number;
 }
+
+export interface ArenaFilterOptions {
+  cities: string[];
+  sports: string[];
+}
