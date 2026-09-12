@@ -1,8 +1,5 @@
 .city-autocomplete-menu {
-  position: absolute;
-  top: calc(100% + 0.65rem);
-  left: 0;
-  right: 0;
+  position: fixed;
   z-index: 20;
   max-height: 240px;
   overflow-y: auto;
