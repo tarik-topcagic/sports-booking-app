@@ -8,6 +8,7 @@ import { MessageActionsCoordinatorService } from './message-actions-coordinator.
 export class DropdownCoordinatorService {
   private activeId: unknown = null;
   private activeElement: HTMLElement | null = null;
+  private activeExtraContains: ((target: Node) => boolean) | null = null;
   private readonly activeChangedSubject = new Subject<unknown>();
   readonly activeChanged$ = this.activeChangedSubject.asObservable();
 
@@ -18,7 +19,7 @@ export class DropdownCoordinatorService {
 
     const target = event.target as Node | null;
 
-    if (target && this.activeElement?.contains(target)) {
+    if (target && (this.activeElement?.contains(target) || this.activeExtraContains?.(target))) {
       return;
     }
 
@@ -36,13 +37,14 @@ export class DropdownCoordinatorService {
     document.addEventListener('keydown', this.onKeydown, true);
   }
 
-  open(id: unknown, element: HTMLElement): void {
+  open(id: unknown, element: HTMLElement, extraContains?: (target: Node) => boolean): void {
     if (this.activeId === id) {
       return;
     }
 
     this.activeId = id;
     this.activeElement = element;
+    this.activeExtraContains = extraContains ?? null;
     this.messageActionsCoordinator.clearAllActive();
     this.activeChangedSubject.next(id);
   }
@@ -54,6 +56,7 @@ export class DropdownCoordinatorService {
 
     this.activeId = null;
     this.activeElement = null;
+    this.activeExtraContains = null;
     this.activeChangedSubject.next(null);
   }
 }

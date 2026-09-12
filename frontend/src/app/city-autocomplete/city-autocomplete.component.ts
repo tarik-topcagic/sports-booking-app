@@ -1,17 +1,19 @@
 import {
-  AfterViewInit,
   Component,
   ElementRef,
   Input,
   OnDestroy,
   OnInit,
-  Renderer2,
+  TemplateRef,
   ViewChild,
+  ViewContainerRef,
   ViewEncapsulation,
   forwardRef,
 } from '@angular/core';
 import { NgFor, NgIf } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { ConnectedPosition, Overlay, OverlayContainer, OverlayPositionBuilder, OverlayRef } from '@angular/cdk/overlay';
+import { TemplatePortal } from '@angular/cdk/portal';
 import { Subscription } from 'rxjs';
 import { City } from '../interfaces/city';
 import { CityService } from '../../services/city.service';
@@ -32,42 +34,60 @@ import { TranslatePipe } from '../pipes/translate.pipe';
       useExisting: forwardRef(() => CityAutocompleteComponent),
       multi: true,
     },
+   
+    Overlay,
+    OverlayContainer,
+    OverlayPositionBuilder,
   ],
 })
-export class CityAutocompleteComponent implements ControlValueAccessor, OnInit, AfterViewInit, OnDestroy {
+export class CityAutocompleteComponent implements ControlValueAccessor, OnInit, OnDestroy {
   @Input() id = '';
   @ViewChild('inputEl') inputRef!: ElementRef<HTMLInputElement>;
-  @ViewChild('menuEl') menuRef!: ElementRef<HTMLElement>;
+  @ViewChild('menuTemplate') private menuTemplateRef!: TemplateRef<unknown>;
 
   cities: City[] = [];
   value = '';
   selectedCityId: number | null = null;
-  showSuggestions = false;
   disabled = false;
   citiesLoaded = false;
 
+  get showSuggestions(): boolean {
+    return this.overlayRef !== null;
+  }
+
   private static readonly MENU_GAP = 0.65 * 16;
-  private static readonly MENU_MAX_HEIGHT = 240;
-  private static readonly Z_INDEX_NORMAL = 20;
-  private static readonly Z_INDEX_IN_MODAL = 1100;
   private static readonly MODAL_PANEL_SELECTOR = '.modal-content, .admin-modal';
+
+  private static readonly PANEL_CLASS = 'city-autocomplete-overlay-panel';
+  private static readonly PANEL_CLASS_IN_MODAL = 'city-autocomplete-overlay-in-modal';
+
+  private static readonly CONTAINER_CLASS = 'city-autocomplete-overlay-container';
+  private static readonly CONTAINER_CLASS_IN_MODAL = 'city-autocomplete-overlay-container-in-modal';
+
+  private static readonly POSITIONS: ConnectedPosition[] = [
+    { originX: 'start', originY: 'bottom', overlayX: 'start', overlayY: 'top', offsetY: CityAutocompleteComponent.MENU_GAP },
+    { originX: 'start', originY: 'top', overlayX: 'start', overlayY: 'bottom', offsetY: -CityAutocompleteComponent.MENU_GAP },
+  ];
 
   private onChange: (value: number | null) => void = () => {};
   private onTouched: () => void = () => {};
   private coordinatorSubscription?: Subscription;
-  private handleReflowBound = this.handleReflow.bind(this);
-  private handleScrollBound = this.handleScroll.bind(this);
-  private positionUpdateFrameId: number | null = null;
+  private overlayRef: OverlayRef | null = null;
+
+  private readonly isClickInsideOverlay = (target: Node): boolean =>
+    this.overlayRef?.overlayElement.contains(target) ?? false;
 
   constructor(
     private cityService: CityService,
     private elementRef: ElementRef<HTMLElement>,
-    private renderer: Renderer2,
+    private overlay: Overlay,
+    private overlayContainer: OverlayContainer,
+    private viewContainerRef: ViewContainerRef,
     private dropdownCoordinator: DropdownCoordinatorService,
   ) {
     this.coordinatorSubscription = this.dropdownCoordinator.activeChanged$.subscribe((activeId) => {
-      if (activeId !== this && this.showSuggestions) {
-        this.showSuggestions = false;
+      if (activeId !== this && this.overlayRef) {
+        this.closeOverlay();
       }
     });
   }
@@ -78,29 +98,12 @@ export class CityAutocompleteComponent implements ControlValueAccessor, OnInit, 
       this.citiesLoaded = true;
       this.resolveDisplayText();
     });
-
-    window.addEventListener('resize', this.handleReflowBound);
-    
-    window.visualViewport?.addEventListener('resize', this.handleReflowBound);
-    
-    document.addEventListener('scroll', this.handleScrollBound, { capture: true, passive: true });
-  }
-
-  ngAfterViewInit(): void {
-    this.renderer.appendChild(document.body, this.menuRef.nativeElement);
   }
 
   ngOnDestroy(): void {
     this.coordinatorSubscription?.unsubscribe();
     this.dropdownCoordinator.close(this);
-    window.removeEventListener('resize', this.handleReflowBound);
-    window.visualViewport?.removeEventListener('resize', this.handleReflowBound);
-    document.removeEventListener('scroll', this.handleScrollBound, { capture: true });
-    if (this.positionUpdateFrameId !== null) {
-      cancelAnimationFrame(this.positionUpdateFrameId);
-      this.positionUpdateFrameId = null;
-    }
-    this.menuRef?.nativeElement?.remove();
+    this.closeOverlay();
   }
 
   get filteredCities(): City[] {
@@ -119,94 +122,51 @@ export class CityAutocompleteComponent implements ControlValueAccessor, OnInit, 
     this.value = match ? match.name : '';
   }
 
-  private isInsideComponent(target: Node): boolean {
-    if (this.elementRef.nativeElement.contains(target)) {
-      return true;
-    }
-    return this.menuRef?.nativeElement?.contains(target) ?? false;
-  }
-
-  private handleReflow(): void {
-    if (this.showSuggestions) {
-      this.scheduleMenuPositionUpdate();
-    }
-  }
-
-  private handleScroll(event: Event): void {
-    if (!this.showSuggestions) {
+  private openOverlay(): void {
+    if (this.overlayRef) {
       return;
     }
 
-    const target = event.target;
-
-    if (target === document || target === window || this.isInsideComponent(target as Node)) {
-      this.scheduleMenuPositionUpdate();
-      return;
-    }
-
-    this.showSuggestions = false;
-  }
-
-  private scheduleMenuPositionUpdate(): void {
-    if (this.positionUpdateFrameId !== null) {
-      return;
-    }
-    this.positionUpdateFrameId = requestAnimationFrame(() => {
-      this.positionUpdateFrameId = null;
-      this.updateMenuPosition();
-    });
-  }
-
-  private updateMenuPosition(): void {
-    const inputEl = this.inputRef?.nativeElement;
-    const menuEl = this.menuRef?.nativeElement;
-    if (!inputEl || !menuEl) {
-      return;
-    }
-
-    const rect = inputEl.getBoundingClientRect();
-    const gap = CityAutocompleteComponent.MENU_GAP;
-    const viewportHeight = window.innerHeight;
-
-    const spaceBelow = viewportHeight - rect.bottom - gap;
-    const spaceAbove = rect.top - gap;
-    const placeAbove = spaceBelow < CityAutocompleteComponent.MENU_MAX_HEIGHT && spaceAbove > spaceBelow;
-
-    const left = Math.round(rect.left);
-    const width = Math.round(rect.width);
-    this.renderer.setStyle(menuEl, 'left', `${left}px`);
-    this.renderer.setStyle(menuEl, 'width', `${width}px`);
-
-    if (placeAbove) {
-      const bottom = Math.round(viewportHeight - rect.top + gap);
-      this.renderer.setStyle(menuEl, 'bottom', `${bottom}px`);
-      this.renderer.removeStyle(menuEl, 'top');
-    } else {
-      const top = Math.round(rect.bottom + gap);
-      this.renderer.setStyle(menuEl, 'top', `${top}px`);
-      this.renderer.removeStyle(menuEl, 'bottom');
-    }
-  }
-
-  private applyContextualZIndex(): void {
-    const inputEl = this.inputRef?.nativeElement;
-    const menuEl = this.menuRef?.nativeElement;
-    if (!inputEl || !menuEl) {
-      return;
-    }
-
+    const inputEl = this.inputRef.nativeElement;
     const isInsideModal = !!inputEl.closest(CityAutocompleteComponent.MODAL_PANEL_SELECTOR);
-    const zIndex = isInsideModal ? CityAutocompleteComponent.Z_INDEX_IN_MODAL : CityAutocompleteComponent.Z_INDEX_NORMAL;
-    this.renderer.setStyle(menuEl, 'z-index', String(zIndex));
+
+    const containerEl = this.overlayContainer.getContainerElement();
+    containerEl.classList.add(CityAutocompleteComponent.CONTAINER_CLASS);
+    containerEl.classList.toggle(CityAutocompleteComponent.CONTAINER_CLASS_IN_MODAL, isInsideModal);
+
+    const panelClass = isInsideModal
+      ? [CityAutocompleteComponent.PANEL_CLASS, CityAutocompleteComponent.PANEL_CLASS_IN_MODAL]
+      : [CityAutocompleteComponent.PANEL_CLASS];
+
+    const positionStrategy = this.overlay
+      .position()
+      .flexibleConnectedTo(this.inputRef)
+      .withPositions(CityAutocompleteComponent.POSITIONS)
+      .withPush(true)
+      .withViewportMargin(8);
+
+    this.overlayRef = this.overlay.create({
+      positionStrategy,
+      scrollStrategy: this.overlay.scrollStrategies.reposition(),
+      width: inputEl.getBoundingClientRect().width,
+      panelClass,
+    });
+
+    this.overlayRef.attach(new TemplatePortal(this.menuTemplateRef, this.viewContainerRef));
+  }
+
+  private closeOverlay(): void {
+    if (!this.overlayRef) {
+      return;
+    }
+    this.overlayRef.dispose();
+    this.overlayRef = null;
   }
 
   onInput(text: string): void {
     this.value = text;
-    this.showSuggestions = true;
-    this.applyContextualZIndex();
-    this.updateMenuPosition();
-    requestAnimationFrame(() => this.updateMenuPosition());
-    this.dropdownCoordinator.open(this, this.elementRef.nativeElement);
+    this.openOverlay();
+    this.dropdownCoordinator.open(this, this.elementRef.nativeElement, this.isClickInsideOverlay);
 
     const match = this.cities.find((city) => city.name === text.trim());
     this.selectedCityId = match ? match.id : null;
@@ -215,11 +175,8 @@ export class CityAutocompleteComponent implements ControlValueAccessor, OnInit, 
   }
 
   onFocus(): void {
-    this.showSuggestions = true;
-    this.applyContextualZIndex();
-    this.updateMenuPosition();
-    requestAnimationFrame(() => this.updateMenuPosition());
-    this.dropdownCoordinator.open(this, this.elementRef.nativeElement);
+    this.openOverlay();
+    this.dropdownCoordinator.open(this, this.elementRef.nativeElement, this.isClickInsideOverlay);
   }
 
   onBlur(): void {
@@ -229,7 +186,7 @@ export class CityAutocompleteComponent implements ControlValueAccessor, OnInit, 
   selectCity(city: City): void {
     this.value = city.name;
     this.selectedCityId = city.id;
-    this.showSuggestions = false;
+    this.closeOverlay();
     this.dropdownCoordinator.close(this);
     this.onChange(this.selectedCityId);
     this.onTouched();

@@ -15,23 +15,21 @@
   <label [attr.for]="id">{{ 'groupCity' | translate }}</label>
 </div>
 
-<div
-  #menuEl
-  class="city-autocomplete-menu"
-  [style.display]="showSuggestions ? 'block' : 'none'"
->
-  <div *ngIf="!citiesLoaded" class="city-autocomplete-status">
-    {{ 'loading' | translate }}
+<ng-template #menuTemplate>
+  <div class="city-autocomplete-menu">
+    <div *ngIf="!citiesLoaded" class="city-autocomplete-status">
+      {{ 'loading' | translate }}
+    </div>
+    <div *ngIf="citiesLoaded && !filteredCities.length" class="city-autocomplete-status">
+      {{ 'noCitiesFound' | translate }}
+    </div>
+    <button
+      type="button"
+      class="city-autocomplete-option"
+      *ngFor="let city of filteredCities"
+      (click)="selectCity(city)"
+    >
+      {{ city.name }}, {{ city.canton }}
+    </button>
   </div>
-  <div *ngIf="citiesLoaded && !filteredCities.length" class="city-autocomplete-status">
-    {{ 'noCitiesFound' | translate }}
-  </div>
-  <button
-    type="button"
-    class="city-autocomplete-option"
-    *ngFor="let city of filteredCities"
-    (click)="selectCity(city)"
-  >
-    {{ city.name }}, {{ city.canton }}
-  </button>
-</div>
+</ng-template>
