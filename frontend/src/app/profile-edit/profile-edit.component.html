@@ -94,7 +94,7 @@
           <div *ngIf="isCompletionFlow" class="city-onboarding-hint">
             {{ 'cityOnboardingHint' | translate }}
           </div>
-          <app-city-autocomplete id="location" formControlName="cityId" [menuBehindBottomNavbar]="true"></app-city-autocomplete>
+          <app-city-autocomplete id="location" formControlName="cityId"></app-city-autocomplete>
           <div *ngIf="!isCompletionFlow && editForm.get('cityId')?.touched && editForm.get('cityId')?.errors?.['required']" class="text-danger">
             {{ 'requiredField' | translate }}
           </div>

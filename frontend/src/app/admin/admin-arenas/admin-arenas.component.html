@@ -113,7 +113,7 @@
         </div>
       </div>
       <div class="mb-3" *ngIf="mode === 'create'">
-        <app-city-autocomplete id="adminArenaCity" formControlName="cityId" [menuBehindBottomNavbar]="true"></app-city-autocomplete>
+        <app-city-autocomplete id="adminArenaCity" formControlName="cityId"></app-city-autocomplete>
         <div *ngIf="arenaForm.get('cityId')?.touched && arenaForm.get('cityId')?.errors?.['required']" class="text-danger">
           City is required.
         </div>
