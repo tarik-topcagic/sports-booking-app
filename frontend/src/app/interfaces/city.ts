@@ -6,5 +6,5 @@ export interface City {
 
 export interface CreateCityDto {
   name: string;
-  canton: string;
+  cantonId: number;
 }

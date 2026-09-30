@@ -13,13 +13,14 @@ import { SkeletonTableRowComponent } from '../../skeleton/skeleton-table-row/ske
 import { LoadErrorStateComponent } from '../../load-error-state/load-error-state.component';
 import { PaginationComponent } from '../../pagination/pagination.component';
 import { CanComponentDeactivate } from '../../guards/can-component-deactivate';
+import { CantonAutocompleteComponent } from '../../canton-autocomplete/canton-autocomplete.component';
 
 type AdminCityMode = 'list' | 'create';
 
 @Component({
   selector: 'app-admin-cities',
   standalone: true,
-  imports: [NgFor, NgIf, ReactiveFormsModule, RouterModule, SkeletonTableRowComponent, LoadErrorStateComponent, PaginationComponent],
+  imports: [NgFor, NgIf, ReactiveFormsModule, RouterModule, SkeletonTableRowComponent, LoadErrorStateComponent, PaginationComponent, CantonAutocompleteComponent],
   templateUrl: './admin-cities.component.html',
   styleUrl: './admin-cities.component.scss',
 })
@@ -38,7 +39,7 @@ export class AdminCitiesComponent implements OnInit, OnDestroy, CanComponentDeac
   formError = '';
 
   private beforeUnloadHandlerBound = this.beforeUnloadHandler.bind(this);
-  private originalCity: { name: string; canton: string } | null = null;
+  private originalCity: { name: string; cantonId: number | null } | null = null;
 
   itemsPerPage = 10;
   resetPageSignal = 0;
@@ -72,11 +73,11 @@ export class AdminCitiesComponent implements OnInit, OnDestroy, CanComponentDeac
     window.removeEventListener('beforeunload', this.beforeUnloadHandlerBound);
   }
 
-  private snapshotFormValue(): { name: string; canton: string } {
+  private snapshotFormValue(): { name: string; cantonId: number | null } {
     const value = this.cityForm.value;
     return {
       name: (value.name ?? '').trim(),
-      canton: (value.canton ?? '').trim(),
+      cantonId: value.cantonId ?? null,
     };
   }
 
@@ -88,7 +89,7 @@ export class AdminCitiesComponent implements OnInit, OnDestroy, CanComponentDeac
     const value = this.cityForm.value;
     return (
       (value.name ?? '').trim() !== this.originalCity.name ||
-      (value.canton ?? '').trim() !== this.originalCity.canton
+      (value.cantonId ?? null) !== this.originalCity.cantonId
     );
   }
 
@@ -108,7 +109,7 @@ export class AdminCitiesComponent implements OnInit, OnDestroy, CanComponentDeac
   private buildForm(): FormGroup {
     return this.fb.group({
       name: ['', Validators.required],
-      canton: ['', Validators.required],
+      cantonId: [null, Validators.required],
     });
   }
 
@@ -170,7 +171,7 @@ export class AdminCitiesComponent implements OnInit, OnDestroy, CanComponentDeac
     const value = this.cityForm.value;
     const dto: CreateCityDto = {
       name: value.name,
-      canton: value.canton,
+      cantonId: value.cantonId,
     };
 
     this.adminCityService.createCity(dto).subscribe({

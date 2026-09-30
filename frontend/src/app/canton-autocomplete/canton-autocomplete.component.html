@@ -1,0 +1,13 @@
+<app-searchable-dropdown
+  [id]="id"
+  [items]="cantons"
+  [itemsLoaded]="cantonsLoaded"
+  [itemLabel]="itemLabel"
+  placeholder="Canton"
+  loadingText="Loading..."
+  noResultsText="No cantons found."
+  [disabled]="disabled"
+  (itemSelected)="onCantonSelected($event)"
+  (selectionCleared)="onSelectionCleared()"
+  (blurred)="onTouchedHandler()"
+></app-searchable-dropdown>

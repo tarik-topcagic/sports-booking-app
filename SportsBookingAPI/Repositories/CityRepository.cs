@@ -15,12 +15,12 @@ namespace SportsBookingAPI.Repositories
 
         public async Task<IEnumerable<City>> GetAllCitiesAsync()
         {
-            return await _context.Cities.ToListAsync();
+            return await _context.Cities.Include(c => c.CantonRef).ToListAsync();
         }
 
         public async Task<City?> GetCityByIdAsync(int id)
         {
-            return await _context.Cities.FirstOrDefaultAsync(c => c.Id == id);
+            return await _context.Cities.Include(c => c.CantonRef).FirstOrDefaultAsync(c => c.Id == id);
         }
 
         public async Task<bool> ExistsByNameAsync(string name)

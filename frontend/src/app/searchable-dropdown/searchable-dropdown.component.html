@@ -1,0 +1,35 @@
+<div class="searchable-dropdown form-floating">
+  <input
+    #inputEl
+    [id]="id"
+    type="text"
+    class="form-control"
+    autocomplete="one-time-code"
+    [value]="value"
+    [disabled]="disabled"
+    [placeholder]="placeholder"
+    (input)="onInput($any($event.target).value)"
+    (focus)="onFocus()"
+    (blur)="onBlur()"
+  />
+  <label [attr.for]="id">{{ placeholder }}</label>
+</div>
+
+<ng-template #menuTemplate>
+  <div class="searchable-dropdown-menu">
+    <div *ngIf="!itemsLoaded" class="searchable-dropdown-status">
+      {{ loadingText }}
+    </div>
+    <div *ngIf="itemsLoaded && !filteredItems.length" class="searchable-dropdown-status">
+      {{ noResultsText }}
+    </div>
+    <button
+      type="button"
+      class="searchable-dropdown-option"
+      *ngFor="let item of filteredItems"
+      (click)="selectItem(item)"
+    >
+      {{ itemLabel(item) }}
+    </button>
+  </div>
+</ng-template>

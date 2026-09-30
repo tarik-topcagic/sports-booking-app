@@ -142,8 +142,10 @@ namespace SportsBookingAPI
             builder.Services.AddScoped<IUserProfileService, UserProfileService>();
             builder.Services.AddScoped<IArenaService, ArenaService>();
             builder.Services.AddScoped<ICityService, CityService>();
+            builder.Services.AddScoped<ICantonService, CantonService>();
             builder.Services.AddScoped<IArenaRepository, ArenaRepository>();
             builder.Services.AddScoped<ICityRepository, CityRepository>();
+            builder.Services.AddScoped<ICantonRepository, CantonRepository>();
             builder.Services.AddScoped<IGroupRepository, GroupRepository>();
             builder.Services.AddScoped<IGroupChatRepository, GroupChatRepository>();
             builder.Services.AddScoped<IPrivateChatRepository, PrivateChatRepository>();

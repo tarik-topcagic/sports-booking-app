@@ -12,6 +12,7 @@ namespace SportsBookingAPI.Data
 
         }
         public DbSet<City> Cities { get; set; }
+        public DbSet<Canton> Cantons { get; set; }
         public DbSet<Arena> Arenas { get; set; }
         public DbSet<Group> Groups { get; set; }
         public DbSet<GroupMembership> GroupMemberships { get; set; }
@@ -66,6 +67,12 @@ namespace SportsBookingAPI.Data
                 .HasOne(arena => arena.CityRef)
                 .WithMany()
                 .HasForeignKey(arena => arena.CityId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<City>()
+                .HasOne(city => city.CantonRef)
+                .WithMany()
+                .HasForeignKey(city => city.CantonId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Group>()

@@ -1,96 +1,41 @@
-import {
-  Component,
-  ElementRef,
-  Input,
-  OnDestroy,
-  OnInit,
-  TemplateRef,
-  ViewChild,
-  ViewContainerRef,
-  ViewEncapsulation,
-  forwardRef,
-} from '@angular/core';
-import { NgFor, NgIf } from '@angular/common';
+import { AfterViewInit, Component, Input, OnInit, ViewChild, forwardRef } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { ConnectedPosition, Overlay, OverlayContainer, OverlayPositionBuilder, OverlayRef } from '@angular/cdk/overlay';
-import { TemplatePortal } from '@angular/cdk/portal';
-import { Subscription } from 'rxjs';
 import { City } from '../interfaces/city';
 import { CityService } from '../../services/city.service';
-import { DropdownCoordinatorService } from '../../services/dropdown-coordinator.service';
+import { SearchableDropdownComponent } from '../searchable-dropdown/searchable-dropdown.component';
 import { TranslatePipe } from '../pipes/translate.pipe';
 
 @Component({
   selector: 'app-city-autocomplete',
   standalone: true,
-  imports: [NgFor, NgIf, TranslatePipe],
+  imports: [SearchableDropdownComponent, TranslatePipe],
   templateUrl: './city-autocomplete.component.html',
-  styleUrl: './city-autocomplete.component.scss',
   host: { '[attr.id]': 'null' },
-  encapsulation: ViewEncapsulation.None,
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
       useExisting: forwardRef(() => CityAutocompleteComponent),
       multi: true,
     },
-   
-    Overlay,
-    OverlayContainer,
-    OverlayPositionBuilder,
   ],
 })
-export class CityAutocompleteComponent implements ControlValueAccessor, OnInit, OnDestroy {
+export class CityAutocompleteComponent implements ControlValueAccessor, OnInit, AfterViewInit {
   @Input() id = '';
-  @ViewChild('inputEl') inputRef!: ElementRef<HTMLInputElement>;
-  @ViewChild('menuTemplate') private menuTemplateRef!: TemplateRef<unknown>;
+  @ViewChild(SearchableDropdownComponent) private dropdownRef!: SearchableDropdownComponent<City>;
 
   cities: City[] = [];
-  value = '';
-  selectedCityId: number | null = null;
-  disabled = false;
   citiesLoaded = false;
-
-  get showSuggestions(): boolean {
-    return this.overlayRef !== null;
-  }
-
-  private static readonly MENU_GAP = 0.65 * 16;
-  private static readonly MODAL_PANEL_SELECTOR = '.modal-content, .admin-modal';
-
-  private static readonly PANEL_CLASS = 'city-autocomplete-overlay-panel';
-  private static readonly PANEL_CLASS_IN_MODAL = 'city-autocomplete-overlay-in-modal';
-
-  private static readonly CONTAINER_CLASS = 'city-autocomplete-overlay-container';
-  private static readonly CONTAINER_CLASS_IN_MODAL = 'city-autocomplete-overlay-container-in-modal';
-
-  private static readonly POSITIONS: ConnectedPosition[] = [
-    { originX: 'start', originY: 'bottom', overlayX: 'start', overlayY: 'top', offsetY: CityAutocompleteComponent.MENU_GAP },
-    { originX: 'start', originY: 'top', overlayX: 'start', overlayY: 'bottom', offsetY: -CityAutocompleteComponent.MENU_GAP },
-  ];
+  disabled = false;
+  selectedCityId: number | null = null;
 
   private onChange: (value: number | null) => void = () => {};
   private onTouched: () => void = () => {};
-  private coordinatorSubscription?: Subscription;
-  private overlayRef: OverlayRef | null = null;
 
-  private readonly isClickInsideOverlay = (target: Node): boolean =>
-    this.overlayRef?.overlayElement.contains(target) ?? false;
+  readonly itemLabel = (city: City): string => `${city.name}, ${city.canton}`;
+  readonly matchValue = (city: City): string => city.name;
+  readonly filterPredicate = (city: City, query: string): boolean => city.name.toLowerCase().includes(query);
 
-  constructor(
-    private cityService: CityService,
-    private elementRef: ElementRef<HTMLElement>,
-    private overlay: Overlay,
-    private overlayContainer: OverlayContainer,
-    private viewContainerRef: ViewContainerRef,
-    private dropdownCoordinator: DropdownCoordinatorService,
-  ) {
-    this.coordinatorSubscription = this.dropdownCoordinator.activeChanged$.subscribe((activeId) => {
-      if (activeId !== this && this.overlayRef) {
-        this.closeOverlay();
-      }
-    });
-  }
+  constructor(private cityService: CityService) {}
 
   ngOnInit(): void {
     this.cityService.getCities().subscribe((cities) => {
@@ -100,18 +45,8 @@ export class CityAutocompleteComponent implements ControlValueAccessor, OnInit, 
     });
   }
 
-  ngOnDestroy(): void {
-    this.coordinatorSubscription?.unsubscribe();
-    this.dropdownCoordinator.close(this);
-    this.closeOverlay();
-  }
-
-  get filteredCities(): City[] {
-    const query = this.value.trim().toLowerCase();
-    if (!query) {
-      return this.cities;
-    }
-    return this.cities.filter((city) => city.name.toLowerCase().includes(query));
+  ngAfterViewInit(): void {
+    this.resolveDisplayText();
   }
 
   private resolveDisplayText(): void {
@@ -119,83 +54,27 @@ export class CityAutocompleteComponent implements ControlValueAccessor, OnInit, 
       return;
     }
     const match = this.cities.find((city) => city.id === this.selectedCityId);
-    this.value = match ? match.name : '';
+    this.dropdownRef?.setDisplayValue(match ? match.name : '');
   }
 
-  private openOverlay(): void {
-    if (this.overlayRef) {
-      return;
-    }
-
-    const inputEl = this.inputRef.nativeElement;
-    const isInsideModal = !!inputEl.closest(CityAutocompleteComponent.MODAL_PANEL_SELECTOR);
-
-    const containerEl = this.overlayContainer.getContainerElement();
-    containerEl.classList.add(CityAutocompleteComponent.CONTAINER_CLASS);
-    containerEl.classList.toggle(CityAutocompleteComponent.CONTAINER_CLASS_IN_MODAL, isInsideModal);
-
-    const panelClass = isInsideModal
-      ? [CityAutocompleteComponent.PANEL_CLASS, CityAutocompleteComponent.PANEL_CLASS_IN_MODAL]
-      : [CityAutocompleteComponent.PANEL_CLASS];
-
-    const positionStrategy = this.overlay
-      .position()
-      .flexibleConnectedTo(this.inputRef)
-      .withPositions(CityAutocompleteComponent.POSITIONS)
-      .withPush(true)
-      .withViewportMargin(8);
-
-    this.overlayRef = this.overlay.create({
-      positionStrategy,
-      scrollStrategy: this.overlay.scrollStrategies.reposition(),
-      width: inputEl.getBoundingClientRect().width,
-      panelClass,
-    });
-
-    this.overlayRef.attach(new TemplatePortal(this.menuTemplateRef, this.viewContainerRef));
-  }
-
-  private closeOverlay(): void {
-    if (!this.overlayRef) {
-      return;
-    }
-    this.overlayRef.dispose();
-    this.overlayRef = null;
-  }
-
-  onInput(text: string): void {
-    this.value = text;
-    this.openOverlay();
-    this.dropdownCoordinator.open(this, this.elementRef.nativeElement, this.isClickInsideOverlay);
-
-    const match = this.cities.find((city) => city.name === text.trim());
-    this.selectedCityId = match ? match.id : null;
-
-    this.onChange(this.selectedCityId);
-  }
-
-  onFocus(): void {
-    this.openOverlay();
-    this.dropdownCoordinator.open(this, this.elementRef.nativeElement, this.isClickInsideOverlay);
-  }
-
-  onBlur(): void {
-    this.onTouched();
-  }
-
-  selectCity(city: City): void {
-    this.value = city.name;
+  onCitySelected(city: City): void {
     this.selectedCityId = city.id;
-    this.closeOverlay();
-    this.dropdownCoordinator.close(this);
     this.onChange(this.selectedCityId);
+  }
+
+  onSelectionCleared(): void {
+    this.selectedCityId = null;
+    this.onChange(this.selectedCityId);
+  }
+
+  onTouchedHandler(): void {
     this.onTouched();
   }
 
   writeValue(cityId: number | null): void {
     this.selectedCityId = cityId ?? null;
     if (this.selectedCityId == null) {
-      this.value = '';
+      this.dropdownRef?.setDisplayValue('');
       return;
     }
     this.resolveDisplayText();

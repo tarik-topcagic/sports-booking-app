@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SportsBookingAPI.Data;
@@ -11,9 +12,11 @@ using SportsBookingAPI.Data;
 namespace SportsBookingAPI.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260930133854_CreateCantonsTable")]
+    partial class CreateCantonsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -369,16 +372,15 @@ namespace SportsBookingAPI.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CantonId")
-                        .HasColumnType("integer");
+                    b.Property<string>("Canton")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CantonId");
 
                     b.ToTable("Cities");
                 });
@@ -1018,17 +1020,6 @@ namespace SportsBookingAPI.Migrations
                         .IsRequired();
 
                     b.Navigation("CityRef");
-                });
-
-            modelBuilder.Entity("SportsBookingAPI.Models.City", b =>
-                {
-                    b.HasOne("SportsBookingAPI.Models.Canton", "CantonRef")
-                        .WithMany()
-                        .HasForeignKey("CantonId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("CantonRef");
                 });
 
             modelBuilder.Entity("SportsBookingAPI.Models.FavoriteArena", b =>

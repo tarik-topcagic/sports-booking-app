@@ -1,35 +1,15 @@
-<div class="city-autocomplete form-floating">
-  <input
-    #inputEl
-    [id]="id"
-    type="text"
-    class="form-control"
-    autocomplete="one-time-code"
-    [value]="value"
-    [disabled]="disabled"
-    [placeholder]="'groupCity' | translate"
-    (input)="onInput($any($event.target).value)"
-    (focus)="onFocus()"
-    (blur)="onBlur()"
-  />
-  <label [attr.for]="id">{{ 'groupCity' | translate }}</label>
-</div>
-
-<ng-template #menuTemplate>
-  <div class="city-autocomplete-menu">
-    <div *ngIf="!citiesLoaded" class="city-autocomplete-status">
-      {{ 'loading' | translate }}
-    </div>
-    <div *ngIf="citiesLoaded && !filteredCities.length" class="city-autocomplete-status">
-      {{ 'noCitiesFound' | translate }}
-    </div>
-    <button
-      type="button"
-      class="city-autocomplete-option"
-      *ngFor="let city of filteredCities"
-      (click)="selectCity(city)"
-    >
-      {{ city.name }}, {{ city.canton }}
-    </button>
-  </div>
-</ng-template>
+<app-searchable-dropdown
+  [id]="id"
+  [items]="cities"
+  [itemsLoaded]="citiesLoaded"
+  [itemLabel]="itemLabel"
+  [matchValue]="matchValue"
+  [filterPredicate]="filterPredicate"
+  [placeholder]="'groupCity' | translate"
+  [loadingText]="'loading' | translate"
+  [noResultsText]="'noCitiesFound' | translate"
+  [disabled]="disabled"
+  (itemSelected)="onCitySelected($event)"
+  (selectionCleared)="onSelectionCleared()"
+  (blurred)="onTouchedHandler()"
+></app-searchable-dropdown>

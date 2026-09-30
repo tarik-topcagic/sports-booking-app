@@ -71,10 +71,9 @@
           Name is required.
         </div>
       </div>
-      <div class="mb-3 form-floating">
-        <input id="adminCityCanton" type="text" class="form-control" formControlName="canton" placeholder="Canton" />
-        <label for="adminCityCanton">Canton</label>
-        <div *ngIf="cityForm.get('canton')?.touched && cityForm.get('canton')?.invalid" class="text-danger">
+      <div class="mb-3">
+        <app-canton-autocomplete id="adminCityCanton" formControlName="cantonId"></app-canton-autocomplete>
+        <div *ngIf="cityForm.get('cantonId')?.touched && cityForm.get('cantonId')?.invalid" class="text-danger">
           Canton is required.
         </div>
       </div>

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SportsBookingAPI.Data;
@@ -11,9 +12,11 @@ using SportsBookingAPI.Data;
 namespace SportsBookingAPI.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260930134140_BackfillCityCantonId")]
+    partial class BackfillCityCantonId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -369,7 +372,11 @@ namespace SportsBookingAPI.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CantonId")
+                    b.Property<string>("Canton")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("CantonId")
                         .HasColumnType("integer");
 
                     b.Property<string>("Name")
@@ -1025,8 +1032,7 @@ namespace SportsBookingAPI.Migrations
                     b.HasOne("SportsBookingAPI.Models.Canton", "CantonRef")
                         .WithMany()
                         .HasForeignKey("CantonId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("CantonRef");
                 });

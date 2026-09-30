@@ -183,6 +183,22 @@ body.dark-mode .form-select {
     border-color: #3a3a3a;
 }
 
+:is(.form-control, .form-select, input, textarea, select):focus {
+    border-color: #97d2f3;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(47, 164, 231, 0.25);
+}
+
+.search-bar:focus-within {
+    border-color: #97d2f3;
+    box-shadow: 0 0 0 0.25rem rgba(47, 164, 231, 0.25);
+}
+
+.search-bar input:focus {
+    border-color: transparent;
+    box-shadow: none;
+}
+
 body:not(.dark-mode) .navbar .dropdown-menu,
 body:not(.dark-mode) .navbar .list-group-item {
     --bs-dropdown-bg: #fff;
@@ -320,8 +336,18 @@ body.dark-mode :is(.admin-page, .admin-dashboard-page) :is(.form-control, .form-
 body.dark-mode :is(.admin-page, .admin-dashboard-page) :is(.form-control, .form-select):focus {
     background-color: #15191e;
     color: #fff;
-    border-color: #86b7fe;
-    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+body.dark-mode :is(.admin-page, .admin-dashboard-page) .form-control:-webkit-autofill,
+body.dark-mode :is(.admin-page, .admin-dashboard-page) .form-control:-webkit-autofill:hover,
+body.dark-mode :is(.admin-page, .admin-dashboard-page) .form-control:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px #15191e inset !important;
+    -webkit-text-fill-color: #f1f3f5 !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+body.dark-mode :is(.admin-page, .admin-dashboard-page) .form-floating > .form-control:-webkit-autofill ~ label::after {
+    background-color: #15191e;
 }
 
 body.dark-mode :is(.admin-page, .admin-dashboard-page) .form-control::placeholder {

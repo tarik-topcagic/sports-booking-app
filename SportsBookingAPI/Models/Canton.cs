@@ -1,10 +1,8 @@
 namespace SportsBookingAPI.Models
 {
-    public class City
+    public class Canton
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public int CantonId { get; set; }
-        public virtual Canton CantonRef { get; set; }
     }
 }
